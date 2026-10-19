@@ -1,1 +1,21 @@
-re
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+src-tauri/target/
+src-tauri/gen/
+
+# The reverse-engineering study is deliberately kept out of version control.
+re/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local logs
+*.log
+npm-debug.log*

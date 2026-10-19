@@ -3,8 +3,10 @@
 A desktop app that completes Discord quests for games you do not own — by making Discord's own
 local activity detection believe the game is running.
 
-**Status:** pre-implementation. The reverse-engineering study is complete; the product has not been
-built yet.
+**Status:** the catalogue works; questing does not yet. The reverse-engineering study is complete
+and the application now fetches, caches, and serves Discord's catalogue of detectable games. The
+stub that completes a quest — materialising it, launching it, and stopping it — is the next
+milestone and is not implemented.
 
 ## What it does
 
@@ -26,6 +28,9 @@ LAUNCH       run the stub and track its PID
 STOP         terminate that exact PID — never by image name
 ```
 
+The first two steps work today. The last three are the questing milestone, and the app says so
+where they would go.
+
 ## What it is not
 
 - **Not a Discord bot.** It does not talk to the Discord API to complete quests, because no such
@@ -43,6 +48,9 @@ STOP         terminate that exact PID — never by image name
 | `docs/CONTEXT.md` | Router for project context and constraints. |
 | `docs/ROADMAP.md` | Grouped, outcome-based build guide and progress tracker. |
 | `AGENTS.md` | Working method, Git workflow, and architecture non-negotiables. |
+| `src/` | The React frontend: the catalogue index, its filters, and the entry panel. |
+| `src-tauri/` | The Rust backend: the catalogue service, its cache, and the Tauri shell. |
+| `.impeccable/` | The design direction for the catalogue surface and the brief it is held to. |
 | `re/` | The reverse-engineering study of the upstream app. **Git-ignored** — it is reference material, not product code. |
 
 ## The reverse-engineering study
@@ -77,9 +85,19 @@ investigation evidence that is intentionally kept out of the product's history.
 
 ## Building
 
-The build is not yet established — there is no `package.json`, `Cargo.toml`, or runner crate in
-this repository yet. The commands will be recorded here as each milestone lands, verified against
-the real manifests rather than assumed.
+The app is a Tauri v2 desktop application: a Rust backend under a React frontend.
+
+```bash
+npm install              # install dependencies
+npm run tauri dev        # run the app against the Vite dev server
+npm run build            # type-check and build the frontend
+npm run tauri build      # build the desktop application
+npm test                 # the frontend test suite
+cargo test --manifest-path src-tauri/Cargo.toml   # the backend test suite
+```
+
+The catalogue is fetched from Discord at runtime and cached under your user data
+directory. Nothing about the catalogue is compiled into the application.
 
 ## Licence and attribution
 

@@ -10,8 +10,9 @@
   Discord's local activity detection reports the game as running.
 - **Primary users / use cases:** Discord players who want to clear seasonal game quests without
   buying and installing every title in the catalogue.
-- **Current focus:** The reverse-engineering study is complete. The product itself is not yet
-  implemented — there is no application source in this repository.
+- **Current focus:** The reverse-engineering study is complete. The application exists and
+  serves Discord's catalogue; questing — materialising a stub, launching it, and stopping it by
+  PID — is the next milestone and is **not yet implemented**.
 
 ## Where to Look
 
@@ -19,6 +20,8 @@
 |---|---|
 | Durable product truth, principles, non-goals | `PRODUCT.md` |
 | Goals, features, and progress | `docs/ROADMAP.md` |
+| The catalogue service: fetch, validate, project, cache, serve | `src-tauri/src/catalogue/` |
+| The catalogue index and the states it can be in | `src/`, `src/components/` |
 | The mechanism, and why it works | `re/docs/02-quest-completion-mechanism.md` |
 | Catalogue schema, statistics, and constraints | `re/docs/03-data-model-and-catalog.md` |
 | Backend architecture and IPC surface | `re/docs/04-application-architecture.md` |
@@ -28,7 +31,8 @@
 | The clone specification and acceptance cases | `re/docs/08-reconstruction-map.md` |
 | What is unresolved, and what evidence would close it | `re/docs/09-coverage-and-open-questions.md` |
 | Evidence provenance for every claim | `re/docs/01-evidence-register.md` |
-| Build and test commands | Root `AGENTS.md` and the project manifests, once they exist |
+| The design direction of the catalogue surface | `.impeccable/surfaces/src-app-tsx.md` |
+| Build and test commands | Root `AGENTS.md` and the project manifests |
 
 ## Project-Specific Constraints
 
