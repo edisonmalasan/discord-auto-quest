@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CatalogueSnapshot } from '../types/catalogue';
+import type { CatalogueSnapshot } from './types/catalogue';
 
 const loadCatalogue = vi.fn<() => Promise<CatalogueSnapshot>>();
 const refreshCatalogue = vi.fn<() => Promise<CatalogueSnapshot>>();

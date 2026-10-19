@@ -54,7 +54,11 @@ fn age_ratings(game: &RawGame) -> Vec<String> {
     let mut ratings: Vec<String> = classification
         .agency_ratings
         .iter()
-        .map(|(agency, rating)| format!("{agency}:{}", rating.rating))
+        .filter_map(|(agency, rating)| {
+            // An agency with no numeric rating contributes nothing, but it must not
+            // cost the entry its place in the catalogue either.
+            rating.rating.map(|value| format!("{agency}:{value}"))
+        })
         .collect();
     ratings.sort();
     ratings
@@ -126,15 +130,19 @@ mod tests {
                 (
                     "pegi".to_string(),
                     crate::catalogue::model::AgencyRating {
-                        rating: 3,
+                        rating: Some(3),
                         descriptors: vec![],
+                        themes: vec![],
+                        classification: None,
                     },
                 ),
                 (
                     "esrb".to_string(),
                     crate::catalogue::model::AgencyRating {
-                        rating: 4,
+                        rating: Some(4),
                         descriptors: vec![1, 2],
+                        themes: vec![],
+                        classification: None,
                     },
                 ),
             ]
@@ -143,5 +151,54 @@ mod tests {
         });
         let entry = compact_entry(&game);
         assert_eq!(entry.age_ratings, vec!["esrb:4".to_string(), "pegi:3".to_string()]);
+    }
+
+    #[test]
+    fn an_agency_without_a_rating_does_not_cost_the_entry_its_place() {
+        // `igdb` carries only `themes` and `gop` only a `classification`. Neither
+        // has a numeric rating, and the entry is still a perfectly good catalogue
+        // entry that must survive.
+        let payload = r#"[
+            {
+                "id": "363425169051615262",
+                "name": "HuniePop",
+                "aliases": [],
+                "cover_image_hash": null,
+                "icon_hash": "7b10572839d1bcbb017d5bce629e3ae1",
+                "executables": [{"is_launcher": false, "name": "huniepop.exe", "os": "win32"}],
+                "content_classification": {"agency_ratings": {"igdb": {"themes": [21]}}}
+            },
+            {
+                "id": "2",
+                "name": "Shelter 69",
+                "aliases": [],
+                "cover_image_hash": null,
+                "icon_hash": null,
+                "executables": [{"is_launcher": false, "name": "shelter.exe", "os": "win32"}],
+                "content_classification": {"agency_ratings": {"gop": {"classification": 1}}}
+            },
+            {
+                "id": "3",
+                "name": "Overwatch",
+                "aliases": [],
+                "cover_image_hash": null,
+                "icon_hash": null,
+                "executables": [{"is_launcher": false, "name": "overwatch.exe", "os": "win32"}],
+                "content_classification": {"agency_ratings": {"esrb": {"rating": 3, "descriptors": [9]}}}
+            }
+        ]"#;
+        let (games, dropped) = crate::catalogue::validate::parse(payload).expect("parses");
+        assert_eq!(dropped, 0);
+        assert_eq!(games.len(), 3);
+        assert_eq!(games[0].name, "HuniePop");
+        assert!(games[0].executables[0].name.ends_with("huniepop.exe"));
+        // An agency with no numeric rating contributes no rating string.
+        assert!(compact_entry(&games[0]).age_ratings.is_empty());
+        assert!(compact_entry(&games[1]).age_ratings.is_empty());
+        // An agency with a rating contributes it verbatim.
+        assert_eq!(
+            compact_entry(&games[2]).age_ratings,
+            vec!["esrb:3".to_string()]
+        );
     }
 }

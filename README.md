@@ -3,8 +3,10 @@
 A desktop app that completes Discord quests for games you do not own — by making Discord's own
 local activity detection believe the game is running.
 
-**Status:** pre-implementation. The reverse-engineering study is complete; the product has not been
-built yet.
+**Status:** the catalogue works; questing does not yet. The reverse-engineering study is complete
+and the application now fetches, caches, and serves Discord's catalogue of detectable games. The
+stub that completes a quest — materialising it, launching it, and stopping it — is the next
+milestone and is not implemented.
 
 ## What it does
 
@@ -25,6 +27,9 @@ MATERIALISE  copy a tiny platform stub to <user data>/games/<app id>/<registered
 LAUNCH       run the stub and track its PID
 STOP         terminate that exact PID — never by image name
 ```
+
+The first two steps work today. The last three are the questing milestone, and the app says so
+where they would go.
 
 ## What it is not
 

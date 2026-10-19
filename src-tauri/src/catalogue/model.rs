@@ -43,11 +43,22 @@ pub struct ContentClassification {
     pub agency_ratings: BTreeMap<String, AgencyRating>,
 }
 
+/// One agency's age rating.
+///
+/// The shape is not uniform across agencies. `esrb`, `pegi`, and `apple` carry a numeric
+/// `rating`; `igdb` carries `themes`; `gop` carries a `classification`. Every field is
+/// therefore optional, so an unfamiliar agency can never cost an entry its place in
+/// the catalogue — the rating is an annotation, not the entry.
 #[derive(Debug, Clone, Deserialize)]
 pub struct AgencyRating {
-    pub rating: i64,
+    #[serde(default)]
+    pub rating: Option<i64>,
     #[serde(default)]
     pub descriptors: Vec<i64>,
+    #[serde(default)]
+    pub themes: Vec<i64>,
+    #[serde(default)]
+    pub classification: Option<i64>,
 }
 
 /// A catalogue entry after projection. This is the shape that is cached on disk and

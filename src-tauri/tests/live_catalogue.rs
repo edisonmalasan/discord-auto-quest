@@ -35,6 +35,23 @@ async fn the_live_catalogue_is_fetched_projected_and_cached() {
         outcome.snapshot.entries.len()
     );
 
+    // Nothing the endpoint served may be dropped. An annotation that does not fit —
+    // an age rating from an agency with an unfamiliar shape — must never cost a
+    // game its place in the catalogue.
+    assert_eq!(
+        outcome.snapshot.stats.dropped_entries, 0,
+        "no entry may be dropped; {} were",
+        outcome.snapshot.stats.dropped_entries
+    );
+
+    // Every entry the endpoint serves must survive the projection. A field this app
+    // does not use must never be able to cost a game its place in the catalogue.
+    assert_eq!(
+        outcome.snapshot.stats.dropped_entries, 0,
+        "entries were dropped: {}",
+        outcome.snapshot.stats.dropped_entries
+    );
+
     // The counts are derived from what actually arrived.
     let detected = outcome
         .snapshot

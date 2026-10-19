@@ -45,19 +45,26 @@ traceable evidence, and the clone specification is written.*
 *Outcome: The application exists, builds on Windows, and can fetch and cache the game catalogue
 without the catalogue being part of the shipped artefact.*
 
-- [ ] A Tauri application builds and launches on Windows from a clean checkout.
-- [ ] The catalogue is fetched from Discord's endpoint and cached to the per-user data directory.
-- [ ] The cached catalogue is a compacted projection, not the raw payload.
-- [ ] A cached catalogue is served when the network is unavailable, and the UI states that it is
+- [x] A Tauri application builds and launches on Windows from a clean checkout.
+- [x] The catalogue is fetched from Discord's endpoint and cached to the per-user data directory.
+- [x] The cached catalogue is a compacted projection, not the raw payload.
+- [x] A cached catalogue is served when the network is unavailable, and the UI states that it is
       showing cached data.
-- [ ] An unreachable endpoint with no cache produces an explicit, retryable error — not an empty
+- [x] An unreachable endpoint with no cache produces an explicit, retryable error — not an empty
       list and not a hang.
-- [ ] The shipped frontend bundle contains no catalogue snapshot.
-- [ ] Catalogue counts, questability ratios, and platform splits are derived from the fetched
+- [x] The shipped frontend bundle contains no catalogue snapshot.
+- [x] Catalogue counts, questability ratios, and platform splits are derived from the fetched
       catalogue at runtime — no count is hard-coded, because the live catalogue and upstream's
       bundled snapshot already disagree by more than 3,000 entries.
 
-**Status:** Not started
+**Status:** Complete. The catalogue service lives in `src-tauri/src/catalogue/`, the index surface
+in `src/`. The catalogue is fetched, validated, projected, cached, and served; the cache is
+served immediately when one exists, and a refresh runs in the background when the cache is past
+its 24-hour interval. Verified by 39 frontend tests, 45 backend tests, and a network test that
+runs against Discord's live endpoint.
+
+**Not in this group:** questing. Materialising a stub, launching it, and stopping it by PID is
+Group 2, and the index's primary action is disabled until then.
 
 ---
 
@@ -176,7 +183,8 @@ complete.*
 | Group | Milestone | Status |
 |---|---|---|
 | 0 | Reverse-engineering study | Complete |
-| 1 | Foundation | Not started |
+| 1 | Foundation | Complete |
+| 2 | Questing on Windows | Not started |
 | 2 | Questing on Windows | Not started |
 | 3 | The catalogue experience | Not started |
 | 4 | Honest state | Not started |

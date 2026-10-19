@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type Fuse from 'fuse.js';
 
 import { EntryList, SkeletonList } from './components/EntryList';
 import { EntryPanel } from './components/EntryPanel';
@@ -54,12 +55,20 @@ export default function App() {
     };
   }, []);
 
-  const entries = useMemo(() => snapshot?.entries ?? [], [snapshot]);
+  const entries = useMemo(() => snapshot?.entries ?? EMPTY_ENTRIES, [snapshot]);
 
-  const index = useMemo(
-    () => (entries.length > 0 ? createSearchIndex(entries) : null),
-    [entries],
-  );
+  // The search index is built after the list has painted, not during render. Building
+  // it over 25,000 entries takes long enough to be felt, and there is no reason to
+  // pay for it before the visitor has typed anything.
+  const [index, setIndex] = useState<Fuse<CatalogEntry> | null>(null);
+  useEffect(() => {
+    if (entries.length === 0) {
+      setIndex(null);
+      return;
+    }
+    const timer = window.setTimeout(() => setIndex(createSearchIndex(entries)), 0);
+    return () => window.clearTimeout(timer);
+  }, [entries]);
 
   const matches = useMemo(() => {
     if (!index || debouncedQuery.trim().length < 2) {
@@ -194,3 +203,6 @@ const EMPTY_STATS = {
   withAliases: 0,
   droppedEntries: 0,
 };
+
+/** A stable empty list, so the memoised entries do not change identity each render. */
+const EMPTY_ENTRIES: CatalogEntry[] = [];
