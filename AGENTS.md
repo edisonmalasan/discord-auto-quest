@@ -43,13 +43,14 @@ supersedes it._
 | ------------------ | ---------------------------- | ------------------------------------ |
 | Frontend / UI      | React 19, TypeScript 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
 | Backend / runtime  | Rust 1.82+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
+| Runner             | Rust, `no_std` + `no_main`, 3 KB, kernel32 only | `runner/`                  |
 | Database / storage | Per-user JSON catalogue cache | `src-tauri/src/catalogue/cache.rs`    |
 | Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
-| Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/src/` |
+| Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/tests/` |
 
 **Target shape:** a Tauri v2 desktop app with a TypeScript webview frontend and a Rust
-backend, plus small per-platform runner executables. The frontend and the backend are
-established; the per-platform runner executables are not, and land with Group 2.
+backend, plus small per-platform runner executables. The frontend, the backend, and the
+Windows runner are established; the macOS and Linux runners land with their own groups.
 
 ## Build, Test, and Development Commands
 
@@ -62,8 +63,11 @@ _These commands exist in this repository. Run them from the repository root._
 | Run the frontend only | `npm run dev` | The frontend in a browser, with no backend. |
 | Build frontend       | `npm run build` | Type-checks, then writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
+| Build the runner     | `npm run build:runner` | The Windows stub, into `runner/target/release/`. |
+| Check the runner     | `npm run check:runner` | Asserts its size and its PE import table. |
 | Test                 | `npm test` | Vitest, the frontend suite. |
 | Test                 | `cargo test --manifest-path src-tauri/Cargo.toml` | The Rust suite. |
+| Test                 | `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored` | The network-backed suite. |
 | Lint / type-check    | `npm run typecheck` | `tsc --noEmit`. |
 
 **Documentation checks available today.** There is no Markdown linter configured in this

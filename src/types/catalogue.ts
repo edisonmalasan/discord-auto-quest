@@ -67,3 +67,33 @@ export const CURRENT_PLATFORM: Record<string, string> = {
   darwin: 'macOS',
   linux: 'Linux',
 };
+
+/** A quest as the backend sees it. */
+export interface QuestView {
+  /** The quest's identity: the application and the executable within it. */
+  id: string;
+  appId: string;
+  displayName: string;
+  /** Where the stub was written. */
+  stubPath: string;
+  /** The process id of the running stub. */
+  pid: number;
+  /** When the quest started, as a Unix timestamp in seconds. */
+  startedAt: number;
+  /** Whether the process is still running. */
+  running: boolean;
+  /** The registered path the stub is mirroring. */
+  registeredPath: string;
+}
+
+/**
+ * What the interface asks for.
+ *
+ * The interface names the application and the registered path. It never supplies a
+ * local path: the backend resolves the executable from the catalogue it holds, so a
+ * stub can only ever be written where Discord's own data says it goes.
+ */
+export interface QuestRequest {
+  appId: string;
+  registeredPath: string;
+}

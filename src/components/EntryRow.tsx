@@ -1,5 +1,5 @@
 import { platformLabel } from '../lib/format';
-import type { CatalogEntry } from '../types/catalogue';
+import type { CatalogEntry, QuestView } from '../types/catalogue';
 
 import { CoverImage } from './CoverImage';
 import { DetectedMark, SelectionCaret, UndetectedMark } from './Marks';
@@ -7,6 +7,7 @@ import { DetectedMark, SelectionCaret, UndetectedMark } from './Marks';
 interface EntryRowProps {
   entry: CatalogEntry;
   selected: boolean;
+  quest?: QuestView;
   onSelect: (entry: CatalogEntry) => void;
 }
 
@@ -14,10 +15,10 @@ interface EntryRowProps {
  * One line of the index.
  *
  * The line reads left to right: the selection pointer, the detection mark, the
- * cover, the title, the registered path, the platform. The path is in the line
- * because the path is the mechanism.
+ * cover, the title, the registered path, the platform, and whether a quest is
+ * running. The path is in the line because the path is the mechanism.
  */
-export function EntryRow({ entry, selected, onSelect }: EntryRowProps) {
+export function EntryRow({ entry, selected, quest, onSelect }: EntryRowProps) {
   const detected = entry.executables.length > 0;
   const primary = entry.executables[0];
 
@@ -27,7 +28,7 @@ export function EntryRow({ entry, selected, onSelect }: EntryRowProps) {
         type="button"
         onClick={() => onSelect(entry)}
         aria-current={selected ? 'true' : undefined}
-        className={`grid w-full grid-cols-[14px_10px_36px_minmax(6rem,1.1fr)_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-rule-soft px-5 py-2 text-left transition-colors duration-150 ${
+        className={`grid w-full grid-cols-[14px_10px_36px_minmax(6rem,1.1fr)_minmax(0,1fr)_auto_58px] items-center gap-x-3 border-b border-rule-soft px-5 py-2 text-left transition-colors duration-150 ${
           selected ? 'bg-surface-2' : 'hover:bg-surface'
         }`}
       >
@@ -55,6 +56,14 @@ export function EntryRow({ entry, selected, onSelect }: EntryRowProps) {
 
         <span className="ml-1 text-[10px] font-medium uppercase tracking-[0.09em] text-ink-3">
           {primary ? platformLabel(primary.os) : 'none'}
+        </span>
+
+        <span className="text-right text-[10px] font-medium uppercase tracking-[0.09em]">
+          {quest?.running ? (
+            <span className="text-spot" title={`PID ${quest.pid}`}>
+              Running
+            </span>
+          ) : null}
         </span>
       </button>
     </li>

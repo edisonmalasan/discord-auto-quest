@@ -270,9 +270,22 @@ The signature component, and the reason the system exists.
 ### The fact panel
 
 The selected entry printed as a fact pass: a 112px cover, the name, and a table of rows, each
-one a label on the left and a value on the right, divided by soft rules. The registered path is
-broken into its segments, one per line, the directories in the tertiary colour and the file in
-the primary. The panel ends with the state of the entry and what may be done with it.
+one a label on the left and a value on the right, divided by soft rules. Below the facts, the
+entry's **registered executables** are listed, each with the platform it belongs to, its path in
+mono, and the control that starts or stops that executable's quest.
+
+### The quest row
+
+The control that runs a quest, and the state it reports.
+
+- **Idle:** a 1px-ruled button reading "Start quest", in the spot colour.
+- **Running:** the button is replaced by the stub's process id and an elapsed clock, both in
+  tabular figures, with a "Stop" button beside them. The path the stub was written to sits
+  beneath in mono.
+- **Failed:** the backend's own error code, in mono, above the message. The error appears next
+  to the game it happened to, not in a corner of the window.
+- **Unavailable:** an entry with no registered executable is given no control at all. The panel
+  says why in the place the executables would have been.
 
 ### The composition readout
 

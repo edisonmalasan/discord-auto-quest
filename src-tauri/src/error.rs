@@ -14,6 +14,18 @@ pub enum ErrorCode {
     CacheUnavailable,
     /// A filesystem operation failed.
     IoError,
+    /// A registered path contains a character or a name the filesystem will not accept.
+    InvalidPath,
+    /// The entry has no registered executable, so there is nothing to mirror.
+    NotQuestable,
+    /// The application is not allowed to write or read the path.
+    Permission,
+    /// The runner could not be started.
+    SpawnFailed,
+    /// There is no quest with that identity, or no runner for this platform.
+    NotInstalled,
+    /// The operation is not available on this platform yet.
+    NotSupported,
 }
 
 /// The error shape every Tauri command returns on failure.
@@ -49,6 +61,30 @@ impl AppError {
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(ErrorCode::IoError, message, true)
     }
+
+    pub fn invalid_path(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::InvalidPath, message, false)
+    }
+
+    pub fn not_questable(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::NotQuestable, message, false)
+    }
+
+    pub fn permission(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::Permission, message, false)
+    }
+
+    pub fn spawn_failed(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::SpawnFailed, message, true)
+    }
+
+    pub fn not_installed(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::NotInstalled, message, false)
+    }
+
+    pub fn not_supported(message: impl Into<String>) -> Self {
+        Self::new(ErrorCode::NotSupported, message, false)
+    }
 }
 
 impl std::fmt::Display for AppError {
@@ -61,7 +97,12 @@ impl std::error::Error for AppError {}
 
 impl From<std::io::Error> for AppError {
     fn from(error: std::io::Error) -> Self {
-        AppError::io(error.to_string())
+        match error.kind() {
+            std::io::ErrorKind::PermissionDenied => {
+                AppError::permission(format!("permission denied: {error}"))
+            }
+            _ => AppError::io(error.to_string()),
+        }
     }
 }
 
@@ -93,8 +134,16 @@ mod tests {
 
     #[test]
     fn io_errors_map_to_the_io_code() {
-        let error: AppError = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied").into();
+        let error: AppError = std::io::Error::new(std::io::ErrorKind::NotFound, "missing").into();
         assert_eq!(error.code, ErrorCode::IoError);
         assert!(error.retryable);
+    }
+
+    #[test]
+    fn a_permission_error_is_reported_as_a_permission() {
+        let error: AppError =
+            std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied").into();
+        assert_eq!(error.code, ErrorCode::Permission);
+        assert!(!error.retryable, "retrying will not grant permission");
     }
 }

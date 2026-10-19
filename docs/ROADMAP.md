@@ -73,18 +73,31 @@ Group 2, and the index's primary action is disabled until then.
 *Outcome: A user can pick a game, start a quest, and stop it, on Windows, with correct process
 lifecycle and honest state.*
 
-- [ ] Starting a quest materialises a stub at
+- [x] Starting a quest materialises a stub at
       `<user data>/games/<app id>/<registered path segments>/<exe>` and returns a child PID.
-- [ ] The stub is launched with the game name, and the UI shows the PID and an elapsed timer.
-- [ ] Stopping a quest terminates that specific child process.
-- [ ] A real game process with the same image name is not affected by stopping a quest.
-- [ ] The runner is silent by default — no window, no tray icon, no console.
-- [ ] The runner is under 300 KB, and its PE import table contains no `user32.dll`, `gdi32.dll`, or
+- [x] The stub is launched with the game name, and the UI shows the PID and an elapsed timer.
+- [x] Stopping a quest terminates that specific child process.
+- [x] A real game process with the same image name is not affected by stopping a quest.
+- [x] The runner is silent by default — no window, no tray icon, no console.
+- [x] The runner is under 300 KB, and its PE import table contains no `user32.dll`, `gdi32.dll`, or
       `shell32.dll` import.
-- [ ] An executable name containing an illegal filesystem character is rejected by the backend with
+- [x] An executable name containing an illegal filesystem character is rejected by the backend with
       a readable message, and no file is written.
 
-**Status:** Not started
+**Status:** Complete. The runner is a `no_std`, `no_main` Windows binary of **3,072 bytes** that
+imports `KERNEL32.dll` and nothing else — no GUI library, so it cannot open a window. `npm run
+check:runner` enforces both constraints against the built binary.
+
+**The path comes from the catalogue.** The interface names an application and a registered path;
+the backend resolves the executable from the catalogue it holds and refuses anything the
+catalogue does not contain. A stub can therefore only ever be written where Discord's own data
+points.
+
+**Stopping is exact.** A quest is stopped through the process handle the application holds, so
+one process is signalled. A test starts a second process with the same image name and shows that
+stopping the quest leaves it running.
+
+**Not in this group:** reconciling quests across restarts, which is Group 4.
 
 ---
 

@@ -86,6 +86,19 @@ export function pathBasename(path: string): string {
   return segments.length > 0 ? segments[segments.length - 1] : path;
 }
 
+/** How long a quest has been running, in the words a person would use. */
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m ${seconds % 60}s`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
 /** A sentence explaining why an entry cannot be quested. */
 export function notQuestableReason(executableCount: number): string {
   if (executableCount === 0) {

@@ -11,8 +11,12 @@ vi.mock('./lib/ipc', () => ({
   refreshCatalogue: () => refreshCatalogue(),
   onCatalogueUpdated: () => Promise.resolve(() => {}),
   onCatalogueRefreshFailed: () => Promise.resolve(() => {}),
-  dataDirectory: () => Promise.resolve('C:\\Users\\ed\\AppData\\Local\\discord-auto-quest'),
+  stubRoot: () => Promise.resolve('C:\\Users\\ed\\AppData\\Local\\discord-auto-quest\\games'),
   currentPlatform: () => Promise.resolve('win32'),
+  listQuests: () => Promise.resolve([]),
+  onQuestsChanged: () => Promise.resolve(() => {}),
+  startQuest: () => Promise.reject(new Error('not used in this test')),
+  stopQuest: () => Promise.reject(new Error('not used in this test')),
   isAppError: (value: unknown) => typeof value === 'object' && value !== null && 'code' in value,
   toAppError: (value: unknown) =>
     typeof value === 'object' && value !== null && 'code' in value

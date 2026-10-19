@@ -1,10 +1,13 @@
 pub mod catalogue;
 pub mod error;
 pub mod paths;
+pub mod quest;
+pub mod runner;
 
 use catalogue::model::CatalogueSnapshot;
 use catalogue::service::CatalogueService;
 use error::{AppError, AppResult};
+use quest::{QuestRequest, QuestService, QuestView};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Emitted after a background refresh has replaced the catalogue.
@@ -13,8 +16,12 @@ pub const CATALOGUE_UPDATED_EVENT: &str = "catalogue-updated";
 /// Emitted when a background refresh failed. The cached copy stays on screen.
 pub const CATALOGUE_REFRESH_FAILED_EVENT: &str = "catalogue-refresh-failed";
 
+/// Emitted when a quest starts or stops.
+pub const QUESTS_CHANGED_EVENT: &str = "quests-changed";
+
 pub struct AppState {
     pub catalogue: CatalogueService,
+    pub quests: QuestService,
 }
 
 /// Serve the catalogue.
@@ -49,10 +56,10 @@ async fn refresh_catalogue(state: State<'_, AppState>) -> AppResult<CatalogueSna
     state.catalogue.refresh().await
 }
 
-/// Where the app keeps its per-user data. The frontend is told so it can show it.
+/// Where the stubs are written. The frontend is told so it can show it.
 #[tauri::command]
-fn data_directory(state: State<'_, AppState>) -> String {
-    state.catalogue.dir().display().to_string()
+fn stub_root(state: State<'_, AppState>) -> String {
+    state.quests.games_root().display().to_string()
 }
 
 /// The platform this build runs on, in the catalogue's own vocabulary.
@@ -72,6 +79,36 @@ fn current_platform() -> &'static str {
     }
 }
 
+/// Start a quest: write the stub where Discord expects it and run it.
+#[tauri::command]
+async fn start_quest(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    request: QuestRequest,
+) -> AppResult<QuestView> {
+    let view = state.quests.start(&request)?;
+    let _ = app.emit(QUESTS_CHANGED_EVENT, &view);
+    Ok(view)
+}
+
+/// Stop a quest. Only that process is terminated.
+#[tauri::command]
+async fn stop_quest(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+) -> AppResult<QuestView> {
+    let view = state.quests.stop(&id)?;
+    let _ = app.emit(QUESTS_CHANGED_EVENT, &view);
+    Ok(view)
+}
+
+/// The quests that are running.
+#[tauri::command]
+fn list_quests(state: State<'_, AppState>) -> Vec<QuestView> {
+    state.quests.list()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -81,15 +118,20 @@ pub fn run() {
             })?;
             std::fs::create_dir_all(&dir)?;
 
-            let service = CatalogueService::new(dir, catalogue::service::DEFAULT_TTL)?;
-            app.manage(AppState { catalogue: service });
+            let catalogue = CatalogueService::new(dir.clone(), catalogue::service::DEFAULT_TTL)?;
+            let quests = QuestService::new(catalogue.clone(), dir);
+
+            app.manage(AppState { catalogue, quests });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             load_catalogue,
             refresh_catalogue,
-            data_directory,
-            current_platform
+            stub_root,
+            current_platform,
+            start_quest,
+            stop_quest,
+            list_quests
         ])
         .run(tauri::generate_context!())
         .expect("error while running the discord-auto-quest application");
