@@ -161,7 +161,9 @@ whether a game can be quested.*
 complete.*
 
 - [ ] Discord RPC Rich Presence — excluded. It does not complete quests, it requires application
-      IDs this project does not own, and it risks the user's account.
+      IDs this project does not own, and it risks the user's account. Confirmed at the **binary**
+      level: the `discord-sdk` crate is linked into the shipped upstream app, so this is a real,
+      reachable upstream feature rather than a source-tree artefact.
 - [ ] A "run for N seconds" timed quest mode — the minimum duration Discord requires is
       unverified; see Q3 in `re/docs/09-coverage-and-open-questions.md`.
 - [ ] Store and platform filters beyond the catalogue's own fields — depends on the catalogue

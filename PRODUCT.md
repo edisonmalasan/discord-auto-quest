@@ -48,9 +48,9 @@ progress is Discord's business, not the app's to assert.
 
 ### 2. Questability is a first-class property
 
-Roughly half of the catalogue has no registered executable and can never be quested by this
-mechanism. The UI must make that visible — marked, explained, and non-actionable — rather than
-letting the user select an entry and hit a dead end.
+Most of the catalogue has no registered executable and can never be quested by this
+mechanism — 51.5% in upstream's snapshot, 57.7% live. The UI must make that visible — marked,
+explained, and non-actionable — rather than letting the user select an entry and hit a dead end.
 
 ### 3. Real cover art, always
 

@@ -54,6 +54,15 @@ the built frontend bundle, and the public source tree.
 It documents the mechanism, the catalog schema and its statistics, the backend IPC surface, the UI
 states, the per-platform runner behaviour, the build pipeline, and the open questions.
 
+Two findings are worth flagging up front, because both correct an assumption:
+
+- **The Discord RPC client is compiled into the shipped app.** A native string scan of the shipped
+  executable recovers the `discord-sdk` crate and the full Discord IPC opcode set. Upstream's RPC
+  path is real and reachable — which is exactly why this project excludes it.
+- **The catalogue is bigger than upstream's snapshot, and less questable.** The live endpoint
+  returned 24,725 entries against the snapshot's 21,692, while the *questable* population shrank
+  by 50. Catalogue counts are therefore never hard-coded in this project.
+
 Start at [`re/README.md`](re/README.md).
 
 **Note:** `re/` is excluded from version control, so it will not appear in a fresh clone. It holds
