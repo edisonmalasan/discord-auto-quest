@@ -168,6 +168,29 @@ impl CatalogueService {
         self.memory.read().ok().and_then(|guard| guard.clone())
     }
 
+    /// The catalogue entry for an application, if the catalogue holds one.
+    ///
+    /// The lookup borrows the catalogue rather than copying it: a 25,000-entry
+    /// snapshot is not something to clone to answer one question.
+    pub fn entry(&self, app_id: &str) -> Option<crate::catalogue::model::CatalogEntry> {
+        let guard = self.memory.read().ok()?;
+        let snapshot = guard.as_ref()?;
+        snapshot
+            .entries
+            .iter()
+            .find(|entry| entry.id == app_id)
+            .cloned()
+    }
+
+    /// Whether a catalogue is loaded at all.
+    pub fn is_loaded(&self) -> bool {
+        self.memory
+            .read()
+            .ok()
+            .map(|guard| guard.is_some())
+            .unwrap_or(false)
+    }
+
     fn store(&self, snapshot: CatalogueSnapshot) {
         if let Ok(mut guard) = self.memory.write() {
             *guard = Some(snapshot);

@@ -9,7 +9,8 @@ import { IndexHead } from './components/IndexHead';
 import { SearchIcon } from './components/Icons';
 import { StatusHeader } from './components/StatusHeader';
 import { useCatalogue } from './hooks/useCatalogue';
-import { currentPlatform, dataDirectory } from './lib/ipc';
+import { useQuests } from './hooks/useQuests';
+import { currentPlatform } from './lib/ipc';
 import { createSearchIndex, searchCatalogue } from './lib/search';
 import type { CatalogEntry } from './types/catalogue';
 
@@ -21,13 +22,13 @@ const SEARCH_LIMIT = 500;
 
 export default function App() {
   const { status, snapshot, error, refreshing, refreshError, refresh, retry } = useCatalogue();
+  const quests = useQuests();
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [scope, setScope] = useState<Scope>('all');
   const [platform, setPlatform] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dataDir, setDataDir] = useState<string | null>(null);
   const [thisPlatform, setThisPlatform] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,14 +40,14 @@ export default function App() {
     let cancelled = false;
     const read = async () => {
       try {
-        const [dir, os] = await Promise.all([dataDirectory(), currentPlatform()]);
+        const os = await currentPlatform();
         if (cancelled) {
           return;
         }
-        setDataDir(dir);
         setThisPlatform(os);
       } catch {
-        // The panel can be shown without them; the path preview is simply omitted.
+        // The panel can be shown without it; the platform is only used to label a
+        // fallback.
       }
     };
     void read();
@@ -168,6 +169,7 @@ export default function App() {
                 <EntryList
                   entries={visible}
                   selectedId={selectedId}
+                  quests={quests.quests}
                   onSelect={handleSelect}
                   emptyReason={
                     matches !== null && matches.length === 0
@@ -183,7 +185,7 @@ export default function App() {
 
           <EntryPanel
             entry={selected}
-            dataDirectory={dataDir}
+            quests={quests}
             currentPlatform={thisPlatform}
           />
         </div>

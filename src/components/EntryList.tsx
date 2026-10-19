@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { CatalogEntry } from '../types/catalogue';
+import type { CatalogEntry, QuestView } from '../types/catalogue';
 
 import { EntryRow } from './EntryRow';
 
@@ -10,6 +10,7 @@ const PAGE = 120;
 interface EntryListProps {
   entries: CatalogEntry[];
   selectedId: string | null;
+  quests: QuestView[];
   onSelect: (entry: CatalogEntry) => void;
   /** Why the list is empty, when it is. */
   emptyReason: string | null;
@@ -22,7 +23,13 @@ interface EntryListProps {
  * visitor reaches the end, so the list stays responsive without capping what they
  * can reach.
  */
-export function EntryList({ entries, selectedId, onSelect, emptyReason }: EntryListProps) {
+export function EntryList({
+  entries,
+  selectedId,
+  quests,
+  onSelect,
+  emptyReason,
+}: EntryListProps) {
   const [visible, setVisible] = useState(PAGE);
   const sentinel = useRef<HTMLDivElement | null>(null);
 
@@ -67,6 +74,7 @@ export function EntryList({ entries, selectedId, onSelect, emptyReason }: EntryL
             key={entry.id}
             entry={entry}
             selected={entry.id === selectedId}
+            quest={questFor(quests, entry)}
             onSelect={onSelect}
           />
         ))}
@@ -79,6 +87,16 @@ export function EntryList({ entries, selectedId, onSelect, emptyReason }: EntryL
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** The quest running for an entry, if there is one. */
+function questFor(quests: QuestView[], entry: CatalogEntry): QuestView | undefined {
+  return quests.find(
+    (quest) =>
+      quest.running &&
+      quest.appId === entry.id &&
+      entry.executables.some((executable) => executable.path === quest.registeredPath),
   );
 }
 

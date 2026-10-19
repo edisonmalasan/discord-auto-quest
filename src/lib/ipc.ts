@@ -1,7 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
-import type { AppErrorShape, CatalogueSnapshot } from '../types/catalogue';
+import type {
+  AppErrorShape,
+  CatalogueSnapshot,
+  QuestRequest,
+  QuestView,
+} from '../types/catalogue';
 
 /** The backend serves the catalogue; it is never bundled with the frontend. */
 export async function loadCatalogue(): Promise<CatalogueSnapshot> {
@@ -13,9 +18,9 @@ export async function refreshCatalogue(): Promise<CatalogueSnapshot> {
   return invoke<CatalogueSnapshot>('refresh_catalogue');
 }
 
-/** Where the app keeps its per-user data. */
-export async function dataDirectory(): Promise<string> {
-  return invoke<string>('data_directory');
+/** Where the stubs are written. */
+export async function stubRoot(): Promise<string> {
+  return invoke<string>('stub_root');
 }
 
 /** The platform this build runs on, in the catalogue's own vocabulary. */
@@ -31,6 +36,26 @@ export function onCatalogueUpdated(handler: (snapshot: CatalogueSnapshot) => voi
 /** A background refresh failed. The cached copy stays on screen. */
 export function onCatalogueRefreshFailed(handler: (error: AppErrorShape) => void): Promise<UnlistenFn> {
   return listen<AppErrorShape>('catalogue-refresh-failed', (event) => handler(event.payload));
+}
+
+/** Start a quest: the backend writes the stub and runs it. */
+export async function startQuest(request: QuestRequest): Promise<QuestView> {
+  return invoke<QuestView>('start_quest', { request });
+}
+
+/** Stop a quest. Only that process is terminated. */
+export async function stopQuest(id: string): Promise<QuestView> {
+  return invoke<QuestView>('stop_quest', { id });
+}
+
+/** The quests that are running. */
+export async function listQuests(): Promise<QuestView[]> {
+  return invoke<QuestView[]>('list_quests');
+}
+
+/** A quest started or stopped. */
+export function onQuestsChanged(handler: (view: QuestView) => void): Promise<UnlistenFn> {
+  return listen<QuestView>('quests-changed', (event) => handler(event.payload));
 }
 
 /**
