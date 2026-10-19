@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+
+/* Self-hosted typefaces. Latin subset only. */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/archivo-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Azeret Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/azeret-mono-latin.woff2') format('woff2');
+}
+
+@theme {
+  /* The working index: ink on a cold ground, one spot colour, flat fields. */
+  --color-ground: #0f1214;
+  --color-surface: #151a1d;
+  --color-surface-2: #1c2327;
+  --color-rule: #232c31;
+  --color-rule-soft: #1a2125;
+
+  --color-ink: #e7eae8;
+  --color-ink-2: #9ba5a6;
+  --color-ink-3: #667173;
+
+  --color-spot: #4fc3b0;
+  --color-warn: #d9a441;
+  --color-danger: #d9534f;
+
+  --font-sans: 'Archivo', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Azeret Mono', 'Cascadia Mono', 'Consolas', monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* The selection is part of the palette, not the browser's default. */
+  ::selection {
+    background: color-mix(in srgb, var(--color-spot) 32%, transparent);
+    color: var(--color-ink);
+  }
+
+  /* Focus rings carry the spot colour, in one weight, everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-spot);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
+
+  /* Scrollbars are themed from the palette rather than left to the platform. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--color-rule);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-surface-2);
+    background-clip: content-box;
+  }
+
+  /* Every figure in this app is a measurement, so it lines up. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* The one authored moment: the catalogue's composition settles when it arrives. */
+  @keyframes da-wipe {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .da-wipe {
+    transform-origin: left center;
+    animation: da-wipe 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes da-stamp {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .da-stamp {
+    animation: da-stamp 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .da-wipe,
+  .da-stamp {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

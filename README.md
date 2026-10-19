@@ -43,6 +43,9 @@ STOP         terminate that exact PID — never by image name
 | `docs/CONTEXT.md` | Router for project context and constraints. |
 | `docs/ROADMAP.md` | Grouped, outcome-based build guide and progress tracker. |
 | `AGENTS.md` | Working method, Git workflow, and architecture non-negotiables. |
+| `src/` | The React frontend: the catalogue index, its filters, and the entry panel. |
+| `src-tauri/` | The Rust backend: the catalogue service, its cache, and the Tauri shell. |
+| `.impeccable/` | The design direction for the catalogue surface and the brief it is held to. |
 | `re/` | The reverse-engineering study of the upstream app. **Git-ignored** — it is reference material, not product code. |
 
 ## The reverse-engineering study
@@ -77,9 +80,19 @@ investigation evidence that is intentionally kept out of the product's history.
 
 ## Building
 
-The build is not yet established — there is no `package.json`, `Cargo.toml`, or runner crate in
-this repository yet. The commands will be recorded here as each milestone lands, verified against
-the real manifests rather than assumed.
+The app is a Tauri v2 desktop application: a Rust backend under a React frontend.
+
+```bash
+npm install              # install dependencies
+npm run tauri dev        # run the app against the Vite dev server
+npm run build            # type-check and build the frontend
+npm run tauri build      # build the desktop application
+npm test                 # the frontend test suite
+cargo test --manifest-path src-tauri/Cargo.toml   # the backend test suite
+```
+
+The catalogue is fetched from Discord at runtime and cached under your user data
+directory. Nothing about the catalogue is compiled into the application.
 
 ## Licence and attribution
 

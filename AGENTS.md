@@ -36,39 +36,35 @@
 
 ## Tech Stack
 
-_No application manifests exist in this repository yet, so every layer below is **Not yet
-established**. Remove a row only when a real manifest supersedes it._
+_Verified against the manifests in this repository. Remove a row only when a real manifest
+supersedes it._
 
-| Layer              | Technology / version      | Evidence        |
-| ------------------ | ------------------------- | --------------- |
-| Frontend / UI      | Not yet established       | —               |
-| Backend / runtime  | Not yet established       | —               |
-| Database / storage | Not yet established       | —               |
-| Build / tooling    | Not yet established       | —               |
-| Tests              | Not yet established       | —               |
+| Layer              | Technology / version         | Evidence                             |
+| ------------------ | ---------------------------- | ------------------------------------ |
+| Frontend / UI      | React 19, TypeScript 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
+| Backend / runtime  | Rust 1.82+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
+| Database / storage | Per-user JSON catalogue cache | `src-tauri/src/catalogue/cache.rs`    |
+| Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
+| Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/src/` |
 
-**Target shape (from the study, not yet implemented):** a Tauri v2 desktop app with a TypeScript
-webview frontend and a Rust backend, plus small per-platform runner executables. Confirm against
-the actual manifests before relying on this.
+**Target shape:** a Tauri v2 desktop app with a TypeScript webview frontend and a Rust
+backend, plus small per-platform runner executables. The frontend and the backend are
+established; the per-platform runner executables are not, and land with Group 2.
 
 ## Build, Test, and Development Commands
 
-_Use commands that really exist in this repository. Never invent a script._
-
-**No application exists yet, so there are no build, test, or dev commands to run.** The table below is
-intentionally empty of commands; it is filled in as each roadmap group lands and the manifests
-exist. Do not copy a command from upstream's project or from `re/docs/` — those describe the
-*studied* project, not this one.
+_These commands exist in this repository. Run them from the repository root._
 
 | Purpose              | Command | Evidence / notes |
 | -------------------- | ------- | ---------------- |
-| Install dependencies | — | No `package.json` / `Cargo.toml` in this repository yet. |
-| Run locally          | — | No application entry point yet. |
-| Build                | — | No build manifest yet. |
-| Test                 | — | No test suite yet. |
-| Lint / type-check    | — | No linter or type-checker configured yet. |
-
-Run from the repository root unless a command explicitly requires another directory.
+| Install dependencies | `npm install` | Reads `package.json`. |
+| Run locally          | `npm run tauri dev` | Starts Vite on port 1420 and the app against it. |
+| Run the frontend only | `npm run dev` | The frontend in a browser, with no backend. |
+| Build frontend       | `npm run build` | Type-checks, then writes `dist/`. |
+| Build the app        | `npm run tauri build` | Production desktop bundle. |
+| Test                 | `npm test` | Vitest, the frontend suite. |
+| Test                 | `cargo test --manifest-path src-tauri/Cargo.toml` | The Rust suite. |
+| Lint / type-check    | `npm run typecheck` | `tsc --noEmit`. |
 
 **Documentation checks available today.** There is no Markdown linter configured in this
 repository, so link and fence integrity is verified by reading the diff:
