@@ -72,7 +72,8 @@ lifecycle and honest state.*
 - [ ] Stopping a quest terminates that specific child process.
 - [ ] A real game process with the same image name is not affected by stopping a quest.
 - [ ] The runner is silent by default — no window, no tray icon, no console.
-- [ ] The runner is under 300 KB and does not statically link `user32`, `gdi32`, or `shell32`.
+- [ ] The runner is under 300 KB, and its PE import table contains no `user32.dll`, `gdi32.dll`, or
+      `shell32.dll` import.
 - [ ] An executable name containing an illegal filesystem character is rejected by the backend with
       a readable message, and no file is written.
 

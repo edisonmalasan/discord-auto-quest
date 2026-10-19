@@ -104,7 +104,7 @@ These are constraints the implementation must respect. They are not preferences.
 | The file extension is stripped from the on-disk name | Discord's match is sensitive to this asymmetry. |
 | The macOS stub must be a real `.app` bundle with a valid `Info.plist`, launched via `open -n -g -a` | macOS treats a bare executable differently from an application. |
 | The macOS stub must present a visible window | Discord on macOS detects applications with a visible window. |
-| The Windows runner should not statically link `user32`, `gdi32`, or `shell32` | Keeps the import table minimal and the runner small. Target ≤ 300 KB. |
+| The Windows runner's PE import table must contain no `user32`, `gdi32`, or `shell32` import | It has no window, tray icon, or console, so the Win32 GUI stack is dead weight; skipping it keeps the runner dependency-free on minimal Windows installs. Target ≤ 300 KB. This deliberately diverges from upstream, whose runner links all three because it draws a window and a tray icon. |
 | The Linux runner must not require GTK to be installed | GTK cannot be assumed on a user's machine. |
 | The catalogue endpoint is unauthenticated and undocumented | The fetch and cache layer must be defensive and must degrade to the cache. |
 | The catalogue source of truth is Discord's endpoint | Any mirror is operator-controlled and can drift. Discord is primary; a mirror is at most a fallback. |
