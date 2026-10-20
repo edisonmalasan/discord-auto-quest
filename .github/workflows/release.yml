@@ -193,7 +193,10 @@ jobs:
       - name: the macos questing tests
         # The macOS runner opens a window, so these tests need a session with a
         # window server. The runner that hosts this job has one.
-        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_macos
+        #
+        # The output is not captured, because what the tests have to say about
+        # the window server is part of the evidence.
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_macos -- --nocapture
       - uses: actions/upload-artifact@v4
         with:
           name: macos-archive

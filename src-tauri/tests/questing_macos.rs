@@ -177,10 +177,13 @@ async fn a_quest_writes_a_real_application_bundle_and_runs_it() {
     // let the question be asked cannot answer it, and the test says so rather
     // than claiming a window it did not see.
     match window_count(view.pid) {
-        Some(count) => assert!(
-            count > 0,
-            "the runner has a window, because that is what makes it an application"
-        ),
+        Some(count) => {
+            println!("the runner has {count} window(s) on the window server");
+            assert!(
+                count > 0,
+                "the runner has a window, because that is what makes it an application"
+            );
+        }
         None => {
             println!(
                 "the window server would not say how many windows the runner has; \
