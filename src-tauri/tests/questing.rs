@@ -596,7 +596,8 @@ async fn a_quest_whose_stub_was_deleted_from_disk_is_idle() {
     // the loader holds it open — so the state is set up the way it occurs in
     // practice: the record is written for a process that is running, and the file
     // it names is not there.
-    let (pid, mut runner_process) = decoy(&dir.path().join("decoy"), "discord-auto-quest-runner.exe");
+    let (pid, mut runner_process) =
+        decoy(&dir.path().join("decoy"), "discord-auto-quest-runner.exe");
 
     let record = QuestRecord {
         id: format!("{APP_ID}:_retail_/overwatch.exe"),

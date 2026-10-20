@@ -310,8 +310,8 @@ async fn stopping_a_quest_leaves_a_process_with_the_same_name_alone() {
     std::fs::create_dir_all(&decoy_dir).expect("the decoy directory is created");
     let decoy_path = decoy_dir.join(runner::FILE_NAME);
     runner::materialise(&decoy_path).expect("the decoy is written");
-    let launched = launch::launch_executable(&decoy_path, "Counter-Strike")
-        .expect("the decoy starts");
+    let launched =
+        launch::launch_executable(&decoy_path, "Counter-Strike").expect("the decoy starts");
     let decoy_pid = launched.pid;
     let mut decoy = launched.child.expect("the decoy is this process's child");
     assert!(is_alive(decoy_pid));
