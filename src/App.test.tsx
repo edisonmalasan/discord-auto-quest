@@ -15,7 +15,7 @@ vi.mock('./lib/ipc', () => ({
   currentPlatform: () => Promise.resolve('win32'),
   needsVisibleWindow: () => Promise.resolve(false),
   appVersion: () => Promise.resolve('0.1.0'),
-  listQuests: () => Promise.resolve({ quests: [], error: null }),
+  listQuests: () => Promise.resolve({ quests: [], ended: [], error: null }),
   stubStates: () => Promise.resolve([]),
   listQuestsLegacy: () => Promise.resolve([]),
   onQuestsChanged: () => Promise.resolve(() => {}),

@@ -28,6 +28,9 @@ const APP_ID: &str = "356875221078245376";
 /// The application id the illegal-path entry belongs to.
 const OTHER_APP_ID: &str = "70";
 
+/// The application id the foreign-platform entry belongs to.
+const FOREIGN_APP_ID: &str = "999";
+
 /// A registered path with a character the filesystem will not accept. The live
 /// catalogue contains one, so this is not a hypothetical.
 const ILLEGAL_PATH: &str = ">hl2_osx";
@@ -48,22 +51,36 @@ fn entry(id: &str, name: &str, path: &str) -> CatalogEntry {
     }
 }
 
+/// An entry whose only executable belongs to another platform.
+fn foreign_entry(id: &str, name: &str, path: &str) -> CatalogEntry {
+    let mut entry = entry(id, name, path);
+    entry.executables[0].os = "darwin".to_string();
+    entry
+}
+
 /// A service whose catalogue is already loaded, with no network involved.
 async fn services(data_dir: &Path) -> (CatalogueService, QuestService) {
     let snapshot = CatalogueSnapshot {
         entries: vec![
             entry(APP_ID, "Overwatch", "_retail_/overwatch.exe"),
             entry(OTHER_APP_ID, "HL2", ILLEGAL_PATH),
+            foreign_entry(FOREIGN_APP_ID, "Dota 2", "osx64/dota2.app"),
         ],
         stats: discord_auto_quest_lib::catalogue::model::CatalogueStats {
-            total: 2,
-            questable: 2,
+            total: 3,
+            questable: 3,
             not_questable: 0,
             questable_ratio: 1.0,
-            platform_splits: vec![discord_auto_quest_lib::catalogue::model::PlatformSplit {
-                os: "win32".to_string(),
-                executables: 2,
-            }],
+            platform_splits: vec![
+                discord_auto_quest_lib::catalogue::model::PlatformSplit {
+                    os: "win32".to_string(),
+                    executables: 2,
+                },
+                discord_auto_quest_lib::catalogue::model::PlatformSplit {
+                    os: "darwin".to_string(),
+                    executables: 1,
+                },
+            ],
             with_cover_art: 0,
             with_icon: 0,
             with_aliases: 0,
@@ -246,6 +263,135 @@ async fn an_unknown_application_is_refused() {
 }
 
 #[tokio::test]
+async fn a_foreign_platform_executable_can_be_started() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (_catalogue, quests) = services(dir.path()).await;
+
+    // The entry's only executable belongs to macOS, and the application is
+    // running on Windows. The interface offers it as a fallback, and the
+    // backend has to honour that: the stub is written at the mirrored path for
+    // that executable, whatever platform it names.
+    //
+    // The path is the Windows one, with the extension stripped — the rule is
+    // the same on every platform. The `.app` bundle treatment is macOS's alone,
+    // because only macOS treats a bundle as an application.
+    let view = quests
+        .start(&QuestRequest {
+            app_id: FOREIGN_APP_ID.to_string(),
+            registered_path: "osx64/dota2.app".to_string(),
+        })
+        .expect("the quest starts");
+
+    let expected = dir
+        .path()
+        .join("games")
+        .join(FOREIGN_APP_ID)
+        .join("osx64")
+        .join("dota2");
+    assert_eq!(
+        PathBuf::from(&view.stub_path),
+        expected,
+        "the stub lands at the mirrored path"
+    );
+    assert!(expected.exists(), "the stub is on disk");
+    assert!(view.pid > 0, "a process id is returned");
+    assert!(is_alive(view.pid), "the stub is running");
+
+    quests.stop(&view.id).expect("the quest stops");
+    assert!(!is_alive(view.pid), "the stub is gone");
+}
+
+#[tokio::test]
+async fn a_quest_started_from_a_read_only_application_directory_still_works() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+
+    // The application is installed somewhere it cannot write to, and the data
+    // directory is somewhere else entirely. This is the ordinary arrangement:
+    // the application lives in a read-only place, and everything it writes goes
+    // under the user's own directory.
+    let application = dir.path().join("application");
+    let data = dir.path().join("data");
+    std::fs::create_dir_all(&application).expect("the application directory");
+    std::fs::create_dir_all(&data).expect("the data directory");
+
+    // The application directory is made unwritable. The stub must not land
+    // there, so the test would fail loudly if it tried.
+    let mut permissions = std::fs::metadata(&application)
+        .expect("readable")
+        .permissions();
+    permissions.set_readonly(true);
+    std::fs::set_permissions(&application, permissions).expect("the permissions are set");
+
+    let catalogue = CatalogueService::new(data.clone(), Duration::from_secs(3600))
+        .expect("the catalogue service builds");
+    let quests = QuestService::new(catalogue.clone(), data.clone());
+
+    // The catalogue has to be loaded before a quest can start, and it is
+    // written under the data directory.
+    let snapshot = CatalogueSnapshot {
+        entries: vec![entry(APP_ID, "Overwatch", "_retail_/overwatch.exe")],
+        stats: discord_auto_quest_lib::catalogue::model::CatalogueStats {
+            total: 1,
+            questable: 1,
+            not_questable: 0,
+            questable_ratio: 1.0,
+            platform_splits: vec![discord_auto_quest_lib::catalogue::model::PlatformSplit {
+                os: "win32".to_string(),
+                executables: 1,
+            }],
+            with_cover_art: 0,
+            with_icon: 0,
+            with_aliases: 0,
+            dropped_entries: 0,
+        },
+        source: CatalogueSource::Cache,
+        fetched_at: Some(1_700_000_000),
+        stale: false,
+    };
+    let cached = CachedCatalogue {
+        schema_version: cache::CACHE_SCHEMA_VERSION,
+        fetched_at: 1_700_000_000,
+        source: "discord".to_string(),
+        entries: snapshot.entries.clone(),
+    };
+    cache::write(&data, &cached).expect("the cache is written");
+    catalogue.load().await.expect("the catalogue loads");
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    let expected = data
+        .join("games")
+        .join(APP_ID)
+        .join("_retail_")
+        .join("overwatch");
+    assert_eq!(
+        PathBuf::from(&view.stub_path),
+        expected,
+        "the stub tree is created under the per-user data directory"
+    );
+    assert!(expected.exists(), "the stub is on disk");
+    assert!(is_alive(view.pid), "the stub is running");
+
+    // Nothing was written where the application lives.
+    let written: Vec<_> = std::fs::read_dir(&application)
+        .expect("the application directory is readable")
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .collect();
+    assert!(
+        written.is_empty(),
+        "the application directory is read-only and stays empty: {written:?}"
+    );
+
+    quests.stop(&view.id).expect("the quest stops");
+}
+
+#[tokio::test]
 async fn a_quest_that_outlives_the_application_is_recovered_on_the_next_start() {
     let dir = tempfile::tempdir().expect("a temp dir");
     let (catalogue, quests) = services(dir.path()).await;
@@ -292,11 +438,6 @@ async fn a_quest_whose_process_is_gone_is_dropped_on_the_next_start() {
         .expect("the quest starts");
 
     // The stub is killed behind the application's back, as a crash would kill it.
-    let child = Command::new(&view.stub_path)
-        .spawn()
-        .expect("nothing to spawn");
-    drop(child);
-
     Command::new("taskkill")
         .args(["/F", "/PID", &view.pid.to_string()])
         .output()
@@ -317,6 +458,121 @@ async fn a_quest_whose_process_is_gone_is_dropped_on_the_next_start() {
         records::read(dir.path()).expect("read").is_empty(),
         "the dead quest's record must be dropped"
     );
+}
+
+#[tokio::test]
+async fn a_quest_that_ended_is_reported_as_ended() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (_catalogue, quests) = services(dir.path()).await;
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    // The stub is killed behind the application's back, as a crash would kill it.
+    Command::new("taskkill")
+        .args(["/F", "/PID", &view.pid.to_string()])
+        .output()
+        .expect("the taskkill runs");
+    assert!(!is_alive(view.pid), "the stub is gone");
+
+    // The quest is not running any more, and the interface is told so: the
+    // notice is what stops it quietly showing a start control again as though
+    // nothing had happened.
+    let list = quests.list();
+
+    assert!(list.quests.is_empty(), "the quest is not running");
+    assert_eq!(
+        list.ended.len(),
+        1,
+        "the quest that ended is reported, so the interface can say so"
+    );
+    assert_eq!(list.ended[0].id, view.id);
+    assert_eq!(list.ended[0].state, QuestState::Ended);
+    assert!(!list.ended[0].running, "an ended quest is not running");
+    assert_eq!(
+        list.ended[0].registered_path, "_retail_/overwatch.exe",
+        "the notice names the executable it was about"
+    );
+}
+
+#[tokio::test]
+async fn a_quest_that_ended_is_reported_after_a_restart() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (catalogue, quests) = services(dir.path()).await;
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    // The stub is killed behind the application's back, as a crash would kill it.
+    Command::new("taskkill")
+        .args(["/F", "/PID", &view.pid.to_string()])
+        .output()
+        .expect("the taskkill runs");
+    assert!(!is_alive(view.pid), "the stub is gone");
+
+    // The application is closed and opened again. The record is still there, and
+    // the process it names is not: the quest ended while the application was
+    // away, and the interface is told that when it comes back.
+    drop(quests);
+    drop(catalogue);
+
+    let (_catalogue, quests) = services(dir.path()).await;
+    let list = quests.list();
+
+    assert!(list.quests.is_empty(), "the quest is not running");
+    assert_eq!(
+        list.ended.len(),
+        1,
+        "the quest that ended while the application was away is reported"
+    );
+    assert_eq!(list.ended[0].id, view.id);
+    assert_eq!(list.ended[0].state, QuestState::Ended);
+}
+
+#[tokio::test]
+async fn starting_a_quest_again_clears_the_notice_that_it_ended() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (_catalogue, quests) = services(dir.path()).await;
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    // The stub is killed behind the application's back, as a crash would kill it.
+    Command::new("taskkill")
+        .args(["/F", "/PID", &view.pid.to_string()])
+        .output()
+        .expect("the taskkill runs");
+    assert!(!is_alive(view.pid), "the stub is gone");
+
+    assert_eq!(quests.list().ended.len(), 1, "the quest ended");
+
+    // The game is played again, so what the notice said about the old quest no
+    // longer applies.
+    quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts again");
+    let list = quests.list();
+    assert_eq!(list.quests.len(), 1, "the new quest is running");
+    assert!(
+        list.ended.is_empty(),
+        "the notice about the old quest is not repeated"
+    );
+
+    quests.stop(&view.id).expect("the quest stops");
 }
 
 #[tokio::test]

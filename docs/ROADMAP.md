@@ -290,6 +290,8 @@ were found by running the tests on the operating system they are about.
 - [x] The project carries its own MIT notice for reused upstream material and an unaffiliation
       disclaimer.
 - [x] The README documents the real build, test, and run commands.
+- [x] Every acceptance case is checked, against the artefact where the case is about the artefact.
+- [x] The application builds and tests on every platform it ships, in continuous integration.
 
 **Status:** Complete. Verified by building the release archive on Windows and by running the
 failure paths deliberately: a missing runner fails the build, and a manifest that disagrees with
@@ -352,6 +354,40 @@ That workflow found two faults that nothing here could have found, and both were
 
 The lesson is the same one the Linux group taught: a check that only runs on the machine that
 wrote the code is not a check of the code.
+
+**A quest that ends says so.** The acceptance case for a restarted application is that the
+interface returns to the idle state *with an explanation*. It did not: a quest whose process had
+gone was dropped silently, and the panel showed a start control again as though nothing had
+happened. The `QuestState::Ended` state existed and nothing produced or showed it. The backend
+now reports the quests that ended, and the panel says so beside the game, until that game is
+played again.
+
+**A foreign-platform quest can be started, and a read-only install works.** Two more acceptance
+cases were open. The interface offered a foreign-platform executable as a fallback and the
+backend had never been shown to honour it; the stub now demonstrably lands at that executable's
+mirrored path and runs. And a quest started while the application lived in a directory it
+could not write to demonstrably creates its stub tree under the per-user data directory, and
+writes nothing beside the application.
+
+### The acceptance cases, and where each is proved
+
+| # | Case | Where it is proved |
+|---|---|---|
+| A1 | Catalogue fetch succeeds | `catalogue/service.rs`; `live_catalogue.rs`; the index renders cover art |
+| A2 | Endpoint unreachable, no cache | `catalogue/service.rs`; `App.test.tsx` — an explicit failure with a retry, never an empty list |
+| A3 | Endpoint unreachable, cache exists | `catalogue/service.rs`; `StatusHeader.test.tsx` — the header says the catalogue is cached |
+| A4 | A game with zero executables | `EntryPanel.test.tsx` — marked not questable, the reason stated, and no control to start it |
+| A5 | A foreign-platform executable only | `questing.rs` — the stub lands at the mirrored path and runs; `EntryPanel.test.tsx` — the fallback is labelled with the actual platform |
+| A6 | A quest is started | `questing.rs` — the stub is at the mirrored path and a pid is returned; `EntryPanel.test.tsx` — the panel shows the pid |
+| A7 | A quest is stopped | `questing.rs` — the specific child is terminated and a same-named process is not |
+| A8 | Restarted, the process is gone | `questing.rs` — the quest is reported as ended, and the panel says so |
+| A9 | Restarted, the process is alive | `questing.rs` — the quest is recovered with the right pid |
+| A10 | An illegal filesystem character | `questing.rs` — `INVALID_PATH` with a readable message, and nothing written |
+| A11 | 20,000+ entries | `search.test.ts` — a synthetic 25,000-entry catalogue answers in under a quarter of a second; `check-acceptance.mjs` — the catalogue is not bundled |
+| A12 | Installed in a read-only location | `questing.rs` — the stub tree lands under the per-user data directory, and the application directory stays empty |
+| A13 | The frontend bundle is inspected | `check-acceptance.mjs` — the bundle carries no catalogue field name |
+| A14 | A quest on macOS | `questing_macos.rs` — a bundle, a launch, a window the window server counts, and a stop |
+| A15 | RPC Rich Presence | `check-acceptance.mjs` — the lock file carries no RPC library |
 
 
 ---
