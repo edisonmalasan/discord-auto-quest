@@ -294,16 +294,24 @@ async fn a_quest_that_outlived_the_application_is_stopped_by_its_process_id() {
     // The process was asked to stop with `SIGTERM`, which is the polite request
     // on a Unix system. The test holds the handle, so it can see what happened.
     let deadline = std::time::Instant::now() + Duration::from_secs(5);
-    let mut status = None;
+    let mut exited = None;
     while std::time::Instant::now() < deadline {
-        if let Some(exited) = child.try_wait().expect("the child can be waited for") {
-            status = Some(exited);
+        if let Some(status) = child.try_wait().expect("the child can be waited for") {
+            exited = Some(status);
             break;
         }
         std::thread::sleep(Duration::from_millis(50));
     }
 
-    let status = status.expect("the quest's process was stopped");
+    // The child is waited for on every path, so it never becomes a zombie. One
+    // that is still alive at this point is killed: the test must not leave a
+    // process behind, and the assertion below is what reports that the stop did
+    // not work.
+    if exited.is_none() {
+        let _ = child.kill();
+    }
+
+    let status = child.wait().expect("the child is waited for");
     assert_eq!(
         status.signal(),
         Some(SIGTERM),
