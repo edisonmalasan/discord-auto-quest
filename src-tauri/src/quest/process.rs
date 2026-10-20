@@ -6,7 +6,9 @@
 //! is the answer.
 //!
 //! The Windows implementation asks the kernel directly, through `kernel32`, so no
-//! extra dependency is needed and no shell is involved.
+//! extra dependency is needed and no shell is involved. The Unix implementation
+//! asks through `kill`, which is the same question asked the same way on every
+//! Unix system.
 
 /// Whether a process with this id is still running.
 pub fn is_alive(pid: u32) -> bool {
@@ -17,11 +19,11 @@ pub fn is_alive(pid: u32) -> bool {
     {
         windows::is_alive(pid)
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     {
-        std::path::Path::new(&format!("/proc/{pid}")).exists()
+        unix::is_alive(pid)
     }
-    #[cfg(not(any(windows, target_os = "linux")))]
+    #[cfg(not(any(windows, unix)))]
     {
         // Nothing to ask. The caller falls back to the stub's presence on disk.
         true
@@ -40,9 +42,12 @@ pub fn terminate(pid: u32) -> bool {
     {
         windows::terminate(pid)
     }
-    #[cfg(not(windows))]
+    #[cfg(unix)]
     {
-        // The runners for other platforms are not built yet.
+        unix::terminate(pid)
+    }
+    #[cfg(not(any(windows, unix)))]
+    {
         let _ = pid;
         false
     }
@@ -64,8 +69,7 @@ mod windows {
     const SYNCHRONIZE: u32 = 0x0010_0000;
     /// The right to terminate a process.
     const PROCESS_TERMINATE: u32 = 0x0001;
-    /// The wait timed out, which means the process is still running. A process
-    /// that has exited is signalled instead.
+    /// The wait timed out, which means the process is still running.
     const WAIT_TIMEOUT: u32 = 0x0000_0102;
 
     /// Whether the process is still running.
@@ -98,6 +102,42 @@ mod windows {
     }
 }
 
+#[cfg(unix)]
+mod unix {
+    extern "C" {
+        fn kill(pid: i32, signal: i32) -> i32;
+    }
+
+    /// `SIGTERM`: the polite request to stop. A runner that has a window may need
+    /// to close it, and a signal it can handle is better than one it cannot.
+    const SIGTERM: i32 = 15;
+    /// Signal zero asks whether a process exists without touching it.
+    const SIGNAL_EXISTS: i32 = 0;
+
+    pub fn is_alive(pid: u32) -> bool {
+        // A process this user does not own reports a permission error rather than
+        // "no such process", so a failure is not proof of absence: the process is
+        // alive whenever the question cannot be answered with "no".
+        unsafe { kill(pid as i32, SIGNAL_EXISTS) == 0 || last_error_is_permission() }
+    }
+
+    pub fn terminate(pid: u32) -> bool {
+        unsafe { kill(pid as i32, SIGTERM) == 0 }
+    }
+
+    /// Whether the last `kill` failed because the process belongs to someone else.
+    ///
+    /// The error number is read from the C library directly, because the Rust
+    /// standard library's copy of it is private.
+    fn last_error_is_permission() -> bool {
+        extern "C" {
+            fn errno() -> i32;
+        }
+        const EPERM: i32 = 1;
+        unsafe { errno() == EPERM }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,7 +151,7 @@ mod tests {
             .expect("a child")
     }
 
-    #[cfg(not(windows))]
+    #[cfg(unix)]
     fn short_lived_child() -> std::process::Child {
         std::process::Command::new("true").spawn().expect("a child")
     }

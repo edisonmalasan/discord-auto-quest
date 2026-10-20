@@ -196,7 +196,33 @@ Verified by 78 backend unit tests, 10 questing integration tests against a real 
 - [ ] Stopping a quest terminates the launched application.
 - [ ] The UI explains that a visible window is required on macOS.
 
-**Status:** Not started
+**Status:** In progress. The mechanism is implemented and the code is checked against the
+`x86_64-apple-darwin` target, but the app has not been run on a Mac, so the behaviour is
+unverified.
+
+**A bundle, not a file.** On macOS, Discord's local integration detects an *application*, not a
+bare executable. A registered path that names a bundle — 61 of the 67 macOS executables in the
+live catalogue do — becomes a real `.app` directory with a `Info.plist` inside it, and the
+bundle's name is the registered name, extension and all, because the name is what the match is
+on. The identifier in the property list is this project's own.
+
+**Launched the way macOS launches applications.** The bundle is opened with
+`open -n -g -a`: a new instance, in the background so it does not steal focus, selected by
+path. The process `open` returns has already exited by then, so the runner's own process id is
+found afterwards, by the exact path of the executable inside the bundle. The same rule the app
+uses on Windows: a process is identified by the path it was started from, never by its name.
+
+**A window, because the window is the mechanism.** The macOS runner opens a small 320×200
+window titled with the game's name. It is not a decoration: an application with no visible
+window is not an application to Discord's macOS integration. The interface says so plainly,
+rather than leaving the user to wonder why a quest did not count.
+
+**What is verified, and what is not.** The bundle layout, the property list, the launch
+command, and the process-identification rule are covered by tests that run here. The macOS
+runner is checked against the `x86_64-apple-darwin` target, and the application builds for
+Windows. **The app has not been launched on a Mac**, so the window appearing, the bundle
+being detected, and the process being stopped are not yet observed. Those three checkboxes
+stay unchecked until they are.
 
 ---
 
@@ -252,7 +278,7 @@ complete.*
 | 2 | Questing on Windows | Complete |
 | 3 | The catalogue experience | Complete |
 | 4 | Honest state | Complete |
-| 5 | macOS | Not started |
+| 5 | macOS | In progress |
 | 6 | Linux | Not started |
 | 7 | Release readiness | Not started |
 

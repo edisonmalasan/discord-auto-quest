@@ -9,7 +9,7 @@ import { SearchIcon } from './components/Icons';
 import { StatusHeader } from './components/StatusHeader';
 import { useCatalogue } from './hooks/useCatalogue';
 import { useQuests } from './hooks/useQuests';
-import { currentPlatform } from './lib/ipc';
+import { currentPlatform, needsVisibleWindow } from './lib/ipc';
 import { createSearchIndex, searchCatalogue } from './lib/search';
 import type { CatalogEntry } from './types/catalogue';
 
@@ -26,6 +26,7 @@ export default function App() {
   const [platform, setPlatform] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [thisPlatform, setThisPlatform] = useState<string | null>(null);
+  const [needsWindow, setNeedsWindow] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
@@ -44,6 +45,16 @@ export default function App() {
       } catch {
         // The panel can be shown without it; the platform is only used to label a
         // fallback.
+      }
+
+      try {
+        const needed = await needsVisibleWindow();
+        if (cancelled) {
+          return;
+        }
+        setNeedsWindow(needed);
+      } catch {
+        // The same: the notice is an addition, not a requirement.
       }
     };
     void read();
@@ -187,6 +198,7 @@ export default function App() {
             entry={selected}
             quests={quests}
             currentPlatform={thisPlatform}
+            needsVisibleWindow={needsWindow}
           />
         </div>
       )}

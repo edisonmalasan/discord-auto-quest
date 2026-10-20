@@ -9,6 +9,10 @@
 //! 2. Write the runner to that path, with the file's extension removed.
 //! 3. Run it, and remember its PID.
 //!
+//! On macOS the second step is different: a registered path that names an
+//! application bundle becomes a real `.app` bundle, because Discord's macOS
+//! integration detects applications rather than bare executables.
+//!
 //! Stopping a quest terminates that one process, by its handle. Nothing is ever
 //! stopped by image name, so a real game the user is running is never touched.
 //!
@@ -17,6 +21,8 @@
 //! places, and never from a flag the app set earlier: the process table
 //! (`process`) and the filesystem (`records`).
 
+pub mod bundle;
+pub mod launch;
 pub mod path;
 pub mod process;
 pub mod records;

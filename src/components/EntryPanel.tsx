@@ -10,6 +10,8 @@ interface EntryPanelProps {
   entry: CatalogEntry | null;
   quests: QuestController;
   currentPlatform: string | null;
+  /** True where a quest needs a visible window to be detected. */
+  needsVisibleWindow?: boolean;
 }
 
 /**
@@ -19,7 +21,7 @@ interface EntryPanelProps {
  * never claims Discord has credited a quest, because the app cannot observe that:
  * what it can say is that a stub is running, with which process id, for how long.
  */
-export function EntryPanel({ entry, quests, currentPlatform }: EntryPanelProps) {
+export function EntryPanel({ entry, quests, currentPlatform, needsVisibleWindow = false }: EntryPanelProps) {
   // The stub's presence on disk is re-read whenever the quests change, because a
   // quest writes a stub and a stopped quest leaves one behind.
   const stubStates = useStubStates(entry?.id ?? null, quests.quests);
@@ -41,6 +43,7 @@ export function EntryPanel({ entry, quests, currentPlatform }: EntryPanelProps) 
           quests={quests}
           currentPlatform={currentPlatform}
           stubStates={stubStates}
+          needsVisibleWindow={needsVisibleWindow}
         />
       )}
     </aside>
@@ -52,11 +55,13 @@ function SelectedEntry({
   quests,
   currentPlatform,
   stubStates,
+  needsVisibleWindow,
 }: {
   entry: CatalogEntry;
   quests: QuestController;
   currentPlatform: string | null;
   stubStates: Record<string, StubState>;
+  needsVisibleWindow: boolean;
 }) {
   const detected = entry.executables.length > 0;
   const native =
@@ -136,6 +141,7 @@ function SelectedEntry({
                 executable={executable}
                 quests={quests}
                 stub={stubStates[executable.path]}
+                needsVisibleWindow={needsVisibleWindow}
               />
             ))}
           </ul>
@@ -167,11 +173,13 @@ function ExecutableRow({
   executable,
   quests,
   stub,
+  needsVisibleWindow,
 }: {
   entry: CatalogEntry;
   executable: CatalogExecutable;
   quests: QuestController;
   stub: StubState | undefined;
+  needsVisibleWindow: boolean;
 }) {
   const quest = quests.questFor(entry.id, executable.path);
   const failure = quests.failureFor(entry.id, executable.path);
@@ -208,6 +216,13 @@ function ExecutableRow({
             {stub.blocked.code}
           </span>
           <span className="mt-0.5 block text-ink-2">{stub.blocked.message}</span>
+        </p>
+      ) : null}
+
+      {needsVisibleWindow ? (
+        <p className="mt-1.5 text-[11.5px] leading-snug text-warn">
+          A small window opens while the quest runs. On this platform Discord only detects an
+          application with a visible window, so the window is part of the mechanism.
         </p>
       ) : null}
 

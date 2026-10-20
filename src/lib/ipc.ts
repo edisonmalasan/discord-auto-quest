@@ -30,6 +30,16 @@ export async function currentPlatform(): Promise<string> {
   return invoke<string>('current_platform');
 }
 
+/**
+ * Whether this platform needs a visible window for a quest to be detected.
+ *
+ * On macOS it does: Discord's local integration looks for an application, not a
+ * bare process, so a stub with no window is not a quest.
+ */
+export async function needsVisibleWindow(): Promise<boolean> {
+  return invoke<boolean>('needs_visible_window');
+}
+
 /** A background refresh replaced the catalogue. */
 export function onCatalogueUpdated(handler: (snapshot: CatalogueSnapshot) => void): Promise<UnlistenFn> {
   return listen<CatalogueSnapshot>('catalogue-updated', (event) => handler(event.payload));

@@ -95,14 +95,6 @@ pub fn write(dir: &Path, quests: &[QuestRecord]) -> AppResult<()> {
     Ok(())
 }
 
-/// Whether the stub for a quest is still on disk.
-///
-/// This is a real filesystem check. The application never infers that a stub is
-/// installed from a flag it set earlier.
-pub fn stub_installed(stub_path: &Path) -> bool {
-    stub_path.is_file()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -151,20 +143,12 @@ mod tests {
     }
 
     #[test]
-    fn a_stub_is_installed_only_when_the_file_is_there() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        let path = dir.path().join("stub");
-        assert!(!stub_installed(&path));
-        std::fs::write(&path, b"x").expect("written");
-        assert!(stub_installed(&path));
-    }
-
-    #[test]
     fn a_stub_that_was_deleted_is_not_installed() {
         let dir = tempfile::tempdir().expect("a temp dir");
         let path = dir.path().join("stub");
         std::fs::write(&path, b"x").expect("written");
+        assert!(path.is_file());
         std::fs::remove_file(&path).expect("deleted");
-        assert!(!stub_installed(&path));
+        assert!(!path.is_file());
     }
 }
