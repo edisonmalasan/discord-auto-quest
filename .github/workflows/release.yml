@@ -66,9 +66,13 @@ jobs:
       - name: lint
         run: |
           cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-          cargo clippy --manifest-path runner/Cargo.toml --all-targets -- -D warnings
           cargo clippy --manifest-path runner-linux/Cargo.toml --all-targets -- -D warnings
           cargo clippy --manifest-path runner-macos/Cargo.toml --all-targets -- -D warnings
+          # The Windows runner is `no_std` and `no_main`, so it has no test
+          # harness: a test binary would need the standard library and an
+          # unwinder the runner does not have. Its binary target is linted
+          # instead, and it carries no tests to run.
+          cargo clippy --manifest-path runner/Cargo.toml --bins -- -D warnings
       - name: the frontend tests
         run: npm test -- --run
       - name: the backend tests

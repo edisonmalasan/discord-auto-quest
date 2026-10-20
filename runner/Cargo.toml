@@ -19,3 +19,10 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+
+# The runner has no standard library, so it cannot unwind a panic: the
+# unwinder does not exist in the binary. The release profile says so, and the
+# development profile has to say so too, or a plain `cargo build` fails to link
+# for a reason that has nothing to do with the code.
+[profile.dev]
+panic = "abort"
