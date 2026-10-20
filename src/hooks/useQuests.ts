@@ -6,8 +6,18 @@ import type { AppErrorShape, QuestRequest, QuestView } from '../types/catalogue'
 export interface QuestController {
   /** The quests that are running. */
   quests: QuestView[];
+  /** The quests that were running and are now over. */
+  ended: QuestView[];
   /** The quest for an executable, if there is one. */
   questFor: (appId: string, registeredPath: string) => QuestView | undefined;
+  /**
+   * The quest that ended for an executable, if there was one.
+   *
+   * It is reported beside the game rather than in a corner of the window, and it
+   * is kept until the game is played again: the interface has to say what
+   * happened, not quietly show a start control as though nothing had.
+   */
+  endedFor: (appId: string, registeredPath: string) => QuestView | undefined;
   /**
    * The backend's own failure for one executable, if the last attempt on it
    * failed.
@@ -45,6 +55,7 @@ function failureKey(appId: string, registeredPath: string): string {
  */
 export function useQuests(): QuestController {
   const [quests, setQuests] = useState<QuestView[]>([]);
+  const [ended, setEnded] = useState<QuestView[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AppErrorShape | null>(null);
   const [failures, setFailures] = useState<Record<string, AppErrorShape>>({});
@@ -53,6 +64,7 @@ export function useQuests(): QuestController {
     try {
       const list = await listQuests();
       setQuests(list.quests);
+      setEnded(list.ended ?? []);
       // A failure the backend could not recover from is reported rather than
       // dropped: the app must not claim that nothing is running when it could
       // not find out.
@@ -163,6 +175,21 @@ export function useQuests(): QuestController {
     [quests],
   );
 
+  /**
+   * The quest that ended for an executable, if there was one.
+   *
+   * It is reported beside the game rather than in a corner of the window, and it
+   * is kept until the game is played again: the interface has to say what
+   * happened, not quietly show a start control as though nothing had.
+   */
+  const endedFor = useCallback(
+    (appId: string, registeredPath: string) =>
+      ended.find(
+        (quest) => quest.appId === appId && quest.registeredPath === registeredPath,
+      ),
+    [ended],
+  );
+
   const failureFor = useCallback(
     (appId: string, registeredPath: string) => failures[failureKey(appId, registeredPath)],
     [failures],
@@ -171,7 +198,9 @@ export function useQuests(): QuestController {
   return useMemo(
     () => ({
       quests,
+      ended,
       questFor,
+      endedFor,
       failureFor,
       busy,
       error,
@@ -179,6 +208,6 @@ export function useQuests(): QuestController {
       stop,
       clearError: () => setError(null),
     }),
-    [quests, questFor, failureFor, busy, error, start, stop],
+    [quests, ended, questFor, endedFor, failureFor, busy, error, start, stop],
   );
 }

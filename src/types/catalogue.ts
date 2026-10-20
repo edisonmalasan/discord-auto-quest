@@ -82,9 +82,15 @@ export type QuestState = 'running' | 'missing' | 'ended';
  * The `error` is a failure the backend could not recover from on its own — a quest
  * records file it could not read, for instance. The quests above are still true;
  * the error says what could not be checked.
+ *
+ * The `ended` are quests that were running and are now over. They are not
+ * running, so they are not in `quests`, but they are not forgotten either: the
+ * interface says what ended rather than showing a start control again as though
+ * nothing had happened.
  */
 export interface QuestList {
   quests: QuestView[];
+  ended: QuestView[];
   error: AppErrorShape | null;
 }
 

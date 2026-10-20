@@ -182,6 +182,7 @@ function ExecutableRow({
   needsVisibleWindow: boolean;
 }) {
   const quest = quests.questFor(entry.id, executable.path);
+  const ended = quests.endedFor(entry.id, executable.path);
   const failure = quests.failureFor(entry.id, executable.path);
   const elapsed = useElapsed(quest?.running ? quest.startedAt : null);
 
@@ -223,6 +224,13 @@ function ExecutableRow({
         <p className="mt-1.5 text-[11.5px] leading-snug text-warn">
           A small window opens while the quest runs. On this platform Discord only detects an
           application with a visible window, so the window is part of the mechanism.
+        </p>
+      ) : null}
+
+      {ended ? (
+        <p className="mt-1.5 text-[11.5px] leading-snug text-ink-3">
+          The last quest for this executable ended — its process is no longer running. Start it
+          again to run it.
         </p>
       ) : null}
 

@@ -44,7 +44,9 @@ function quest(overrides: Partial<QuestView> = {}): QuestView {
 function controller(overrides: Partial<QuestController> = {}): QuestController {
   return {
     quests: [],
+    ended: [],
     questFor: () => undefined,
+    endedFor: () => undefined,
     failureFor: () => undefined,
     busy: false,
     error: null,
@@ -184,6 +186,37 @@ describe('EntryPanel', () => {
 
     expect(screen.getByText(/no path to mirror/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Start quest' })).not.toBeInTheDocument();
+  });
+
+  it('says that a quest ended, rather than showing a start control as though nothing happened', () => {
+    const ended = quest({ running: false, state: 'ended' });
+
+    render(
+      <EntryPanel
+        entry={entry()}
+        quests={controller({
+          ended: [ended],
+          endedFor: () => ended,
+        })}
+        currentPlatform="win32"
+      />,
+    );
+
+    expect(screen.getByText(/quest for this executable ended/i)).toBeInTheDocument();
+    // The quest can be started again: the notice is not the control.
+    expect(screen.getByRole('button', { name: 'Start quest' })).toBeInTheDocument();
+  });
+
+  it('says nothing about a quest ending where none ended', () => {
+    render(
+      <EntryPanel
+        entry={entry()}
+        quests={controller()}
+        currentPlatform="win32"
+      />,
+    );
+
+    expect(screen.queryByText(/quest for this executable ended/i)).not.toBeInTheDocument();
   });
 
   it('labels a fallback when the platform has no registered executable', () => {

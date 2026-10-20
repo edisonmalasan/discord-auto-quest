@@ -88,6 +88,14 @@ pub struct StubState {
 pub struct QuestList {
     /// The quests, read from the process table.
     pub quests: Vec<QuestView>,
+    /// The quests that were running and are now over.
+    ///
+    /// A quest ends when its process is no longer there: it was stopped, it
+    /// crashed, or somebody killed it from outside the application. The quest
+    /// is not in the list above, because it is not running, but it is not
+    /// forgotten either — the interface is told what happened, so it can say so
+    /// rather than quietly showing a start control again.
+    pub ended: Vec<QuestView>,
     /// A failure the application could not recover from on its own — a quest
     /// records file it could not read, for instance. The quests above are still
     /// true; this says what could not be checked.
@@ -137,6 +145,12 @@ pub struct QuestService {
     games_root: PathBuf,
     records_dir: PathBuf,
     live: Arc<Mutex<HashMap<String, LiveQuest>>>,
+    /// The quests that were running and are now over.
+    ///
+    /// A quest that ends is not forgotten. The interface is told what ended, so
+    /// it can say so beside the game rather than quietly showing a start
+    /// control again and leaving the user to guess.
+    ended: Arc<Mutex<Vec<QuestView>>>,
     /// A failure from the start-up reconciliation that the application could not
     /// recover from. It is reported rather than swallowed: the app must not claim
     /// that nothing is running when it could not find out.
@@ -150,6 +164,7 @@ impl QuestService {
             games_root: data_dir.join("games"),
             records_dir: data_dir,
             live: Arc::new(Mutex::new(HashMap::new())),
+            ended: Arc::new(Mutex::new(Vec::new())),
             reconcile_error: Arc::new(Mutex::new(None)),
         };
         service.reconcile();
@@ -184,10 +199,25 @@ impl QuestService {
 
         let mut kept = Vec::new();
         let mut recovered = Vec::new();
+        let mut over = Vec::new();
 
         for record in records {
             if !process::is_alive(record.pid) {
-                // The process is gone. The quest is over and its record is dropped.
+                // The process is gone. The quest is over and its record is
+                // dropped — but the fact that it ended is kept, so the interface
+                // can say so rather than showing a start control again as though
+                // nothing had happened.
+                over.push(QuestView {
+                    id: record.id,
+                    app_id: record.app_id,
+                    display_name: record.display_name,
+                    stub_path: record.stub_path,
+                    pid: record.pid,
+                    started_at: record.started_at,
+                    running: false,
+                    state: QuestState::Ended,
+                    registered_path: record.registered_path,
+                });
                 continue;
             }
 
@@ -226,6 +256,10 @@ impl QuestService {
                 live.insert(quest.view.id.clone(), quest);
             }
         }
+
+        if let Ok(mut ended) = self.ended.lock() {
+            ended.extend(over);
+        }
     }
 
     /// Start a quest: write the stub, run it, and remember its process id.
@@ -254,6 +288,13 @@ impl QuestService {
         // process per path, because one path is what Discord matches. This also
         // clears away a quest whose stub was deleted from disk.
         let _ = self.stop(&id);
+
+        // A new quest for this executable supersedes the notice that the last
+        // one ended: the game is being played again, so what it says about the
+        // old quest no longer applies.
+        if let Ok(mut ended) = self.ended.lock() {
+            ended.retain(|quest| quest.id != id);
+        }
 
         let launched = self.launch(&entry.id, &entry.name, &executable.path)?;
 
@@ -386,6 +427,7 @@ impl QuestService {
     /// application set.
     pub fn list(&self) -> QuestList {
         let mut views = Vec::new();
+        let mut just_ended: Vec<QuestView> = Vec::new();
 
         if let Ok(mut live) = self.live.lock() {
             let mut ended: Vec<String> = Vec::new();
@@ -416,9 +458,23 @@ impl QuestService {
                 views.push(quest.view.clone());
             }
 
+            // A quest whose process has gone is over. It is not running, so it
+            // leaves the list above, but it is reported as ended so the
+            // interface can say what happened.
             for id in ended {
-                live.remove(&id);
+                if let Some(quest) = live.remove(&id) {
+                    let mut view = quest.view;
+                    view.running = false;
+                    view.state = QuestState::Ended;
+                    just_ended.push(view);
+                }
                 self.forget(&id);
+            }
+        }
+
+        if !just_ended.is_empty() {
+            if let Ok(mut ended) = self.ended.lock() {
+                ended.extend(just_ended);
             }
         }
 
@@ -428,8 +484,15 @@ impl QuestService {
             .ok()
             .and_then(|slot| slot.clone());
 
+        let over = self
+            .ended
+            .lock()
+            .map(|ended| ended.clone())
+            .unwrap_or_default();
+
         QuestList {
             quests: views,
+            ended: over,
             error,
         }
     }
@@ -717,5 +780,43 @@ mod tests {
 
             assert_eq!(error.code, crate::error::ErrorCode::InvalidPath);
         }
+    }
+
+    #[test]
+    fn a_quest_that_ended_is_reported_as_ended() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+
+        // A quest that was running, whose record says so, and whose process is
+        // not there any more.
+        records::write(
+            dir.path(),
+            &[QuestRecord {
+                id: "1:a/b.exe".to_string(),
+                app_id: "1".to_string(),
+                display_name: "Alpha".to_string(),
+                registered_path: "a/b.exe".to_string(),
+                stub_path: dir
+                    .path()
+                    .join("games")
+                    .join("1")
+                    .join("a")
+                    .join("b")
+                    .display()
+                    .to_string(),
+                pid: DEAD_PID,
+                started_at: 1_700_000_000,
+            }],
+        )
+        .expect("written");
+
+        // A service built over the same directory reconciles the record against
+        // the process table.
+        let quests = service(dir.path());
+        let list = quests.list();
+
+        assert!(list.quests.is_empty(), "the quest is not running");
+        assert_eq!(list.ended.len(), 1, "the quest that ended is reported");
+        assert_eq!(list.ended[0].state, QuestState::Ended);
+        assert!(!list.ended[0].running, "an ended quest is not running");
     }
 }

@@ -136,6 +136,37 @@ function checkNoRpc() {
   console.log('A15: the lock file carries no Discord RPC library');
 }
 
+/**
+ * Every acceptance case is still accounted for.
+ *
+ * The contract for "done" is the A1–A15 list, and the roadmap carries a table
+ * saying where each one is proved. A case that quietly leaves that table is a
+ * case nobody is checking, so the table is checked here: every case from A1 to
+ * A15 has to be there, with a place named for it.
+ */
+function checkTheContractIsIntact() {
+  const roadmap = readFileSync(join(root, 'docs', 'ROADMAP.md'), 'utf8');
+  const missing = [];
+
+  for (let number = 1; number <= 15; number += 1) {
+    const row = new RegExp(`^\\|\\s*A${number}\\s*\\|`, 'm');
+
+    if (!row.test(roadmap)) {
+      missing.push(`A${number}`);
+    }
+  }
+
+  if (missing.length > 0) {
+    fail(
+      `the roadmap does not account for ${missing.join(', ')}; ` +
+        'every acceptance case has to say where it is proved',
+    );
+  }
+
+  console.log('the roadmap accounts for all fifteen acceptance cases');
+}
+
 checkNoCatalogueSnapshot();
 checkNoRpc();
+checkTheContractIsIntact();
 console.log('acceptance checks passed');
