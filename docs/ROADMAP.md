@@ -340,8 +340,9 @@ complete.*
       reachable upstream feature rather than a source-tree artefact.
 - [ ] A "run for N seconds" timed quest mode — the minimum duration Discord requires is
       unverified; see Q3 in `re/docs/09-coverage-and-open-questions.md`.
-- [ ] Store and platform filters beyond the catalogue's own fields — depends on the catalogue
-      service landing first.
+- [ ] A store filter — the catalogue carries no store field, so there is nothing to filter by.
+- [ ] Filters beyond the catalogue's own fields — the scope and platform filters are in, and
+      anything else would need data the endpoint does not carry.
 - [ ] An installer rather than a portable archive — deferred to keep the download small.
 
 ## Status Summary
