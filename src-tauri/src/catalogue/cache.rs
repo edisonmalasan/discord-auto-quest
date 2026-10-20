@@ -135,8 +135,16 @@ mod tests {
     #[test]
     fn writing_replaces_an_existing_cache() {
         let dir = tempfile::tempdir().expect("temp dir");
-        write(dir.path(), &CachedCatalogue::new(1, "discord", vec![entry()])).expect("first");
-        write(dir.path(), &CachedCatalogue::new(2, "discord", vec![entry()])).expect("second");
+        write(
+            dir.path(),
+            &CachedCatalogue::new(1, "discord", vec![entry()]),
+        )
+        .expect("first");
+        write(
+            dir.path(),
+            &CachedCatalogue::new(2, "discord", vec![entry()]),
+        )
+        .expect("second");
 
         let loaded = read(dir.path()).expect("read").expect("present");
         assert_eq!(loaded.fetched_at, 2);
@@ -145,7 +153,11 @@ mod tests {
     #[test]
     fn the_temporary_file_is_not_left_behind() {
         let dir = tempfile::tempdir().expect("temp dir");
-        write(dir.path(), &CachedCatalogue::new(1, "discord", vec![entry()])).expect("written");
+        write(
+            dir.path(),
+            &CachedCatalogue::new(1, "discord", vec![entry()]),
+        )
+        .expect("written");
         assert!(!dir.path().join("catalogue.json.tmp").exists());
     }
 

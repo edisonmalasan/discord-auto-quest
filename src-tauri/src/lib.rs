@@ -37,7 +37,10 @@ pub struct AppState {
 /// the network. A cached copy that is past its refresh interval is refreshed in the
 /// background, and the frontend is told when the fresh one is ready.
 #[tauri::command]
-async fn load_catalogue(app: AppHandle, state: State<'_, AppState>) -> AppResult<CatalogueSnapshot> {
+async fn load_catalogue(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> AppResult<CatalogueSnapshot> {
     let outcome = state.catalogue.load().await?;
 
     if outcome.needs_refresh {
@@ -150,9 +153,8 @@ fn stub_states(state: State<'_, AppState>, app_id: String) -> AppResult<Vec<Stub
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let dir = paths::user_data_dir().ok_or_else(|| {
-                AppError::io("could not resolve this user's data directory")
-            })?;
+            let dir = paths::user_data_dir()
+                .ok_or_else(|| AppError::io("could not resolve this user's data directory"))?;
             std::fs::create_dir_all(&dir)?;
 
             let catalogue = CatalogueService::new(dir.clone(), catalogue::service::DEFAULT_TTL)?;

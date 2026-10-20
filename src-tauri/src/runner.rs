@@ -19,24 +19,16 @@ use crate::error::{AppError, AppResult};
 
 /// The Windows runner, embedded at build time.
 #[cfg(windows)]
-pub const RUNNER: &[u8] = include_bytes!(concat!(
-    env!("OUT_DIR"),
-    "/discord-auto-quest-runner.exe"
-));
+pub const RUNNER: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/discord-auto-quest-runner.exe"));
 
 /// The macOS runner, embedded at build time.
 #[cfg(target_os = "macos")]
-pub const RUNNER: &[u8] = include_bytes!(concat!(
-    env!("OUT_DIR"),
-    "/discord-auto-quest-runner"
-));
+pub const RUNNER: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/discord-auto-quest-runner"));
 
 /// The Linux runner, embedded at build time.
 #[cfg(target_os = "linux")]
-pub const RUNNER: &[u8] = include_bytes!(concat!(
-    env!("OUT_DIR"),
-    "/discord-auto-quest-runner"
-));
+pub const RUNNER: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/discord-auto-quest-runner"));
 
 /// There is no runner for this platform yet.
 #[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
@@ -114,11 +106,7 @@ pub fn size() -> u64 {
 
 /// The path a stub takes for a registered executable, given the game's directory.
 #[cfg(test)]
-pub fn stub_path(
-    games_root: &Path,
-    app_id: &str,
-    segments: &[String],
-) -> std::path::PathBuf {
+pub fn stub_path(games_root: &Path, app_id: &str, segments: &[String]) -> std::path::PathBuf {
     let mut path = games_root.join(app_id);
     for segment in segments {
         path.push(segment);
@@ -143,7 +131,11 @@ mod tests {
     #[test]
     fn the_stub_path_mirrors_the_registered_segments() {
         let root = Path::new("/data/games");
-        let path = stub_path(root, "356875221078245376", &["_retail_".into(), "overwatch".into()]);
+        let path = stub_path(
+            root,
+            "356875221078245376",
+            &["_retail_".into(), "overwatch".into()],
+        );
         assert_eq!(
             path,
             Path::new("/data/games/356875221078245376/_retail_/overwatch")

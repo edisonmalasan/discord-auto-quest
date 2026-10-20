@@ -76,7 +76,10 @@ async fn services(data_dir: &std::path::Path) -> (CatalogueService, QuestService
         .expect("the catalogue service builds");
     let quests = QuestService::new(catalogue.clone(), data_dir.to_path_buf());
 
-    catalogue.load().await.expect("the catalogue loads from the cache");
+    catalogue
+        .load()
+        .await
+        .expect("the catalogue loads from the cache");
 
     (catalogue, quests)
 }

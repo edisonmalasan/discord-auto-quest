@@ -118,7 +118,10 @@ mod tests {
         // `hook`, `overlay`, `third_party_skus` and `themes` have no field here.
         let serialised = serde_json::to_string(&entry).expect("serialises");
         for dropped in ["hook", "overlay", "third_party_skus", "themes"] {
-            assert!(!serialised.contains(dropped), "{dropped} should not survive");
+            assert!(
+                !serialised.contains(dropped),
+                "{dropped} should not survive"
+            );
         }
     }
 
@@ -150,7 +153,10 @@ mod tests {
             .collect(),
         });
         let entry = compact_entry(&game);
-        assert_eq!(entry.age_ratings, vec!["esrb:4".to_string(), "pegi:3".to_string()]);
+        assert_eq!(
+            entry.age_ratings,
+            vec!["esrb:4".to_string(), "pegi:3".to_string()]
+        );
     }
 
     #[test]

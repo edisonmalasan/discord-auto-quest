@@ -74,10 +74,7 @@ impl ApplicationHandler for Runner {
         let attributes = WindowAttributes::default()
             .with_title(self.title.clone())
             .with_visible(true)
-            .with_inner_size(winit::dpi::LogicalSize::new(
-                WINDOW_WIDTH,
-                WINDOW_HEIGHT,
-            ));
+            .with_inner_size(winit::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT));
 
         let window = event_loop
             .create_window(attributes)
@@ -87,7 +84,12 @@ impl ApplicationHandler for Runner {
         self.window = Some(window);
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: winit::window::WindowId, event: WindowEvent) {
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        _id: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
         // The user closing the window ends the quest. The app's own Stop button
         // does the same thing from the other side.
         if let WindowEvent::CloseRequested = event {

@@ -28,9 +28,7 @@ pub fn compute(entries: &[CatalogEntry], dropped_entries: u32) -> CatalogueStats
             with_aliases += 1;
         }
         for executable in &entry.executables {
-            *executables_per_os
-                .entry(executable.os.clone())
-                .or_insert(0) += 1;
+            *executables_per_os.entry(executable.os.clone()).or_insert(0) += 1;
         }
     }
 

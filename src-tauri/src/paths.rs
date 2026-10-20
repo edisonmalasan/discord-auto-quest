@@ -42,9 +42,7 @@ pub fn resolve_user_data_dir(
         }),
         _ => xdg_data_home
             .map(|dir| dir.join(APP_DIR_NAME))
-            .or_else(|| {
-                home_dir.map(|home| home.join(".local").join("share").join(APP_DIR_NAME))
-            }),
+            .or_else(|| home_dir.map(|home| home.join(".local").join("share").join(APP_DIR_NAME))),
     }
 }
 
@@ -80,7 +78,12 @@ mod tests {
         );
         assert_eq!(
             resolved,
-            Some(p(&["/Users/ed", "Library", "Application Support", APP_DIR_NAME]))
+            Some(p(&[
+                "/Users/ed",
+                "Library",
+                "Application Support",
+                APP_DIR_NAME
+            ]))
         );
     }
 

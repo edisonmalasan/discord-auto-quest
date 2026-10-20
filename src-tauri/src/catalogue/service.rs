@@ -265,9 +265,7 @@ mod tests {
         .expect("written");
 
         let outcome = service
-            .load_with(|| async {
-                Err(AppError::network("the network is down"))
-            })
+            .load_with(|| async { Err(AppError::network("the network is down")) })
             .await
             .expect("served from cache");
 
@@ -289,9 +287,7 @@ mod tests {
         .expect("written");
 
         let outcome = service
-            .load_with(|| async {
-                Err(AppError::network("the network is down"))
-            })
+            .load_with(|| async { Err(AppError::network("the network is down")) })
             .await
             .expect("served from cache");
 

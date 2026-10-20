@@ -211,7 +211,9 @@ mod tests {
     fn an_ordinary_path_is_not_a_bundle() {
         assert!(!is_bundle("_retail_/overwatch.exe"));
         assert!(!is_bundle(">hl2_osx"));
-        assert!(!is_bundle("move or die/love/osx32/love.app/contents/macos/love"));
+        assert!(!is_bundle(
+            "move or die/love/osx32/love.app/contents/macos/love"
+        ));
     }
 
     #[test]
@@ -258,7 +260,8 @@ mod tests {
     #[test]
     fn a_bundle_is_written_with_its_runner_and_its_property_list() {
         let dir = tempfile::tempdir().expect("a temp dir");
-        let bundle = layout(dir.path(), "42", &segments(&["osx64", "dota2.app"])).expect("a bundle");
+        let bundle =
+            layout(dir.path(), "42", &segments(&["osx64", "dota2.app"])).expect("a bundle");
 
         create(&bundle, "Dota 2", b"runner bytes").expect("the bundle is written");
 
@@ -295,7 +298,8 @@ mod tests {
     #[test]
     fn the_bundle_is_an_application_and_not_a_plain_file() {
         let dir = tempfile::tempdir().expect("a temp dir");
-        let bundle = layout(dir.path(), "42", &segments(&["osx64", "dota2.app"])).expect("a bundle");
+        let bundle =
+            layout(dir.path(), "42", &segments(&["osx64", "dota2.app"])).expect("a bundle");
 
         create(&bundle, "Dota 2", b"runner bytes").expect("the bundle is written");
 
@@ -308,7 +312,12 @@ mod tests {
             "the property list is where macOS looks for it"
         );
         assert!(
-            bundle.path.join("Contents").join("MacOS").join("dota2").is_file(),
+            bundle
+                .path
+                .join("Contents")
+                .join("MacOS")
+                .join("dota2")
+                .is_file(),
             "the executable is where macOS looks for it"
         );
     }

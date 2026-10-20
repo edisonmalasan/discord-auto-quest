@@ -60,10 +60,7 @@ async fn the_live_catalogue_is_fetched_projected_and_cached() {
         .filter(|entry| !entry.executables.is_empty())
         .count();
     assert_eq!(detected, outcome.snapshot.stats.questable);
-    assert_eq!(
-        outcome.snapshot.stats.total,
-        outcome.snapshot.entries.len()
-    );
+    assert_eq!(outcome.snapshot.stats.total, outcome.snapshot.entries.len());
     assert_eq!(
         outcome.snapshot.stats.questable + outcome.snapshot.stats.not_questable,
         outcome.snapshot.stats.total
@@ -74,7 +71,12 @@ async fn the_live_catalogue_is_fetched_projected_and_cached() {
         .snapshot
         .entries
         .iter()
-        .find(|entry| entry.executables.iter().any(|executable| executable.path.contains('/')))
+        .find(|entry| {
+            entry
+                .executables
+                .iter()
+                .any(|executable| executable.path.contains('/'))
+        })
         .expect("some entry carries a path with a directory segment");
     assert!(with_path
         .executables
@@ -119,10 +121,7 @@ async fn the_endpoint_answers_with_a_catalogue_the_projection_accepts() {
     let dir = tempfile::tempdir().expect("a temp dir");
     let service = service(dir.path());
 
-    let outcome = service
-        .refresh()
-        .await
-        .expect("the catalogue refreshes");
+    let outcome = service.refresh().await.expect("the catalogue refreshes");
 
     assert!(outcome.stats.total > 1_000);
     assert!(

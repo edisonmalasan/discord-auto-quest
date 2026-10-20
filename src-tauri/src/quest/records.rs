@@ -126,11 +126,8 @@ mod tests {
     #[test]
     fn a_file_from_another_build_reads_as_no_records() {
         let dir = tempfile::tempdir().expect("a temp dir");
-        std::fs::write(
-            path_in(dir.path()),
-            r#"{"schemaVersion":99,"quests":[]}"#,
-        )
-        .expect("written");
+        std::fs::write(path_in(dir.path()), r#"{"schemaVersion":99,"quests":[]}"#)
+            .expect("written");
         assert!(read(dir.path()).expect("read").is_empty());
     }
 
