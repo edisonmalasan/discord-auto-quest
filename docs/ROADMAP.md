@@ -190,15 +190,15 @@ Verified by 78 backend unit tests, 10 questing integration tests against a real 
 
 *Outcome: Questing works on macOS through a real application bundle.*
 
-- [ ] Starting a quest creates a valid `.app` bundle with an `Info.plist` carrying this project's
+- [x] Starting a quest creates a valid `.app` bundle with an `Info.plist` carrying this project's
       own bundle identifier.
 - [ ] The bundle is launched with `open -n -g -a`, and a visible window appears.
 - [ ] Stopping a quest terminates the launched application.
-- [ ] The UI explains that a visible window is required on macOS.
+- [x] The UI explains that a visible window is required on macOS.
 
-**Status:** In progress. The mechanism is implemented and the code is checked against the
-`x86_64-apple-darwin` target, but the app has not been run on a Mac, so the behaviour is
-unverified.
+**Status:** In progress. The mechanism is implemented, and the rules it follows are covered by
+tests that run on any machine, but the app has not been run on a Mac, so the two behaviours that
+need macOS itself are unverified.
 
 **A bundle, not a file.** On macOS, Discord's local integration detects an *application*, not a
 bare executable. A registered path that names a bundle — 61 of the 67 macOS executables in the
@@ -217,12 +217,20 @@ window titled with the game's name. It is not a decoration: an application with 
 window is not an application to Discord's macOS integration. The interface says so plainly,
 rather than leaving the user to wonder why a quest did not count.
 
-**What is verified, and what is not.** The bundle layout, the property list, the launch
-command, and the process-identification rule are covered by tests that run here. The macOS
-runner is checked against the `x86_64-apple-darwin` target, and the application builds for
-Windows. **The app has not been launched on a Mac**, so the window appearing, the bundle
-being detected, and the process being stopped are not yet observed. Those three checkboxes
-stay unchecked until they are.
+**What was made testable, and why.** The rules that decide *what* happens — that a `.app` path
+becomes a bundle on macOS and a bare executable everywhere else, that the bundle carries this
+project's identifier and nobody else's, that the bundle is opened by path with `-n -g -a` — used
+to be compiled only on macOS, and so were only ever checked on a Mac. The platform is now a
+parameter rather than a compile-time constant, and those rules are covered by tests that run
+everywhere: 92 backend tests pass on Linux and 93 on Windows, and the macOS ones are among
+them.
+
+**What is verified, and what is not.** The bundle layout, the property list, the launch command,
+the process-identification rule and the interface's notice are all covered by tests that run here.
+The macOS runner is checked against the `x86_64-apple-darwin` target, and the application builds
+for Windows. **The app has not been launched on a Mac**, so the window appearing and the process
+being stopped are not yet observed. `src-tauri/tests/questing_macos.rs` holds the tests that will
+make those two observations on a Mac; they type-check, but they have not been run.
 
 ---
 

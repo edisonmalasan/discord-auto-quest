@@ -252,7 +252,7 @@ async fn a_quest_that_outlives_the_application_is_recovered_on_the_next_start() 
     drop(quests);
     drop(catalogue);
 
-    let (catalogue, quests) = services(dir.path()).await;
+    let (_catalogue, quests) = services(dir.path()).await;
     let list = quests.list();
 
     assert!(
@@ -282,7 +282,7 @@ async fn a_quest_whose_process_is_gone_is_dropped_on_the_next_start() {
         .expect("the quest starts");
 
     // The stub is killed behind the application's back, as a crash would kill it.
-    let mut child = Command::new(&view.stub_path)
+    let child = Command::new(&view.stub_path)
         .spawn()
         .expect("nothing to spawn");
     drop(child);
