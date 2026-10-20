@@ -41,7 +41,7 @@ traceable evidence, and the clone specification is written.*
 **The study was audited against the upstream tree.** The upstream source was later available as a
 local, built tree, so every claim in the study was checked against it rather than against a
 reading of it, and the built bundle was checked against the bundle the study had already
-analysed. Seventeen disagreements were found and every one is recorded in
+analysed. Twenty disagreements were found and every one is recorded in
 `re/docs/10-upstream-audit.md`, with the documents that carried a wrong fact corrected in place.
 One of them mattered to the product: the study had concluded that the stub is written without the
 file's extension, and it is not — see Group 2. The rest were documentation faults: a property
@@ -54,6 +54,24 @@ platform of Linux in the upstream's own detection; a `v-show` that keeps both pa
 catalogue's `arguments` field, which the upstream never forwards; and the upstream README's
 statement that only Windows is supported, which bears directly on this project's own macOS and
 Linux work.
+
+**The capture was then proved complete.** The study listed the files it had read, which is not
+the same as the files the tree holds: thirty of the ninety-three were in no inventory, including
+the upstream's own README, which the study quoted from repeatedly without registering it. Every
+file is now either registered as a source or recorded as carrying no behavioural claim, and a
+retained check proves it — it exits non-zero and lists anything missing.
+
+**The evidence register was checked against its own record.** Its digests were re-computed from
+the files and compared with the tooling's retained analysis. One was wrong by a single character,
+in the catalogue chunk: the artefact was never in doubt, but a reader hashing the file would
+have concluded that the evidence had been altered. The table now quotes the tooling's record
+rather than a reading of it, and the style sheet and the page — both in the build and in neither
+the table nor the record — have been added.
+
+**Every difference from the upstream is now accounted for.** The claim that the clone differs
+from the upstream in its interface and in nothing else is recorded as a table of every
+behaviour, what each side does with it, and whether the difference is a decision or a defect. One
+was a defect. The rest are decisions, each written down.
 
 ---
 
