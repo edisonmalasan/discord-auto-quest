@@ -79,6 +79,16 @@ fn current_platform() -> &'static str {
     }
 }
 
+/// Whether this platform needs a visible window for a quest to be detected.
+///
+/// On macOS, Discord's local integration looks for an *application*, so a stub
+/// with no window is not a quest. The interface has to say so plainly rather
+/// than leave the user wondering why a quest did not count.
+#[tauri::command]
+fn needs_visible_window() -> bool {
+    cfg!(target_os = "macos")
+}
+
 /// Start a quest: write the stub where Discord expects it and run it.
 #[tauri::command]
 async fn start_quest(
@@ -140,6 +150,7 @@ pub fn run() {
             refresh_catalogue,
             stub_root,
             current_platform,
+            needs_visible_window,
             start_quest,
             stop_quest,
             list_quests,

@@ -13,6 +13,7 @@ vi.mock('./lib/ipc', () => ({
   onCatalogueRefreshFailed: () => Promise.resolve(() => {}),
   stubRoot: () => Promise.resolve('C:\\Users\\ed\\AppData\\Local\\discord-auto-quest\\games'),
   currentPlatform: () => Promise.resolve('win32'),
+  needsVisibleWindow: () => Promise.resolve(false),
   listQuests: () => Promise.resolve({ quests: [], error: null }),
   stubStates: () => Promise.resolve([]),
   listQuestsLegacy: () => Promise.resolve([]),

@@ -148,6 +148,31 @@ describe('EntryPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('the filesystem will not accept');
   });
 
+  it('explains that a visible window is part of the mechanism where it is needed', () => {
+    render(
+      <EntryPanel
+        entry={entry()}
+        quests={controller()}
+        currentPlatform="darwin"
+        needsVisibleWindow
+      />,
+    );
+
+    expect(screen.getByText(/visible window/)).toBeInTheDocument();
+  });
+
+  it('says nothing about windows where they are not needed', () => {
+    render(
+      <EntryPanel
+        entry={entry()}
+        quests={controller()}
+        currentPlatform="win32"
+      />,
+    );
+
+    expect(screen.queryByText(/visible window/)).not.toBeInTheDocument();
+  });
+
   it('explains an entry that has no registered executable', () => {
     render(
       <EntryPanel

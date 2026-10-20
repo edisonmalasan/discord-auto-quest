@@ -2,32 +2,54 @@
 //!
 //! Discord's local activity detection reports a game as running when it sees a
 //! process whose image path matches the executable Discord has registered for that
-//! application. The runner is that process.
+//! application. That is the whole mechanism, so this process has exactly one job:
+//! exist, at the right path, until it is stopped by the app.
 //!
 //! Its bytes are compiled into the application, so there is always one to write and
 //! never a resource file to find.
+//!
+//! The runner is built per platform, because the platforms disagree about what a
+//! running game looks like. Windows wants a bare executable and nothing else; macOS
+//! wants an application bundle with a visible window, because Discord's macOS
+//! integration detects applications rather than processes.
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::error::{AppError, AppResult};
 
-/// The runner executable, embedded at build time.
+/// The Windows runner, embedded at build time.
 #[cfg(windows)]
 pub const RUNNER: &[u8] = include_bytes!(concat!(
     env!("OUT_DIR"),
     "/discord-auto-quest-runner.exe"
 ));
 
-/// There is no runner for this platform yet. The macOS and Linux runners are
-/// separate mechanisms and land with their own groups.
-#[cfg(not(windows))]
+/// The macOS runner, embedded at build time.
+#[cfg(target_os = "macos")]
+pub const RUNNER: &[u8] = include_bytes!(concat!(
+    env!("OUT_DIR"),
+    "/discord-auto-quest-runner-macos"
+));
+
+/// There is no runner for this platform yet. The Linux runner is a separate
+/// mechanism and lands with its own group.
+#[cfg(not(any(windows, target_os = "macos")))]
 pub const RUNNER: &[u8] = &[];
 
 /// The runner's file name on disk.
 ///
 /// The name is what the process is called, and it is what a user would see in a
 /// process list next to the real game.
+#[cfg(windows)]
 pub const FILE_NAME: &str = "discord-auto-quest-runner.exe";
+
+/// The macOS runner's file name on disk.
+#[cfg(target_os = "macos")]
+pub const FILE_NAME: &str = "discord-auto-quest-runner-macos";
+
+/// The runner's file name on disk, where there is no runner.
+#[cfg(not(any(windows, target_os = "macos")))]
+pub const FILE_NAME: &str = "discord-auto-quest-runner";
 
 /// Write the runner to `path`, creating the parent directories.
 pub fn materialise(path: &Path) -> AppResult<()> {
@@ -50,14 +72,16 @@ pub fn size() -> u64 {
     RUNNER.len() as u64
 }
 
-/// Where the runner would be written for a game, given the game's directory.
-///
-/// The path is the game's own directory, which is where the stub belongs: the stub
-/// has to sit at the path Discord matches, and the runner is the file that sits there.
-pub fn stub_path(games_root: &Path, app_id: &str, segments: &[String]) -> PathBuf {
+/// The path a stub takes for a registered executable, given the game's directory.
+#[cfg(test)]
+pub fn stub_path(
+    games_root: &Path,
+    app_id: &str,
+    segments: &[String],
+) -> std::path::PathBuf {
     let mut path = games_root.join(app_id);
     for segment in segments {
-        path = path.join(segment);
+        path.push(segment);
     }
     path
 }

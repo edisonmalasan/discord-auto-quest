@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
+use std::path::PathBuf;
+use std::process::Child;
 use std::sync::{Arc, Mutex};
 
 use serde::{Deserialize, Serialize};
@@ -8,14 +8,13 @@ use serde::{Deserialize, Serialize};
 use crate::catalogue::service::CatalogueService;
 use crate::error::{AppError, AppResult};
 
+use super::launch;
 use super::path;
 use super::process;
 use super::records::{self, QuestRecord};
 
-/// The `CREATE_NO_WINDOW` flag. The runner is a windowed binary already, so this
-/// only makes sure a console can never appear.
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+#[cfg(target_os = "macos")]
+use super::bundle;
 
 /// What the interface asks for: an application, and the registered path it wants to
 /// mirror.
@@ -104,6 +103,35 @@ struct LiveQuest {
     child: Option<Child>,
 }
 
+/// What a launch produced.
+struct Launched {
+    /// The process the app has to watch.
+    pid: u32,
+    /// The handle to the process, when the platform gives the app one.
+    child: Option<Child>,
+    /// Where the stub was written.
+    stub_path: PathBuf,
+}
+
+/// Where a registered path's stub goes.
+struct StubLocation {
+    /// The path Discord matches: the executable, or the bundle on macOS.
+    path: PathBuf,
+    /// The file the runner occupies.
+    executable: PathBuf,
+}
+
+impl StubLocation {
+    /// Whether the stub is on disk right now.
+    ///
+    /// This is a real check of the filesystem, made at the moment it is asked
+    /// for. The application never infers that a stub is installed from a flag it
+    /// set earlier.
+    fn is_installed(&self) -> bool {
+        self.executable.is_file()
+    }
+}
+
 /// Runs quests.
 pub struct QuestService {
     catalogue: CatalogueService,
@@ -164,7 +192,9 @@ impl QuestService {
                 continue;
             }
 
-            let stub_present = records::stub_installed(Path::new(&record.stub_path));
+            let stub_present = self.stub_location(&record.app_id, &record.registered_path)
+                .map(|location| location.is_installed())
+                .unwrap_or(false);
 
             kept.push(record.clone());
             recovered.push(LiveQuest {
@@ -218,10 +248,6 @@ impl QuestService {
                 ))
             })?;
 
-        let segments = path::segments(&executable.path)?;
-        let stub_path = path::stub_path(&self.games_root, &entry.id, &segments);
-        path::ensure_inside(&self.games_root, &stub_path)?;
-
         let id = quest_id(&entry.id, &executable.path);
 
         // A quest for the same executable is replaced, not duplicated: there is one
@@ -229,28 +255,10 @@ impl QuestService {
         // clears away a quest whose stub was deleted from disk.
         let _ = self.stop(&id);
 
-        crate::runner::materialise(&stub_path)?;
+        let launched = self.launch(&entry.id, &entry.name, &executable.path)?;
 
-        let mut command = Command::new(&stub_path);
-        command
-            .arg("--title")
-            .arg(&entry.name)
-            .current_dir(stub_path.parent().unwrap_or(&self.games_root));
-
-        #[cfg(windows)]
-        {
-            use std::os::windows::process::CommandExt;
-            command.creation_flags(CREATE_NO_WINDOW);
-        }
-
-        let child = command.spawn().map_err(|error| {
-            AppError::spawn_failed(format!(
-                "the runner at {} could not be started: {error}",
-                stub_path.display()
-            ))
-        })?;
-
-        let pid = child.id();
+        let pid = launched.pid;
+        let stub_path = launched.stub_path;
         let view = QuestView {
             id: id.clone(),
             app_id: entry.id.clone(),
@@ -278,12 +286,89 @@ impl QuestService {
                 id,
                 LiveQuest {
                     view: view.clone(),
-                    child: Some(child),
+                    child: launched.child,
                 },
             );
         }
 
         Ok(view)
+    }
+
+    /// Where a registered path's stub goes, and whether it is there.
+    ///
+    /// On macOS a registered path that names an application bundle becomes a real
+    /// `.app` bundle, and it is launched the way macOS launches applications.
+    /// Everywhere else it is a bare executable, launched directly.
+    fn stub_location(&self, app_id: &str, registered_path: &str) -> AppResult<StubLocation> {
+        #[cfg(target_os = "macos")]
+        {
+            if bundle::is_bundle(registered_path) {
+                // The bundle's segments are the registered path's own segments,
+                // with the `.app` extension kept: the bundle is named after what
+                // Discord registered, because the name is what the match is on.
+                let segments = path::raw_segments(registered_path)?;
+                let bundle = bundle::layout(&self.games_root, app_id, &segments)?;
+                path::ensure_inside(&self.games_root, &bundle.path)?;
+
+                return Ok(StubLocation {
+                    path: bundle.path,
+                    executable: bundle.executable,
+                });
+            }
+        }
+
+        let segments = path::segments(registered_path)?;
+        let stub_path = path::stub_path(&self.games_root, app_id, &segments);
+        path::ensure_inside(&self.games_root, &stub_path)?;
+
+        Ok(StubLocation {
+            path: stub_path.clone(),
+            executable: stub_path,
+        })
+    }
+
+    /// Materialise the stub and start it, in the way the platform asks for.
+    fn launch(
+        &self,
+        app_id: &str,
+        display_name: &str,
+        registered_path: &str,
+    ) -> AppResult<Launched> {
+        let location = self.stub_location(app_id, registered_path)?;
+
+        #[cfg(target_os = "macos")]
+        {
+            if location.path != location.executable {
+                // A macOS application bundle: the runner goes inside it, and the
+                // bundle is opened the way macOS opens applications.
+                bundle::create(
+                    &bundle::Bundle {
+                        path: location.path.clone(),
+                        executable: location.executable.clone(),
+                    },
+                    display_name,
+                    crate::runner::RUNNER,
+                )?;
+
+                let launched = launch::launch_bundle(&location.path, display_name)?;
+
+                return Ok(Launched {
+                    pid: launched.pid,
+                    child: launched.child,
+                    stub_path: location.path,
+                });
+            }
+        }
+
+        crate::runner::materialise(&location.executable)?;
+
+        let launched = launch::launch_executable(&location.executable, display_name)?;
+
+        Ok(Launched {
+            pid: launched.pid,
+            child: launched.child,
+            stub_path: location.path,
+        })
     }
 
     /// Stop a quest by its identity.
@@ -339,7 +424,10 @@ impl QuestService {
                 }
 
                 // The stub's presence is a filesystem check, every time.
-                let stub_present = records::stub_installed(Path::new(&quest.view.stub_path));
+                let stub_present = self
+                    .stub_location(&quest.view.app_id, &quest.view.registered_path)
+                    .map(|location| location.is_installed())
+                    .unwrap_or(false);
                 quest.view.running = stub_present;
                 quest.view.state = if stub_present {
                     QuestState::Running
@@ -381,8 +469,8 @@ impl QuestService {
         let mut states = Vec::new();
 
         for executable in &entry.executables {
-            let segments = match path::segments(&executable.path) {
-                Ok(segments) => segments,
+            let location = match self.stub_location(&entry.id, &executable.path) {
+                Ok(location) => location,
                 Err(error) => {
                     states.push(StubState {
                         registered_path: executable.path.clone(),
@@ -394,12 +482,10 @@ impl QuestService {
                 }
             };
 
-            let stub_path = path::stub_path(&self.games_root, &entry.id, &segments);
-
             states.push(StubState {
                 registered_path: executable.path.clone(),
-                installed: records::stub_installed(&stub_path),
-                path: stub_path.display().to_string(),
+                installed: location.is_installed(),
+                path: location.path.display().to_string(),
                 blocked: None,
             });
         }
@@ -441,6 +527,7 @@ fn now_seconds() -> u64 {
 mod tests {
     use super::*;
     use crate::quest::records::QuestRecord;
+    use std::path::Path;
     use std::time::Duration;
 
     /// A service over a temporary directory. The catalogue is never loaded, so

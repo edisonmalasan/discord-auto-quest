@@ -1,31 +1,34 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// Builds the Windows runner and embeds it in the application.
+/// Builds the platform's runner and embeds it in the application.
 ///
 /// The runner is a separate executable, not a library: it is copied to the mirrored
 /// path and launched as its own process. Embedding its bytes means the application
-/// always has a runner to write, with no resource file to find and no way for one to
-/// be missing at run time.
+/// always has a runner to write, with no resource file to find and no way for one
+/// to be missing at run time.
 fn main() {
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if target.contains("windows") {
-        let runner = build_runner();
-        embed(&runner);
+        let runner = build_runner("runner", "discord-auto-quest-runner.exe");
+        embed(&runner, "discord-auto-quest-runner.exe");
+    } else if target.contains("apple-darwin") {
+        let runner = build_runner("runner-macos", "discord-auto-quest-runner-macos");
+        embed(&runner, "discord-auto-quest-runner-macos");
     }
 
     tauri_build::build()
 }
 
-/// Build the runner in its own target directory and return the path to it.
+/// Build a runner in its own target directory and return the path to it.
 ///
 /// The runner is built by a separate `cargo` invocation with its own target
 /// directory, so it never contends with this crate's build lock.
-fn build_runner() -> PathBuf {
+fn build_runner(directory: &str, binary: &str) -> PathBuf {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
-        .join("runner")
+        .join(directory)
         .join("Cargo.toml");
 
     let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_string());
@@ -44,10 +47,10 @@ fn build_runner() -> PathBuf {
 
     let built = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
-        .join("runner")
+        .join(directory)
         .join("target")
         .join("release")
-        .join("discord-auto-quest-runner.exe");
+        .join(binary);
 
     assert!(built.exists(), "the runner must be at {}", built.display());
 
@@ -56,9 +59,8 @@ fn build_runner() -> PathBuf {
 }
 
 /// Copy the runner into `OUT_DIR` so `include_bytes!` can pick it up.
-fn embed(runner: &Path) {
-    let out = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR"))
-        .join("discord-auto-quest-runner.exe");
+fn embed(runner: &Path, name: &str) {
+    let out = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR")).join(name);
 
     std::fs::copy(runner, &out)
         .unwrap_or_else(|error| panic!("the runner must be copyable into OUT_DIR: {error}"));

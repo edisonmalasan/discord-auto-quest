@@ -72,6 +72,36 @@ pub fn stub_path(games_root: &Path, app_id: &str, segments: &[String]) -> PathBu
     path
 }
 
+/// The segments of a registered path, with the extension kept.
+///
+/// A macOS application bundle is named after the registered path, extension and
+/// all, because the bundle's name is what Discord's match is on. The extension is
+/// stripped from the executable *inside* the bundle instead.
+pub fn raw_segments(registered_path: &str) -> AppResult<Vec<String>> {
+    let trimmed = registered_path.trim();
+
+    if trimmed.is_empty() {
+        return Err(AppError::invalid_path(
+            "the registered path is empty, so there is nothing to mirror",
+        ));
+    }
+
+    let mut segments: Vec<String> = Vec::new();
+
+    for raw in trimmed.split('/') {
+        if raw.is_empty() {
+            return Err(AppError::invalid_path(format!(
+                "the registered path `{trimmed}` has an empty segment"
+            )));
+        }
+
+        check_segment(raw, trimmed)?;
+        segments.push(raw.to_string());
+    }
+
+    Ok(segments)
+}
+
 /// Check that the resolved path is still inside the games root.
 ///
 /// The segments are checked individually, so this should never fire. It is here
