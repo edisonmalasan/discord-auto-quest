@@ -47,6 +47,12 @@ jobs:
           node-version: 20
           cache: npm
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner -> target
+            runner-linux -> target
+            runner-macos -> target
       - name: the libraries the window renders through
         run: |
           sudo apt-get update
@@ -94,6 +100,10 @@ jobs:
           node-version: 20
           cache: npm
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner-linux -> target
       - name: the libraries the window renders through
         run: |
           sudo apt-get update
@@ -104,6 +114,10 @@ jobs:
       - run: npm ci
       - name: build
         run: |
+          # The application embeds the frontend, so the frontend is built first.
+          # Without it the build fails with "the frontendDist configuration is
+          # set to ../dist but this path doesn't exist".
+          npm run build
           cargo build --release --manifest-path runner-linux/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
       - name: check the runner
@@ -129,9 +143,15 @@ jobs:
           node-version: 20
           cache: npm
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner -> target
       - run: npm ci
       - name: build
         run: |
+          # The application embeds the frontend, so the frontend is built first.
+          npm run build
           cargo build --release --manifest-path runner/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
       - name: check the runner
@@ -157,9 +177,15 @@ jobs:
           node-version: 20
           cache: npm
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner-macos -> target
       - run: npm ci
       - name: build
         run: |
+          # The application embeds the frontend, so the frontend is built first.
+          npm run build
           cargo build --release --manifest-path runner-macos/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
       - name: check the runner

@@ -326,6 +326,30 @@ disclaimer. Both are in the release archive.
 checks, the tests, the version commands, and the release command, and it says which platforms are
 verified and which are not.
 
+**The acceptance cases are checked, not asserted.** The contract for "done" is the A1–A15 list, and
+two of those cases were only ever checked by hand: that the shipped frontend carries no
+catalogue snapshot, and that the Discord RPC feature is absent. Both are now checked against the
+artefacts rather than the source, because a check against the source cannot see what the bundler
+produced. The check was proven to fail: a catalogue field name was written into the built bundle
+by hand, and the check failed with the reason.
+
+**The project builds on every platform.** A workflow builds and checks the application on
+Windows, Linux and macOS, and runs each platform's own questing tests, so the Linux and macOS
+suites are run on the platform they are about. The artifacts are uploaded rather than published,
+so a green run cannot put something in front of a user by itself.
+
+That workflow found two faults that nothing here could have found, and both were real:
+
+- The Linux questing test spawned a process and polled it without ever waiting for it, so the
+  process was left as a zombie when the wait timed out. `clippy` on Linux says so, and says a
+  spawned process must be waited for on every path.
+- The Windows runner is `no_std` and `no_main`, so it cannot unwind a panic — the unwinder is
+  not in the binary. The release profile said so and the development profile did not, so a plain
+  `cargo build` of the runner failed to link for a reason that had nothing to do with the code.
+
+The lesson is the same one the Linux group taught: a check that only runs on the machine that
+wrote the code is not a check of the code.
+
 
 ---
 
