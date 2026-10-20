@@ -1,0 +1,246 @@
+# Build and check the application on every platform we ship.
+#
+# Each platform builds in the environment it will run in, because the desktop
+# window needs a webview toolkit and native libraries that cannot be carried
+# across: a Windows build made on Linux would link against the wrong libraries,
+# and a macOS build needs the macOS frameworks.
+#
+# The artifacts are uploaded rather than published. Publishing is a separate,
+# deliberate step, so a green run cannot put something in front of a user by
+# itself.
+
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the release
+        type: boolean
+        default: false
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # The Tauri CLI is invoked through cargo, so it is installed once per job.
+  TAURI_CLI_VERSION: "^2"
+
+jobs:
+  check:
+    name: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner -> target
+            runner-linux -> target
+            runner-macos -> target
+      - name: the libraries the window renders through
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config file curl ca-certificates \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev
+      - run: npm ci
+      - name: the version
+        run: npm run version:check
+      - name: formatting
+        run: |
+          cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+          cargo fmt --manifest-path runner/Cargo.toml -- --check
+          cargo fmt --manifest-path runner-linux/Cargo.toml -- --check
+          cargo fmt --manifest-path runner-macos/Cargo.toml -- --check
+      - name: lint
+        run: |
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+          cargo clippy --manifest-path runner-linux/Cargo.toml --all-targets -- -D warnings
+          cargo clippy --manifest-path runner-macos/Cargo.toml --all-targets -- -D warnings
+          # The Windows runner is `no_std` and `no_main`, so it has no test
+          # harness: a test binary would need the standard library and an
+          # unwinder the runner does not have. Its binary target is linted
+          # instead, and it carries no tests to run.
+          cargo clippy --manifest-path runner/Cargo.toml --bins -- -D warnings
+      - name: the frontend tests
+        run: npm test -- --run
+      - name: the backend tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+      - name: the acceptance cases
+        run: |
+          npm run build
+          npm run check:acceptance
+
+  linux:
+    name: linux archive
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner-linux -> target
+      - name: the libraries the window renders through
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config file curl ca-certificates \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev
+      - run: npm ci
+      - name: build
+        run: |
+          # The application embeds the frontend, so the frontend is built first.
+          # Without it the build fails with "the frontendDist configuration is
+          # set to ../dist but this path doesn't exist".
+          npm run build
+          cargo build --release --manifest-path runner-linux/Cargo.toml
+          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
+      - name: check the runner
+        run: npm run check:runner
+      - name: the linux questing tests
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-archive
+          path: |
+            runner-linux/target/release/discord-auto-quest-runner
+            src-tauri/target/release/discord-auto-quest
+
+  windows:
+    name: windows archive
+    runs-on: windows-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner -> target
+      - run: npm ci
+      - name: build
+        run: |
+          # The application embeds the frontend, so the frontend is built first.
+          npm run build
+          cargo build --release --manifest-path runner/Cargo.toml
+          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
+      - name: check the runner
+        run: npm run check:runner
+      - name: the windows questing tests
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-archive
+          path: |
+            runner/target/release/discord-auto-quest-runner.exe
+            src-tauri/target/release/discord-auto-quest.exe
+
+  macos:
+    name: macos archive
+    runs-on: macos-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+            runner-macos -> target
+      - run: npm ci
+      - name: build
+        run: |
+          # The application embeds the frontend, so the frontend is built first.
+          npm run build
+          cargo build --release --manifest-path runner-macos/Cargo.toml
+          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
+      - name: check the runner
+        run: npm run check:runner
+      - name: the macos questing tests
+        # The macOS runner opens a window, so these tests need a session with a
+        # window server. The runner that hosts this job has one.
+        #
+        # The output is not captured, because what the tests have to say about
+        # the window server is part of the evidence.
+        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_macos -- --nocapture
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-archive
+          path: |
+            runner-macos/target/release/discord-auto-quest-runner
+            src-tauri/target/release/discord-auto-quest
+
+  # The release is cut from the artifacts the three builds produced, so what is
+  # published is exactly what was built and checked rather than a second build
+  # that might differ. The job runs only for a tag: a plain run builds and stops
+  # there, and nothing reaches a user until the tag is pushed.
+  publish:
+    name: publish the release
+    needs: [linux, windows, macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: the files to publish
+        run: |
+          mkdir -p publish
+          find artifacts -type f \( -name '*.exe' -o -name 'discord-auto-quest' \
+            -o -name 'discord-auto-quest-runner' \) \
+            -exec bash -c 'for file; do cp "$file" "publish/$(basename "$file")"; done' _ {} +
+          cp LICENSE NOTICE README.md publish/
+          echo "publish: the files that will be published"
+          ls -la publish
+      - name: the checksums
+        run: |
+          cd publish
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+      - name: cut the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            --title "discord-auto-quest $version" \
+            --generate-notes \
+            publish/*
+          echo "publish: https://github.com/${{ github.repository }}/releases/tag/$GITHUB_REF_NAME"

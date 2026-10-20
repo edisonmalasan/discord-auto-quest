@@ -12,8 +12,7 @@
   buying and installing every title in the catalogue.
 - **Current focus:** The reverse-engineering study is complete. The application exists, serves
   Discord's catalogue, and quests: a stub is materialised at the mirrored path, launched, and
-  stopped by its process id. Verified on Windows and on Linux. The macOS mechanism is implemented
-  and built, but has not been run on a Mac.
+  stopped by its process id. Verified on Windows, on Linux, and on macOS.
 
 ## Where to Look
 

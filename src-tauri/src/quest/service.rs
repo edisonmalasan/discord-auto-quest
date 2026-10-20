@@ -191,7 +191,8 @@ impl QuestService {
                 continue;
             }
 
-            let stub_present = self.stub_location(&record.app_id, &record.registered_path)
+            let stub_present = self
+                .stub_location(&record.app_id, &record.registered_path)
                 .map(|location| location.is_installed())
                 .unwrap_or(false);
 
@@ -299,7 +300,12 @@ impl QuestService {
     /// `.app` bundle, and it is launched the way macOS launches applications.
     /// Everywhere else it is a bare executable, launched directly.
     fn stub_location(&self, app_id: &str, registered_path: &str) -> AppResult<StubLocation> {
-        stub_location_for(std::env::consts::OS, &self.games_root, app_id, registered_path)
+        stub_location_for(
+            std::env::consts::OS,
+            &self.games_root,
+            app_id,
+            registered_path,
+        )
     }
 
     /// Materialise the stub and start it, in the way the platform asks for.
@@ -354,9 +360,9 @@ impl QuestService {
             .lock()
             .map_err(|_| AppError::io("the quest table is poisoned"))?;
 
-        let mut quest = live.remove(id).ok_or_else(|| {
-            AppError::not_installed(format!("there is no quest `{id}` to stop"))
-        })?;
+        let mut quest = live
+            .remove(id)
+            .ok_or_else(|| AppError::not_installed(format!("there is no quest `{id}` to stop")))?;
 
         match quest.child.as_mut() {
             Some(child) => {
@@ -422,7 +428,10 @@ impl QuestService {
             .ok()
             .and_then(|slot| slot.clone());
 
-        QuestList { quests: views, error }
+        QuestList {
+            quests: views,
+            error,
+        }
     }
 
     /// What the filesystem says about each of an application's registered
@@ -541,8 +550,8 @@ mod tests {
     /// A service over a temporary directory. The catalogue is never loaded, so
     /// nothing here touches the network.
     fn service(dir: &Path) -> QuestService {
-        let catalogue =
-            CatalogueService::new(dir.to_path_buf(), Duration::from_secs(3600)).expect("the service builds");
+        let catalogue = CatalogueService::new(dir.to_path_buf(), Duration::from_secs(3600))
+            .expect("the service builds");
         QuestService::new(catalogue, dir.to_path_buf())
     }
 
@@ -552,7 +561,13 @@ mod tests {
             app_id: "1".to_string(),
             display_name: "Alpha".to_string(),
             registered_path: "a/b.exe".to_string(),
-            stub_path: dir.join("games").join("1").join("a").join("b").display().to_string(),
+            stub_path: dir
+                .join("games")
+                .join("1")
+                .join("a")
+                .join("b")
+                .display()
+                .to_string(),
             pid,
             started_at: 1_700_000_000,
         }
@@ -649,13 +664,8 @@ mod tests {
 
     #[test]
     fn a_macos_bundle_is_a_bundle_on_macos() {
-        let location = stub_location_for(
-            "macos",
-            Path::new("/games"),
-            "42",
-            "osx64/dota2.app",
-        )
-        .expect("a location");
+        let location = stub_location_for("macos", Path::new("/games"), "42", "osx64/dota2.app")
+            .expect("a location");
 
         assert_eq!(
             location.path,
@@ -672,8 +682,8 @@ mod tests {
     #[test]
     fn a_bundle_is_an_ordinary_executable_elsewhere() {
         for os in ["windows", "linux"] {
-            let location =
-                stub_location_for(os, Path::new("/games"), "42", "osx64/dota2.app").expect("a location");
+            let location = stub_location_for(os, Path::new("/games"), "42", "osx64/dota2.app")
+                .expect("a location");
 
             assert_eq!(
                 location.path,
@@ -686,13 +696,9 @@ mod tests {
     #[test]
     fn an_ordinary_executable_is_one_on_every_platform() {
         for os in ["macos", "windows", "linux"] {
-            let location = stub_location_for(
-                os,
-                Path::new("/games"),
-                "42",
-                "_retail_/overwatch.exe",
-            )
-            .expect("a location");
+            let location =
+                stub_location_for(os, Path::new("/games"), "42", "_retail_/overwatch.exe")
+                    .expect("a location");
 
             assert_eq!(
                 location.path,
@@ -706,8 +712,8 @@ mod tests {
     #[test]
     fn a_refused_path_is_refused_on_every_platform() {
         for os in ["macos", "windows", "linux"] {
-            let error = stub_location_for(os, Path::new("/games"), "42", ">hl2_osx")
-                .expect_err("refused");
+            let error =
+                stub_location_for(os, Path::new("/games"), "42", ">hl2_osx").expect_err("refused");
 
             assert_eq!(error.code, crate::error::ErrorCode::InvalidPath);
         }

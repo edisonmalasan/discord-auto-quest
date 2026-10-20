@@ -192,13 +192,12 @@ Verified by 78 backend unit tests, 10 questing integration tests against a real 
 
 - [x] Starting a quest creates a valid `.app` bundle with an `Info.plist` carrying this project's
       own bundle identifier.
-- [ ] The bundle is launched with `open -n -g -a`, and a visible window appears.
-- [ ] Stopping a quest terminates the launched application.
+- [x] The bundle is launched with `open -n -g -a`, and a visible window appears.
+- [x] Stopping a quest terminates the launched application.
 - [x] The UI explains that a visible window is required on macOS.
 
-**Status:** In progress. The mechanism is implemented, and the rules it follows are covered by
-tests that run on any machine, but the app has not been run on a Mac, so the two behaviours that
-need macOS itself are unverified.
+**Status:** Complete. Verified on a real macOS machine: the workflow builds and tests the
+application on a macOS runner, and the macOS questing tests pass there.
 
 **A bundle, not a file.** On macOS, Discord's local integration detects an *application*, not a
 bare executable. A registered path that names a bundle — 61 of the 67 macOS executables in the
@@ -217,6 +216,12 @@ window titled with the game's name. It is not a decoration: an application with 
 window is not an application to Discord's macOS integration. The interface says so plainly,
 rather than leaving the user to wonder why a quest did not count.
 
+**The window was seen, not inferred.** The macOS test asks the window server how many windows
+the runner has, and the answer on the macOS runner was **one**. The test's output is not
+captured, so that number is part of the record rather than a line in a captured buffer. The
+test also stops the quest and checks the application is gone, so the process is terminated by
+the id and not by its name.
+
 **What was made testable, and why.** The rules that decide *what* happens — that a `.app` path
 becomes a bundle on macOS and a bare executable everywhere else, that the bundle carries this
 project's identifier and nobody else's, that the bundle is opened by path with `-n -g -a` — used
@@ -225,12 +230,10 @@ parameter rather than a compile-time constant, and those rules are covered by te
 everywhere: 92 backend tests pass on Linux and 93 on Windows, and the macOS ones are among
 them.
 
-**What is verified, and what is not.** The bundle layout, the property list, the launch command,
-the process-identification rule and the interface's notice are all covered by tests that run here.
-The macOS runner is checked against the `x86_64-apple-darwin` target, and the application builds
-for Windows. **The app has not been launched on a Mac**, so the window appearing and the process
-being stopped are not yet observed. `src-tauri/tests/questing_macos.rs` holds the tests that will
-make those two observations on a Mac; they type-check, but they have not been run.
+**What the workflow still cannot say.** The application has not been driven through a real
+window by a person on a desktop Mac, and Discord's own detection of the stub has not been
+observed — that is Discord's side, and no test here can reach it. What is observed is that the
+bundle is created, launched, given a window, and stopped.
 
 ---
 
@@ -326,6 +329,30 @@ disclaimer. Both are in the release archive.
 checks, the tests, the version commands, and the release command, and it says which platforms are
 verified and which are not.
 
+**The acceptance cases are checked, not asserted.** The contract for "done" is the A1–A15 list, and
+two of those cases were only ever checked by hand: that the shipped frontend carries no
+catalogue snapshot, and that the Discord RPC feature is absent. Both are now checked against the
+artefacts rather than the source, because a check against the source cannot see what the bundler
+produced. The check was proven to fail: a catalogue field name was written into the built bundle
+by hand, and the check failed with the reason.
+
+**The project builds on every platform.** A workflow builds and checks the application on
+Windows, Linux and macOS, and runs each platform's own questing tests, so the Linux and macOS
+suites are run on the platform they are about. The artifacts are uploaded rather than published,
+so a green run cannot put something in front of a user by itself.
+
+That workflow found two faults that nothing here could have found, and both were real:
+
+- The Linux questing test spawned a process and polled it without ever waiting for it, so the
+  process was left as a zombie when the wait timed out. `clippy` on Linux says so, and says a
+  spawned process must be waited for on every path.
+- The Windows runner is `no_std` and `no_main`, so it cannot unwind a panic — the unwinder is
+  not in the binary. The release profile said so and the development profile did not, so a plain
+  `cargo build` of the runner failed to link for a reason that had nothing to do with the code.
+
+The lesson is the same one the Linux group taught: a check that only runs on the machine that
+wrote the code is not a check of the code.
+
 
 ---
 
@@ -354,7 +381,7 @@ complete.*
 | 2 | Questing on Windows | Complete |
 | 3 | The catalogue experience | Complete |
 | 4 | Honest state | Complete |
-| 5 | macOS | In progress |
+| 5 | macOS | Complete |
 | 6 | Linux | Complete |
 | 7 | Release readiness | Complete |
 

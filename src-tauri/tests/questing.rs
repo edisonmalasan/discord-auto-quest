@@ -51,7 +51,10 @@ fn entry(id: &str, name: &str, path: &str) -> CatalogEntry {
 /// A service whose catalogue is already loaded, with no network involved.
 async fn services(data_dir: &Path) -> (CatalogueService, QuestService) {
     let snapshot = CatalogueSnapshot {
-        entries: vec![entry(APP_ID, "Overwatch", "_retail_/overwatch.exe"), entry(OTHER_APP_ID, "HL2", ILLEGAL_PATH)],
+        entries: vec![
+            entry(APP_ID, "Overwatch", "_retail_/overwatch.exe"),
+            entry(OTHER_APP_ID, "HL2", ILLEGAL_PATH),
+        ],
         stats: discord_auto_quest_lib::catalogue::model::CatalogueStats {
             total: 2,
             questable: 2,
@@ -85,7 +88,10 @@ async fn services(data_dir: &Path) -> (CatalogueService, QuestService) {
 
     // The quest service resolves the registered path from the catalogue it holds, so
     // the catalogue has to be loaded before a quest can start.
-    catalogue.load().await.expect("the catalogue loads from the cache");
+    catalogue
+        .load()
+        .await
+        .expect("the catalogue loads from the cache");
 
     (catalogue, quests)
 }
@@ -111,9 +117,7 @@ fn decoy(directory: &Path) -> Child {
     let path: PathBuf = directory.join(runner::FILE_NAME);
     runner::materialise(&path).expect("the decoy is written");
 
-    Command::new(&path)
-        .spawn()
-        .expect("the decoy starts")
+    Command::new(&path).spawn().expect("the decoy starts")
 }
 
 #[tokio::test]
@@ -187,8 +191,14 @@ async fn an_illegal_path_is_refused_and_nothing_is_written() {
         })
         .expect_err("the path is refused");
 
-    assert_eq!(error.code, discord_auto_quest_lib::error::ErrorCode::InvalidPath);
-    assert!(error.message.contains('>'), "the message names the character: {error}");
+    assert_eq!(
+        error.code,
+        discord_auto_quest_lib::error::ErrorCode::InvalidPath
+    );
+    assert!(
+        error.message.contains('>'),
+        "the message names the character: {error}"
+    );
 
     // Nothing may be written for a path that was refused.
     let games = dir.path().join("games");
@@ -391,7 +401,9 @@ async fn a_path_the_filesystem_will_not_accept_is_reported_as_blocked() {
     let dir = tempfile::tempdir().expect("a temp dir");
     let (_catalogue, quests) = services(dir.path()).await;
 
-    let states = quests.stub_states(OTHER_APP_ID).expect("the states are read");
+    let states = quests
+        .stub_states(OTHER_APP_ID)
+        .expect("the states are read");
 
     assert_eq!(states.len(), 1);
     assert_eq!(states[0].registered_path, ILLEGAL_PATH);
@@ -401,5 +413,8 @@ async fn a_path_the_filesystem_will_not_accept_is_reported_as_blocked() {
         blocked.code,
         discord_auto_quest_lib::error::ErrorCode::InvalidPath
     );
-    assert!(blocked.message.contains('>'), "the message names the character");
+    assert!(
+        blocked.message.contains('>'),
+        "the message names the character"
+    );
 }

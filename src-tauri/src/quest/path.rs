@@ -127,9 +127,10 @@ pub fn ensure_inside(root: &Path, path: &Path) -> AppResult<()> {
 
 /// Refuse a segment the filesystem will not accept.
 fn check_segment(segment: &str, whole: &str) -> AppResult<()> {
-    if let Some(character) = segment.chars().find(|character| {
-        ILLEGAL_CHARACTERS.contains(character) || character.is_control()
-    }) {
+    if let Some(character) = segment
+        .chars()
+        .find(|character| ILLEGAL_CHARACTERS.contains(character) || character.is_control())
+    {
         return Err(AppError::invalid_path(format!(
             "the registered path `{whole}` contains `{character}`, which the filesystem will not accept"
         )));
