@@ -113,28 +113,29 @@ mod unix {
     const SIGTERM: i32 = 15;
     /// Signal zero asks whether a process exists without touching it.
     const SIGNAL_EXISTS: i32 = 0;
+    /// `EPERM`: the process exists, but it belongs to somebody else.
+    const EPERM: i32 = 1;
 
     pub fn is_alive(pid: u32) -> bool {
         // A process this user does not own reports a permission error rather than
         // "no such process", so a failure is not proof of absence: the process is
         // alive whenever the question cannot be answered with "no".
-        unsafe { kill(pid as i32, SIGNAL_EXISTS) == 0 || last_error_is_permission() }
+        //
+        // The error is read through the standard library rather than through the C
+        // library's `errno` directly. `errno` is a macro over a thread-local
+        // variable, not a function, and declaring it as one and calling it
+        // dereferences a variable as though it were code.
+        unsafe {
+            if kill(pid as i32, SIGNAL_EXISTS) == 0 {
+                return true;
+            }
+
+            std::io::Error::last_os_error().raw_os_error() == Some(EPERM)
+        }
     }
 
     pub fn terminate(pid: u32) -> bool {
         unsafe { kill(pid as i32, SIGTERM) == 0 }
-    }
-
-    /// Whether the last `kill` failed because the process belongs to someone else.
-    ///
-    /// The error number is read from the C library directly, because the Rust
-    /// standard library's copy of it is private.
-    fn last_error_is_permission() -> bool {
-        extern "C" {
-            fn errno() -> i32;
-        }
-        const EPERM: i32 = 1;
-        unsafe { errno() == EPERM }
     }
 }
 

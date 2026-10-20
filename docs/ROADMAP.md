@@ -230,11 +230,41 @@ stay unchecked until they are.
 
 *Outcome: Questing works on Linux without assuming a graphical toolkit is installed.*
 
-- [ ] The runner has no GTK or equivalent runtime dependency.
-- [ ] The runner starts hidden by default.
-- [ ] Starting and stopping a quest works and is tracked by PID.
+- [x] The runner has no GTK or equivalent runtime dependency.
+- [x] The runner starts hidden by default.
+- [x] Starting and stopping a quest works and is tracked by PID.
 
-**Status:** Not started
+**Status:** Complete. Verified on a real Linux machine — Ubuntu 26.04 under WSL2, x86-64 — by
+running the application's own test suite there, against a runner built for that machine.
+
+**No toolkit, and nothing to install.** The upstream Linux runner draws a GTK4 window. GTK
+cannot be assumed on a user's machine, so the clone's runner is headless: it has no window, no
+toolkit, and no dependencies at all. The built binary's dynamic section was parsed and it needs
+no shared library beyond the C library that every machine with a desktop already has — no GTK,
+no X11, no Wayland. A quest needs a process at the right path, and that is all it needs.
+
+**Headless is hidden.** The runner starts with no window and never opens one, so a dozen quests
+are a dozen processes rather than a dozen windows. This is the same rule the product sets for
+Windows, and it is the opposite of what the upstream application does.
+
+**The quest was observed running, not merely compiled.** The Linux integration tests in
+`src-tauri/tests/questing_linux.rs` were run on that machine: the stub lands at the mirrored
+path, the quest is tracked by the process id the backend reported, the process is stopped by
+that id, a process with the same image name is left alone, and a quest that outlived the
+application is found again on start-up and stopped by its id.
+
+**Two real bugs were found by running it there, and both are fixed.**
+
+- The stub was written without the execute bit. A file that cannot be run is not a stub, and
+  the app started it by path: every quest on Linux failed with a permission error. The stub is
+  now given the same permissions a runner needs on every Unix system.
+- The liveness check read `errno` by declaring it as a function. It is a macro over a
+  thread-local variable, and calling it as a function dereferenced a variable as though it
+  were code: the process crashed. The error is now read through the standard library.
+
+Neither fault was visible on Windows, and neither was visible in a cross-compiled build. Both
+were found by running the tests on the operating system they are about.
+
 
 ---
 
@@ -279,7 +309,7 @@ complete.*
 | 3 | The catalogue experience | Complete |
 | 4 | Honest state | Complete |
 | 5 | macOS | In progress |
-| 6 | Linux | Not started |
+| 6 | Linux | Complete |
 | 7 | Release readiness | Not started |
 
 ## Maintenance
