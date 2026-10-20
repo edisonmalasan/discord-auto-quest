@@ -18,7 +18,10 @@ on:
         description: Publish the release
         type: boolean
         default: false
+  pull_request:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -190,6 +193,7 @@ jobs:
           find artifacts -type f \( -name '*.exe' -o -name 'discord-auto-quest' \
             -o -name 'discord-auto-quest-runner' \) \
             -exec bash -c 'for file; do cp "$file" "publish/$(basename "$file")"; done' _ {} +
+          cp LICENSE NOTICE README.md publish/
           echo "publish: the files that will be published"
           ls -la publish
       - name: the checksums
