@@ -98,6 +98,32 @@ fn is_alive(pid: u32) -> bool {
     }
 }
 
+/// Whether a process has a window on screen.
+///
+/// This is the whole point of the macOS runner: Discord's macOS integration
+/// detects an *application*, and an application with no window is not one. The
+/// window server is asked directly, through the tool the system provides for
+/// exactly this question.
+///
+/// The answer is `None` when the question could not be asked — asking about
+/// another process's windows needs the system to allow it, and a machine that
+/// does not allow it cannot answer. `Some(false)` means the answer was "no".
+fn window_count(pid: u32) -> Option<u32> {
+    let output = std::process::Command::new("/usr/bin/osascript")
+        .arg("-e")
+        .arg(format!(
+            "tell application \"System Events\" to count windows of \
+             (first process whose unix id is {pid})"
+        ))
+        .output()
+        .ok()?;
+
+    let text = String::from_utf8_lossy(&output.stdout);
+    let count = text.trim().parse::<u32>().ok()?;
+
+    Some(count)
+}
+
 #[tokio::test]
 async fn a_quest_writes_a_real_application_bundle_and_runs_it() {
     let dir = tempfile::tempdir().expect("a temp dir");
@@ -136,6 +162,32 @@ async fn a_quest_writes_a_real_application_bundle_and_runs_it() {
     assert!(view.pid > 0);
     assert!(is_alive(view.pid), "the stub is running");
     assert!(view.running);
+
+    // The runner creates its window when the application is launched, and a
+    // failure to create it ends the process. The runner is therefore given a
+    // moment to reach that point, and is then checked again: a process that is
+    // still running has a window.
+    std::thread::sleep(Duration::from_millis(750));
+    assert!(
+        is_alive(view.pid),
+        "the runner is still running, so its window was created"
+    );
+
+    // The window itself, asked of the window server. A machine that does not
+    // let the question be asked cannot answer it, and the test says so rather
+    // than claiming a window it did not see.
+    match window_count(view.pid) {
+        Some(count) => assert!(
+            count > 0,
+            "the runner has a window, because that is what makes it an application"
+        ),
+        None => {
+            println!(
+                "the window server would not say how many windows the runner has; \
+                 the runner's survival is the evidence that its window was created"
+            );
+        }
+    }
 
     quests.stop(&view.id).expect("the quest stops");
     assert!(!is_alive(view.pid), "the stub is gone");
