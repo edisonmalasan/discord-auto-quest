@@ -31,9 +31,15 @@ pub const RUNNER: &[u8] = include_bytes!(concat!(
     "/discord-auto-quest-runner-macos"
 ));
 
-/// There is no runner for this platform yet. The Linux runner is a separate
-/// mechanism and lands with its own group.
-#[cfg(not(any(windows, target_os = "macos")))]
+/// The Linux runner, embedded at build time.
+#[cfg(target_os = "linux")]
+pub const RUNNER: &[u8] = include_bytes!(concat!(
+    env!("OUT_DIR"),
+    "/discord-auto-quest-runner-linux"
+));
+
+/// There is no runner for this platform yet.
+#[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
 pub const RUNNER: &[u8] = &[];
 
 /// The runner's file name on disk.
@@ -47,8 +53,12 @@ pub const FILE_NAME: &str = "discord-auto-quest-runner.exe";
 #[cfg(target_os = "macos")]
 pub const FILE_NAME: &str = "discord-auto-quest-runner-macos";
 
+/// The Linux runner's file name on disk.
+#[cfg(target_os = "linux")]
+pub const FILE_NAME: &str = "discord-auto-quest-runner-linux";
+
 /// The runner's file name on disk, where there is no runner.
-#[cfg(not(any(windows, target_os = "macos")))]
+#[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]
 pub const FILE_NAME: &str = "discord-auto-quest-runner";
 
 /// Write the runner to `path`, creating the parent directories.
@@ -64,6 +74,32 @@ pub fn materialise(path: &Path) -> AppResult<()> {
     }
 
     std::fs::write(path, RUNNER)?;
+    make_executable(path)?;
+
+    Ok(())
+}
+
+/// Give the runner the right to be run.
+///
+/// A file that is not executable cannot be started, and the stub is started by
+/// path. Windows has no execute bit, so this is a no-op there.
+#[cfg(unix)]
+fn make_executable(path: &Path) -> AppResult<()> {
+    use std::os::unix::fs::PermissionsExt;
+
+    let mut permissions = std::fs::metadata(path)?.permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(path, permissions)?;
+
+    Ok(())
+}
+
+/// Give the runner the right to be run.
+///
+/// Windows has no execute bit: a file is run because of what it is, not because
+/// of a mode.
+#[cfg(not(unix))]
+fn make_executable(_path: &Path) -> AppResult<()> {
     Ok(())
 }
 

@@ -109,7 +109,7 @@ fn is_alive(pid: u32) -> bool {
 fn decoy(directory: &Path) -> Child {
     std::fs::create_dir_all(directory).expect("the decoy directory is created");
     let path: PathBuf = directory.join(runner::FILE_NAME);
-    std::fs::write(&path, runner::RUNNER).expect("the decoy is written");
+    runner::materialise(&path).expect("the decoy is written");
 
     Command::new(&path)
         .spawn()

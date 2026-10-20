@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:runner": "cargo build --release --manifest-path runner/Cargo.toml",
+    "build:runner:macos": "cargo build --release --manifest-path runner-macos/Cargo.toml",
+    "build:runner:linux": "cargo build --release --manifest-path runner-linux/Cargo.toml",
     "check:runner": "node scripts/check-runner.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
