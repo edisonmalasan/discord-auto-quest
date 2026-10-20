@@ -4,7 +4,7 @@ import { useStubStates } from '../hooks/useStubStates';
 import { platformLabel } from '../lib/format';
 import type { CatalogEntry, CatalogExecutable, StubState } from '../types/catalogue';
 
-import { CoverImage } from './CoverImage';
+import { Artwork, IconImage } from './Artwork';
 
 interface EntryPanelProps {
   entry: CatalogEntry | null;
@@ -74,11 +74,14 @@ function SelectedEntry({
   return (
     <div className="flex flex-1 flex-col">
       <div className="px-5 pt-5">
-        <CoverImage entry={entry} size={112} className="rounded-[3px]" />
+        <Artwork entry={entry} size={112} className="rounded-[3px]" />
 
-        <h3 className="mt-3 text-[17px] font-semibold leading-tight tracking-[-0.01em] text-ink">
-          {entry.name}
-        </h3>
+        <div className="mt-3 flex items-start gap-2.5">
+          <IconImage entry={entry} size={28} className="mt-0.5 rounded-[2px]" />
+          <h3 className="text-[17px] font-semibold leading-tight tracking-[-0.01em] text-ink">
+            {entry.name}
+          </h3>
+        </div>
 
         {entry.aliases.length > 0 ? (
           <p className="mt-1 text-[12px] text-ink-3">
@@ -88,7 +91,10 @@ function SelectedEntry({
       </div>
 
       <dl className="mt-5 border-t border-rule-soft">
-        <Fact label="State" value={detected ? 'Detected' : 'Not detected'} />
+        <Fact
+          label="State"
+          value={detected ? 'Detected' : 'Not detected'}
+        />
         <Fact
           label="Platforms"
           value={

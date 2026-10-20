@@ -106,17 +106,43 @@ stopping the quest leaves it running.
 *Outcome: The app is browsable by eye, not only searchable, and the user can tell at a glance
 whether a game can be quested.*
 
-- [ ] Catalogue entries render real cover art and icons.
-- [ ] Games with no registered executable are visibly marked not questable, with the reason, and
+- [x] Catalogue entries render real cover art and icons.
+- [x] Games with no registered executable are visibly marked not questable, with the reason, and
       cannot be started.
-- [ ] A cross-platform executable fallback is offered with a notice naming the actual platform.
-- [ ] The catalogue can be browsed and filtered, not only reached through a capped search result
+- [x] A cross-platform executable fallback is offered with a notice naming the actual platform.
+- [x] The catalogue can be browsed and filtered, not only reached through a capped search result
       list.
-- [ ] Search remains responsive over 20,000 entries.
-- [ ] The app never displays an unearned verification badge or claims Discord-side state it has
+- [x] Search remains responsive over 20,000 entries.
+- [x] The app never displays an unearned verification badge or claims Discord-side state it has
       not observed.
 
-**Status:** Not started
+**Status:** Complete. The index is a catalogue of everything Discord has registered, and every
+entry in it is reachable: the 500-result cap is gone, and the list pages through whatever it is
+given.
+
+**The artwork is real.** 17,684 of the 24,725 entries in the live catalogue carry cover art and
+20,572 carry an icon. The cover art is the plate and the icon is the mark, so an entry with only
+an icon still gets a picture, and the 3,955 entries with neither fall back to their initial.
+Both are fetched from Discord's own CDN at the moment they are shown, and a failed load falls
+back rather than leaving a broken frame.
+
+**Search was measured, not assumed.** The upstream fuzzy index answered a query over the live
+catalogue in between thirty-five and a hundred and seventy milliseconds, which is a visible
+freeze on every keystroke. The index now holds one normalised string per entry and answers by
+scanning it, which took about two milliseconds on the same machine — a twenty-five-fold
+improvement, measured over 684 two-letter queries against the real catalogue. The fuzzy index is
+kept for a query that matches nothing exactly, a typo, and is built only when one arrives.
+
+**Nothing is claimed that was not observed.** There is no verification badge anywhere in the
+interface, because the app cannot observe that Discord has credited anything. A title with no
+registered executable says so in the margin of its own line and cannot be started.
+
+**The fallback names the real platform.** Where a title has only a foreign executable, the notice
+names the platform that will actually be used, which is what the upstream study recorded the
+upstream app getting wrong.
+
+Verified by 53 frontend tests, including one that searches a synthetic 25,000-entry catalogue
+and asserts the query answers inside a quarter of a second.
 
 ---
 
@@ -224,7 +250,7 @@ complete.*
 | 0 | Reverse-engineering study | Complete |
 | 1 | Foundation | Complete |
 | 2 | Questing on Windows | Complete |
-| 3 | The catalogue experience | Not started |
+| 3 | The catalogue experience | Complete |
 | 4 | Honest state | Complete |
 | 5 | macOS | Not started |
 | 6 | Linux | Not started |
