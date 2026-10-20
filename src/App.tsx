@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import type Fuse from 'fuse.js';
 
 import { EntryList, SkeletonList } from './components/EntryList';
 import { EntryPanel } from './components/EntryPanel';
@@ -16,9 +15,6 @@ import type { CatalogEntry } from './types/catalogue';
 
 /** The debounce the upstream study recorded. It keeps search responsive over 25,000 entries. */
 const SEARCH_DEBOUNCE_MS = 300;
-
-/** How many matches a single query is allowed to return. */
-const SEARCH_LIMIT = 500;
 
 export default function App() {
   const { status, snapshot, error, refreshing, refreshError, refresh, retry } = useCatalogue();
@@ -58,10 +54,10 @@ export default function App() {
 
   const entries = useMemo(() => snapshot?.entries ?? EMPTY_ENTRIES, [snapshot]);
 
-  // The search index is built after the list has painted, not during render. Building
-  // it over 25,000 entries takes long enough to be felt, and there is no reason to
-  // pay for it before the visitor has typed anything.
-  const [index, setIndex] = useState<Fuse<CatalogEntry> | null>(null);
+  // The search index is built after the list has painted, not during render.
+  // Building it over 25,000 entries takes long enough to be felt, and there is no
+  // reason to pay for it before the visitor has typed anything.
+  const [index, setIndex] = useState<ReturnType<typeof createSearchIndex> | null>(null);
   useEffect(() => {
     if (entries.length === 0) {
       setIndex(null);
@@ -71,11 +67,14 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [entries]);
 
+  // Every match is returned, not a capped page of them. The index is a catalogue
+  // of everything Discord has registered, and a reader is entitled to reach every
+  // entry in it, whether they typed a query or not.
   const matches = useMemo(() => {
     if (!index || debouncedQuery.trim().length < 2) {
       return null;
     }
-    return searchCatalogue(index, debouncedQuery, SEARCH_LIMIT);
+    return searchCatalogue(index, debouncedQuery);
   }, [index, debouncedQuery]);
 
   const platformEntryCounts = useMemo(() => {
@@ -160,6 +159,7 @@ export default function App() {
             <IndexHead
               shown={visible.length}
               total={matches === null ? entries.length : matches.length}
+              searching={matches !== null && debouncedQuery.trim() !== query.trim()}
             />
 
             <div className="min-h-0 flex-1 overflow-y-auto">

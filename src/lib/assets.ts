@@ -25,3 +25,14 @@ export function iconUrl(entry: CatalogEntry): string | null {
   }
   return assetUrl(entry.id, entry.iconHash);
 }
+
+/**
+ * The artwork for an entry.
+ *
+ * The cover art is the plate and the icon is the mark, so the cover is preferred
+ * where both exist. An entry with neither falls back to the initial, which is a
+ * real name rather than a picture of nothing.
+ */
+export function artworkUrl(entry: CatalogEntry): string | null {
+  return coverUrl(entry) ?? iconUrl(entry);
+}

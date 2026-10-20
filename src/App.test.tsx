@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CatalogueSnapshot } from './types/catalogue';
@@ -15,6 +15,7 @@ vi.mock('./lib/ipc', () => ({
   currentPlatform: () => Promise.resolve('win32'),
   listQuests: () => Promise.resolve({ quests: [], error: null }),
   stubStates: () => Promise.resolve([]),
+  listQuestsLegacy: () => Promise.resolve([]),
   onQuestsChanged: () => Promise.resolve(() => {}),
   startQuest: () => Promise.reject(new Error('not used in this test')),
   stopQuest: () => Promise.reject(new Error('not used in this test')),
@@ -89,9 +90,11 @@ describe('App', () => {
     render(<App />);
 
     await screen.findByText('Overwatch');
-    // The scope filter carries the derived counts.
-    expect(screen.getByRole('button', { name: /Questable/ })).toHaveTextContent('1');
-    expect(screen.getByRole('button', { name: /Not questable/ })).toHaveTextContent('1');
+    // The scope filter carries the derived counts. The queries are scoped to the
+    // rail, because the index says "Not questable" too.
+    const rail = screen.getByRole('navigation', { name: 'Catalogue filters' });
+    expect(within(rail).getByRole('button', { name: /Questable/ })).toHaveTextContent('1');
+    expect(within(rail).getByRole('button', { name: /Not questable/ })).toHaveTextContent('1');
     expect(screen.getByText('50.0%')).toBeInTheDocument();
   });
 

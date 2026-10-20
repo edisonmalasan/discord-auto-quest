@@ -54,6 +54,20 @@ describe('EntryRow', () => {
     expect(screen.getByText('none')).toBeInTheDocument();
   });
 
+  it('marks a title with no registered executable as not questable', () => {
+    render(
+      <ul>
+        <EntryRow
+          entry={entry({ id: '2', name: 'Hollow Knight' })}
+          selected={false}
+          onSelect={() => {}}
+        />
+      </ul>,
+    );
+
+    expect(screen.getByText('No path')).toBeInTheDocument();
+  });
+
   it('reports the entry when it is clicked', () => {
     const onSelect = vi.fn();
     render(

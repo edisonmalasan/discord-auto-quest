@@ -1,7 +1,7 @@
 import { platformLabel } from '../lib/format';
 import type { CatalogEntry, QuestView } from '../types/catalogue';
 
-import { CoverImage } from './CoverImage';
+import { Artwork } from './Artwork';
 import { DetectedMark, SelectionCaret, UndetectedMark } from './Marks';
 
 interface EntryRowProps {
@@ -15,7 +15,7 @@ interface EntryRowProps {
  * One line of the index.
  *
  * The line reads left to right: the selection pointer, the detection mark, the
- * cover, the title, the registered path, the platform, and whether a quest is
+ * artwork, the title, the registered path, the platform, and whether a quest is
  * running. The path is in the line because the path is the mechanism.
  */
 export function EntryRow({ entry, selected, quest, onSelect }: EntryRowProps) {
@@ -28,7 +28,7 @@ export function EntryRow({ entry, selected, quest, onSelect }: EntryRowProps) {
         type="button"
         onClick={() => onSelect(entry)}
         aria-current={selected ? 'true' : undefined}
-        className={`grid w-full grid-cols-[14px_10px_36px_minmax(6rem,1.1fr)_minmax(0,1fr)_auto_58px] items-center gap-x-3 border-b border-rule-soft px-5 py-2 text-left transition-colors duration-150 ${
+        className={`grid w-full grid-cols-[14px_10px_36px_minmax(6rem,1.1fr)_minmax(0,1fr)_auto_76px] items-center gap-x-3 border-b border-rule-soft px-5 py-2 text-left transition-colors duration-150 ${
           selected ? 'bg-surface-2' : 'hover:bg-surface'
         }`}
       >
@@ -44,7 +44,7 @@ export function EntryRow({ entry, selected, quest, onSelect }: EntryRowProps) {
           )}
         </span>
 
-        <CoverImage entry={entry} size={36} />
+        <Artwork entry={entry} size={36} />
 
         <span className="min-w-0 truncate text-[13px] font-medium text-ink">
           {entry.name}
@@ -62,6 +62,13 @@ export function EntryRow({ entry, selected, quest, onSelect }: EntryRowProps) {
           {quest?.running ? (
             <span className="text-spot" title={`PID ${quest.pid}`}>
               Running
+            </span>
+          ) : !detected ? (
+            <span
+              className="text-ink-3"
+              title="Discord registered no executable for this title, so there is no path to mirror"
+            >
+              No path
             </span>
           ) : null}
         </span>
