@@ -34,7 +34,8 @@ Discord observes the running process, reports the game as active, and credits th
 
 **The path mirror is load-bearing.** Discord matches on the registered executable path, not merely
 the file name. The stub is placed at
-`<user data>/games/<app id>/<registered path segments>/<executable basename, extension stripped>`.
+`<user data>/games/<app id>/<registered path>`, exactly as registered — the file's extension
+included, because the extension is part of the name Discord registered.
 
 ## Product principles
 
@@ -101,7 +102,7 @@ These are constraints the implementation must respect. They are not preferences.
 | Constraint | Reason |
 |---|---|
 | The stub path must mirror the registered executable path | Discord's match is path-sensitive. |
-| The file extension is stripped from the on-disk name | Discord's match is sensitive to this asymmetry. |
+| The on-disk name must keep the registered file's extension | The extension is part of the name Discord registered, so a stub named `overwatch` is not at the path Discord registered (`overwatch.exe`) and does not match. |
 | The macOS stub must be a real `.app` bundle with a valid `Info.plist`, launched via `open -n -g -a` | macOS treats a bare executable differently from an application. |
 | The macOS stub must present a visible window | Discord on macOS detects applications with a visible window. |
 | The Windows runner's PE import table must contain no `user32`, `gdi32`, or `shell32` import | It has no window, tray icon, or console, so the Win32 GUI stack is dead weight; skipping it keeps the runner dependency-free on minimal Windows installs. Target ≤ 300 KB. This deliberately diverges from upstream, whose runner links all three because it draws a window and a tray icon. |

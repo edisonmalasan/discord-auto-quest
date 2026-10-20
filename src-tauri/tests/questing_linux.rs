@@ -8,7 +8,6 @@
 
 use std::os::unix::process::ExitStatusExt;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command};
 use std::time::Duration;
 
 use discord_auto_quest_lib::catalogue::cache::{self, CachedCatalogue};
@@ -16,6 +15,7 @@ use discord_auto_quest_lib::catalogue::model::{
     CatalogEntry, CatalogExecutable, CatalogueSnapshot, CatalogueSource,
 };
 use discord_auto_quest_lib::catalogue::service::CatalogueService;
+use discord_auto_quest_lib::quest::launch;
 use discord_auto_quest_lib::quest::records::{self, QuestRecord};
 use discord_auto_quest_lib::quest::service::{QuestRequest, QuestService};
 use discord_auto_quest_lib::runner;
@@ -134,6 +134,43 @@ fn loaded_libraries(pid: u32) -> Vec<String> {
     libraries
 }
 
+/// The shared libraries a running process has loaded, once the loader has
+/// mapped them.
+///
+/// A process becomes the executable it was started from a moment *before* the
+/// dynamic loader has mapped its shared libraries. A reading taken in that
+/// window says nothing, so it is taken again until it does.
+fn wait_for_libraries(pid: u32) -> Vec<String> {
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
+
+    loop {
+        let libraries = loaded_libraries(pid);
+
+        if !libraries.is_empty() || std::time::Instant::now() >= deadline {
+            return libraries;
+        }
+
+        std::thread::sleep(Duration::from_millis(10));
+    }
+}
+
+/// The state of a process, as the kernel reports it, for a failure message.
+fn process_state(pid: u32) -> String {
+    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).unwrap_or_default();
+    let state = stat
+        .rsplit_once(") ")
+        .and_then(|(_, rest)| rest.chars().next())
+        .unwrap_or('?');
+
+    let maps = std::fs::read_to_string(format!("/proc/{pid}/maps")).unwrap_or_default();
+
+    format!(
+        "state {state}, {} mapping lines, /proc/{pid}/exe -> {:?}",
+        maps.lines().count(),
+        std::fs::read_link(format!("/proc/{pid}/exe"))
+    )
+}
+
 #[tokio::test]
 async fn a_quest_writes_the_stub_to_the_mirrored_path_and_runs_it() {
     let dir = tempfile::tempdir().expect("a temp dir");
@@ -146,7 +183,8 @@ async fn a_quest_writes_the_stub_to_the_mirrored_path_and_runs_it() {
         })
         .expect("the quest starts");
 
-    // The path mirrors the registered path, with the file's extension removed.
+    // The path mirrors the registered path, extension included. This registered
+    // path has no extension of its own, so nothing is added to it either.
     let expected = dir.path().join("games").join(APP_ID).join("csgo_linux64");
     assert_eq!(PathBuf::from(&view.stub_path), expected);
     assert!(expected.exists(), "the stub is written to disk");
@@ -188,6 +226,28 @@ async fn a_quest_is_tracked_by_its_process_id() {
     );
 }
 
+/// Wait until the process is running the executable it was started from.
+///
+/// A process exists from the moment it is forked, and it is running a given
+/// file only once it has been exec'd. The kernel's own record of that is
+/// `/proc/<pid>/exe`, a link to the file the process is running. Reading it is
+/// also the strongest statement the test can make: the process is not merely
+/// alive, it is alive *as the stub*.
+fn wait_for_executable(pid: u32, expected: &Path) -> bool {
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
+
+    while std::time::Instant::now() < deadline {
+        if let Ok(target) = std::fs::read_link(format!("/proc/{pid}/exe")) {
+            if target == expected {
+                return true;
+            }
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+
+    false
+}
+
 #[tokio::test]
 async fn the_runner_needs_no_toolkit_to_be_installed() {
     let dir = tempfile::tempdir().expect("a temp dir");
@@ -200,12 +260,23 @@ async fn the_runner_needs_no_toolkit_to_be_installed() {
         })
         .expect("the quest starts");
 
+    // The process has to be running the stub before its loaded libraries say
+    // anything: a process that has been forked but not yet exec'd is still the
+    // test's own process as far as the kernel is concerned.
+    let stub = dir.path().join("games").join(APP_ID).join("csgo_linux64");
+    assert!(
+        wait_for_executable(view.pid, &stub),
+        "the process is running the stub it was started from"
+    );
+
     // The running process's own record of what it has loaded. A graphical
-    // toolkit would be in here if the runner needed one.
-    let libraries = loaded_libraries(view.pid);
+    // toolkit would be in here if the runner needed one. The reading is taken
+    // once the loader has mapped the libraries, or it would say nothing at all.
+    let libraries = wait_for_libraries(view.pid);
     assert!(
         !libraries.is_empty(),
-        "the running process should show what it has loaded"
+        "the running process should show what it has loaded: {}",
+        process_state(view.pid)
     );
 
     let lowered = libraries.join(" ").to_lowercase();
@@ -231,19 +302,25 @@ async fn stopping_a_quest_leaves_a_process_with_the_same_name_alone() {
         })
         .expect("the quest starts");
 
-    // A second copy of the runner, standing in for the real game.
+    // A second copy of the runner, standing in for the real game. It is started
+    // through the application's own launch, so it is subject to the same rules
+    // as a real quest — including the one that says a start is tried again
+    // while the file is still open for writing.
     let decoy_dir = dir.path().join("decoy");
     std::fs::create_dir_all(&decoy_dir).expect("the decoy directory is created");
     let decoy_path = decoy_dir.join(runner::FILE_NAME);
     runner::materialise(&decoy_path).expect("the decoy is written");
-    let mut decoy: Child = Command::new(&decoy_path).spawn().expect("the decoy starts");
-    assert!(is_alive(decoy.id()));
+    let launched = launch::launch_executable(&decoy_path, "Counter-Strike")
+        .expect("the decoy starts");
+    let decoy_pid = launched.pid;
+    let mut decoy = launched.child.expect("the decoy is this process's child");
+    assert!(is_alive(decoy_pid));
 
     quests.stop(&view.id).expect("the quest stops");
 
     assert!(!is_alive(view.pid), "the stub is gone");
     assert!(
-        is_alive(decoy.id()),
+        is_alive(decoy_pid),
         "a process with the same image name must not be touched"
     );
 
@@ -261,8 +338,9 @@ async fn a_quest_that_outlived_the_application_is_stopped_by_its_process_id() {
     let stub = dir.path().join("games").join(APP_ID).join("csgo_linux64");
     runner::materialise(&stub).expect("the stub is written");
 
-    let mut child = Command::new(&stub).spawn().expect("the runner starts");
-    let pid = child.id();
+    let launched = launch::launch_executable(&stub, "Counter-Strike").expect("the runner starts");
+    let pid = launched.pid;
+    let mut child = launched.child.expect("the runner is this process's child");
     assert!(is_alive(pid), "the runner is running");
 
     // The record the previous run left behind.
@@ -318,4 +396,90 @@ async fn a_quest_that_outlived_the_application_is_stopped_by_its_process_id() {
         "the process was stopped with SIGTERM, not with a signal the app does not use"
     );
     assert!(!is_alive(pid), "the process is gone");
+}
+
+#[tokio::test]
+async fn the_stub_keeps_the_registered_files_extension() {
+    // A registered path whose last segment carries an extension, of the shape
+    // the catalogue really holds — `bin.x86/terraria.bin.x86` is in it.
+    const REGISTERED: &str = "bin.x86/terraria.bin.x86";
+    const APP: &str = "2";
+
+    let dir = tempfile::tempdir().expect("a temp dir");
+
+    let snapshot = CatalogueSnapshot {
+        entries: vec![CatalogEntry {
+            id: APP.to_string(),
+            name: "Terraria".to_string(),
+            aliases: Vec::new(),
+            cover_image_hash: None,
+            icon_hash: None,
+            executables: vec![CatalogExecutable {
+                os: "linux".to_string(),
+                path: REGISTERED.to_string(),
+                is_launcher: false,
+            }],
+            age_ratings: Vec::new(),
+        }],
+        stats: discord_auto_quest_lib::catalogue::model::CatalogueStats {
+            total: 1,
+            questable: 1,
+            not_questable: 0,
+            questable_ratio: 1.0,
+            platform_splits: vec![discord_auto_quest_lib::catalogue::model::PlatformSplit {
+                os: "linux".to_string(),
+                executables: 1,
+            }],
+            with_cover_art: 0,
+            with_icon: 0,
+            with_aliases: 0,
+            dropped_entries: 0,
+        },
+        source: CatalogueSource::Cache,
+        fetched_at: Some(1_700_000_000),
+        stale: false,
+    };
+
+    let cached = CachedCatalogue {
+        schema_version: cache::CACHE_SCHEMA_VERSION,
+        fetched_at: 1_700_000_000,
+        source: "discord".to_string(),
+        entries: snapshot.entries.clone(),
+    };
+    cache::write(dir.path(), &cached).expect("the cache is written");
+
+    let catalogue = CatalogueService::new(dir.path().to_path_buf(), Duration::from_secs(3600))
+        .expect("the catalogue service builds");
+    let quests = QuestService::new(catalogue.clone(), dir.path().to_path_buf());
+    catalogue
+        .load()
+        .await
+        .expect("the catalogue loads from the cache");
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP.to_string(),
+            registered_path: REGISTERED.to_string(),
+        })
+        .expect("the quest starts");
+
+    // The stub is at the registered path, extension and all. The extension is
+    // part of the name Discord registered, so dropping it would leave the stub
+    // somewhere Discord does not match.
+    let expected = dir
+        .path()
+        .join("games")
+        .join(APP)
+        .join("bin.x86")
+        .join("terraria.bin.x86");
+    assert_eq!(
+        PathBuf::from(&view.stub_path),
+        expected,
+        "the stub is at the registered path, extension included"
+    );
+    assert!(expected.exists(), "the stub is on disk");
+    assert!(is_alive(view.pid), "the stub is running");
+
+    quests.stop(&view.id).expect("the quest stops");
+    assert!(!is_alive(view.pid), "the stub is gone");
 }

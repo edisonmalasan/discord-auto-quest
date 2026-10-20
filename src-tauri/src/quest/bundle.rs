@@ -52,7 +52,7 @@ pub struct Bundle {
 /// ordinary executable, and is handled the same way as on any other platform.
 pub fn is_bundle(registered_path: &str) -> bool {
     registered_path
-        .rsplit('/')
+        .rsplit(['/', '\\'])
         .next()
         .map(|name| name.to_ascii_lowercase().ends_with(BUNDLE_EXTENSION))
         .unwrap_or(false)
@@ -63,7 +63,7 @@ pub fn is_bundle(registered_path: &str) -> bool {
 /// The segments are the registered path's own segments, with the last one keeping
 /// its `.app` extension: the bundle is named after the thing Discord registered,
 /// because the name is what the match is on. The executable inside carries the
-/// name without the extension, which is the rule the other platforms follow.
+/// name without the extension, which is the rule macOS gives a bundle.
 pub fn layout(games_root: &Path, app_id: &str, segments: &[String]) -> AppResult<Bundle> {
     let (name, directories) = segments
         .split_last()
@@ -122,7 +122,7 @@ pub fn info_plist(display_name: &str, executable_name: &str) -> String {
     <key>CFBundleIdentifier</key>
     <string>{BUNDLE_IDENTIFIER}</string>
     <key>CFBundleName</key>
-    <string>{executable_name}</string>
+    <string>{display_name}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>

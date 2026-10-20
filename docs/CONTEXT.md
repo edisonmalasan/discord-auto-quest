@@ -39,8 +39,8 @@
 
 These affect many tasks. They are expanded in `PRODUCT.md` under *Technical constraints*.
 
-- **The stub path must mirror the game's registered executable path**, and the file extension is
-  stripped from the on-disk name. Discord's match is sensitive to both.
+- **The stub path must mirror the game's registered executable path**, exactly as registered — the
+  file extension included. Discord's match is sensitive to both.
 - **Catalogue data and runtime state are separate.** Runtime state is always read from the
   backend — never inferred optimistically in the frontend.
 - **Processes are stopped by PID**, never by image name. A user running the real game must never

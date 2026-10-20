@@ -38,6 +38,23 @@ traceable evidence, and the clone specification is written.*
 
 **Status:** Complete. Documents live in `re/docs/`. `re/` is git-ignored.
 
+**The study was audited against the upstream tree.** The upstream source was later available as a
+local, built tree, so every claim in the study was checked against it rather than against a
+reading of it, and the built bundle was checked against the bundle the study had already
+analysed. Seventeen disagreements were found and every one is recorded in
+`re/docs/10-upstream-audit.md`, with the documents that carried a wrong fact corrected in place.
+One of them mattered to the product: the study had concluded that the stub is written without the
+file's extension, and it is not — see Group 2. The rest were documentation faults: a property
+list shown with four keys instead of eight, two event names that were wrong, a command's
+synchrony, an IPC snippet in the wrong key case, a build script described as doing something it
+does not do, an undocumented Linux stop path, a catalogue-mirror workflow that was not in the
+evidence register at all, and a set of counts and quotations that were slightly off. The study also
+gained the facts it had been silent on — a second, static import of the catalogue; a default
+platform of Linux in the upstream's own detection; a `v-show` that keeps both pages mounted; the
+catalogue's `arguments` field, which the upstream never forwards; and the upstream README's
+statement that only Windows is supported, which bears directly on this project's own macOS and
+Linux work.
+
 ---
 
 ## Group 1 — Foundation
@@ -74,7 +91,8 @@ Group 2, and the index's primary action is disabled until then.
 lifecycle and honest state.*
 
 - [x] Starting a quest materialises a stub at
-      `<user data>/games/<app id>/<registered path segments>/<exe>` and returns a child PID.
+      `<user data>/games/<app id>/<registered path>` — exactly as registered, the file's extension
+      included — and returns a child PID.
 - [x] The stub is launched with the game name, and the UI shows the PID and an elapsed timer.
 - [x] Stopping a quest terminates that specific child process.
 - [x] A real game process with the same image name is not affected by stopping a quest.
@@ -92,6 +110,16 @@ check:runner` enforces both constraints against the built binary.
 the backend resolves the executable from the catalogue it holds and refuses anything the
 catalogue does not contain. A stub can therefore only ever be written where Discord's own data
 points.
+
+**The path is the registered path, exactly.** The stub is written segment for segment at the
+registered executable's path, and the file keeps the extension it was registered with. The
+extension is part of the name Discord registered, so a stub written as `overwatch` is not at the
+path Discord registered (`overwatch.exe`) and does not match. The upstream application keeps the
+extension too, and its own stop path is the proof: it stops the stub by image name, which only
+finds the process if the extension is on the file. An earlier version of this project stripped it,
+on the strength of a study that had read the wrong function; the upstream source, the built
+bundle, the catalogue, and the upstream's stop path were later checked against one another, and the
+rule was corrected. See Group 0.
 
 **Stopping is exact.** A quest is stopped through the process handle the application holds, so
 one process is signalled. A test starts a second process with the same image name and shows that
@@ -264,7 +292,7 @@ path, the quest is tracked by the process id the backend reported, the process i
 that id, a process with the same image name is left alone, and a quest that outlived the
 application is found again on start-up and stopped by its id.
 
-**Two real bugs were found by running it there, and both are fixed.**
+**Three real bugs were found by running it there, and all three are fixed.**
 
 - The stub was written without the execute bit. A file that cannot be run is not a stub, and
   the app started it by path: every quest on Linux failed with a permission error. The stub is
@@ -272,9 +300,23 @@ application is found again on start-up and stopped by its id.
 - The liveness check read `errno` by declaring it as a function. It is a macro over a
   thread-local variable, and calling it as a function dereferenced a variable as though it
   were code: the process crashed. The error is now read through the standard library.
+- A start could fail with `Text file busy`. A Unix system refuses to start a program from a
+  file that anybody still holds open for writing, and a process started in another thread can
+  inherit the descriptor the runner was written with and hold it for a moment after the
+  writer has let go of it. The condition is transient, and the start is now tried again
+  while it lasts. Before the fix, the Linux suite failed three runs in five; after it, two
+  hundred consecutive runs under load passed.
 
-Neither fault was visible on Windows, and neither was visible in a cross-compiled build. Both
-were found by running the tests on the operating system they are about.
+Neither of the first two faults was visible on Windows, and neither was visible in a
+cross-compiled build. All three were found by running the tests on the operating system they
+are about.
+
+**The tests were made honest too.** The suite was reading a process's loaded libraries
+before the dynamic loader had mapped them, so the reading said nothing — and a test that
+says nothing passes. It now waits for the process to be running the stub, by the path the
+kernel reports, and for the loader to have finished, and a failure says what the kernel
+actually said. The decoys are started through the application's own launch, so they are
+subject to the same rules as a real quest.
 
 
 ---
@@ -401,8 +443,10 @@ complete.*
       IDs this project does not own, and it risks the user's account. Confirmed at the **binary**
       level: the `discord-sdk` crate is linked into the shipped upstream app, so this is a real,
       reachable upstream feature rather than a source-tree artefact.
-- [ ] A "run for N seconds" timed quest mode — the minimum duration Discord requires is
-      unverified; see Q3 in `re/docs/09-coverage-and-open-questions.md`.
+- [ ] A "run for N seconds" timed quest mode — the minimum duration Discord requires is still
+      unverified. The upstream README states a 15-minute requirement, but that is the upstream
+      author's own claim, not a measurement; see Q3 in
+      `re/docs/09-coverage-and-open-questions.md`.
 - [ ] A store filter — the catalogue carries no store field, so there is nothing to filter by.
 - [ ] Filters beyond the catalogue's own fields — the scope and platform filters are in, and
       anything else would need data the endpoint does not carry.

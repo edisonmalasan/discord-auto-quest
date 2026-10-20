@@ -76,7 +76,7 @@ export function platformLabel(os: string): string {
  */
 export function pathSegments(path: string): string[] {
   return path
-    .split('/')
+    .split(/[\\/]/)
     .filter((segment) => segment.length > 0);
 }
 
