@@ -8,7 +8,7 @@ license = "MIT"
 publish = false
 
 [[bin]]
-name = "discord-auto-quest-runner-linux"
+name = "discord-auto-quest-runner"
 path = "src/main.rs"
 
 # The runner has no dependencies at all. It needs nothing from the system but the

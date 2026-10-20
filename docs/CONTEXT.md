@@ -10,9 +10,10 @@
   Discord's local activity detection reports the game as running.
 - **Primary users / use cases:** Discord players who want to clear seasonal game quests without
   buying and installing every title in the catalogue.
-- **Current focus:** The reverse-engineering study is complete. The application exists and
-  serves Discord's catalogue; questing — materialising a stub, launching it, and stopping it by
-  PID — is the next milestone and is **not yet implemented**.
+- **Current focus:** The reverse-engineering study is complete. The application exists, serves
+  Discord's catalogue, and quests: a stub is materialised at the mirrored path, launched, and
+  stopped by its process id. Verified on Windows and on Linux. The macOS mechanism is implemented
+  and built, but has not been run on a Mac.
 
 ## Where to Look
 
@@ -32,6 +33,7 @@
 | What is unresolved, and what evidence would close it | `re/docs/09-coverage-and-open-questions.md` |
 | Evidence provenance for every claim | `re/docs/01-evidence-register.md` |
 | The design direction of the catalogue surface | `.impeccable/surfaces/src-app-tsx.md` |
+| The version, the runner checks, and the release archive | `scripts/` |
 | Build and test commands | Root `AGENTS.md` and the project manifests |
 
 ## Project-Specific Constraints

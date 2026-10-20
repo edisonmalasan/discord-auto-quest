@@ -4,6 +4,13 @@ pub mod paths;
 pub mod quest;
 pub mod runner;
 
+/// The version of this build.
+///
+/// It is set by the build script from the workspace manifest, so the about
+/// panel cannot show a version that disagrees with the one the application was
+/// shipped as.
+pub const VERSION: &str = env!("APP_VERSION");
+
 use catalogue::model::CatalogueSnapshot;
 use catalogue::service::CatalogueService;
 use error::{AppError, AppResult};
@@ -89,6 +96,15 @@ fn needs_visible_window() -> bool {
     cfg!(target_os = "macos")
 }
 
+/// The version of this build.
+///
+/// The backend is authoritative: the interface shows what the running
+/// application says it is, not a number compiled into the frontend.
+#[tauri::command]
+fn app_version() -> &'static str {
+    VERSION
+}
+
 /// Start a quest: write the stub where Discord expects it and run it.
 #[tauri::command]
 async fn start_quest(
@@ -151,6 +167,7 @@ pub fn run() {
             stub_root,
             current_platform,
             needs_visible_window,
+            app_version,
             start_quest,
             stop_quest,
             list_quests,
@@ -158,4 +175,31 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running the discord-auto-quest application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_version_is_the_one_the_workspace_manifest_states() {
+        // The build script reads the version from `package.json` and checks the
+        // crate's own manifest against it, so these two are the same number by
+        // construction. The assertion is here so a change that breaks that
+        // arrangement is caught by the test suite rather than by a user.
+        assert_eq!(VERSION, env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn the_version_is_a_release_number() {
+        let parts: Vec<&str> = VERSION.split('.').collect();
+
+        assert_eq!(parts.len(), 3, "the version is major.minor.patch");
+        for part in parts {
+            assert!(
+                part.chars().all(|character| character.is_ascii_digit()),
+                "the version is a number in every part: {VERSION}"
+            );
+        }
+    }
 }

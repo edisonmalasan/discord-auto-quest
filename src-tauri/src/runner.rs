@@ -28,14 +28,14 @@ pub const RUNNER: &[u8] = include_bytes!(concat!(
 #[cfg(target_os = "macos")]
 pub const RUNNER: &[u8] = include_bytes!(concat!(
     env!("OUT_DIR"),
-    "/discord-auto-quest-runner-macos"
+    "/discord-auto-quest-runner"
 ));
 
 /// The Linux runner, embedded at build time.
 #[cfg(target_os = "linux")]
 pub const RUNNER: &[u8] = include_bytes!(concat!(
     env!("OUT_DIR"),
-    "/discord-auto-quest-runner-linux"
+    "/discord-auto-quest-runner"
 ));
 
 /// There is no runner for this platform yet.
@@ -46,16 +46,20 @@ pub const RUNNER: &[u8] = &[];
 ///
 /// The name is what the process is called, and it is what a user would see in a
 /// process list next to the real game.
+///
+/// It is the same on every platform: `discord-auto-quest-runner`, with the
+/// platform's own executable extension. One name, so a release archive carries
+/// the same file whatever it was built for.
 #[cfg(windows)]
 pub const FILE_NAME: &str = "discord-auto-quest-runner.exe";
 
-/// The macOS runner's file name on disk.
+/// The runner's file name on disk.
 #[cfg(target_os = "macos")]
-pub const FILE_NAME: &str = "discord-auto-quest-runner-macos";
+pub const FILE_NAME: &str = "discord-auto-quest-runner";
 
-/// The Linux runner's file name on disk.
+/// The runner's file name on disk.
 #[cfg(target_os = "linux")]
-pub const FILE_NAME: &str = "discord-auto-quest-runner-linux";
+pub const FILE_NAME: &str = "discord-auto-quest-runner";
 
 /// The runner's file name on disk, where there is no runner.
 #[cfg(not(any(windows, target_os = "macos", target_os = "linux")))]

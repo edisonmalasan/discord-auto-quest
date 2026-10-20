@@ -7,6 +7,9 @@ local activity detection believe the game is running.
 application fetches, caches, and serves Discord's catalogue of detectable games, and a quest
 writes a silent stub to the path Discord matches and runs it until it is stopped.
 
+Questing is verified on Windows and on Linux. The macOS mechanism is implemented and built, but
+it has not been run on a Mac.
+
 ## What it does
 
 Discord runs quests that credit you for playing a game you own. This app completes those quests for
@@ -27,8 +30,7 @@ LAUNCH       run the stub and track its PID
 STOP         terminate that exact PID — never by image name
 ```
 
-The first two steps work today. The last three are the questing milestone, and the app says so
-where they would go.
+All five steps work.
 
 ## What it is not
 
@@ -49,6 +51,8 @@ where they would go.
 | `AGENTS.md` | Working method, Git workflow, and architecture non-negotiables. |
 | `src/` | The React frontend: the catalogue index, its filters, and the entry panel. |
 | `src-tauri/` | The Rust backend: the catalogue service, its cache, and the Tauri shell. |
+| `runner/`, `runner-macos/`, `runner-linux/` | The three platform stubs the app launches in place of a game. |
+| `scripts/` | The version, the runner check, and the release packaging. |
 | `.impeccable/` | The design direction for the catalogue surface and the brief it is held to. |
 | `re/` | The reverse-engineering study of the upstream app. **Git-ignored** — it is reference material, not product code. |
 
@@ -79,32 +83,86 @@ investigation evidence that is intentionally kept out of the product's history.
 
 - **Windows 10/11** is the primary target. The catalog is overwhelmingly `win32` (~11,200 executable
   records, against ~70 for `darwin` and ~8 for `linux`).
-- macOS and Linux are follow-on milestones with materially different mechanics, not
-  configuration changes.
+- **Linux** is supported. The stub needs nothing but the C library, so no graphical toolkit has to
+  be installed.
+- **macOS** is implemented and built, but unverified on real hardware.
 
 ## Building
 
 The app is a Tauri v2 desktop application: a Rust backend under a React frontend.
 
 ```bash
-npm install              # install dependencies
-npm run tauri dev        # run the app against the Vite dev server
-npm run build            # type-check and build the frontend
-npm run tauri build      # build the desktop application
-npm test                 # the frontend test suite
-cargo test --manifest-path src-tauri/Cargo.toml   # the backend test suite
+npm install                              # install dependencies
+npm run tauri dev                        # run the app against the Vite dev server
+npm run build                            # check the version, then type-check and build the frontend
+npm run tauri build                      # build the desktop application
 ```
+
+### The runner
+
+Each platform has its own stub, and each is a separate crate so it can carry only what that
+platform needs.
+
+```bash
+npm run build:runner         # Windows
+npm run build:runner:macos   # macOS
+npm run build:runner:linux   # Linux
+npm run check:runner         # check the built runners against their constraints
+```
+
+The application builds its own runner for the target platform, so `npm run tauri build` needs
+nothing extra. The build **fails** rather than warns when a runner is missing, so an application
+that cannot quest is never produced.
+
+### Testing
+
+```bash
+npm test                                             # the frontend test suite
+npm run typecheck                                    # the frontend, without building it
+cargo test --manifest-path src-tauri/Cargo.toml      # the backend test suite
+cargo test --manifest-path src-tauri/Cargo.toml -- --ignored   # the network-backed tests
+```
+
+The backend suite includes `src-tauri/tests/questing_linux.rs`, which runs only on Linux: it
+asserts that a quest lands at the mirrored path, that the stub needs no toolkit, that the quest is
+tracked by its process id, and that stopping a quest leaves a process with the same image name
+alone.
+
+### The version
+
+The version is defined in one place — the `version` field of `package.json` — and injected into
+everything that states one.
+
+```bash
+npm run version:check   # fail if a manifest disagrees with it
+npm run version:sync    # bring the manifests into step
+```
+The Tauri configuration reads `package.json` directly, the Rust build injects the version into the
+binary and checks the crate's own manifest against it, and the about panel shows the version the
+running application reports.
+
+### Releasing
+
+```bash
+npm run release
+```
+
+This builds the runner and the application for this machine and writes a portable archive under
+`target/release/`, named after the version. The archive holds the application, the runner beside
+it, and the licence and notice. The runner is named `discord-auto-quest-runner` on every platform,
+with the platform's own executable extension.
 
 The catalogue is fetched from Discord at runtime and cached under your user data
 directory. Nothing about the catalogue is compiled into the application.
 
 ## Licence and attribution
 
-This project is an independent implementation. It is not affiliated with, endorsed by, or
-connected to Discord Inc., and it is not the upstream project.
+This project is an independent implementation, MIT licensed. It is not affiliated with, endorsed
+by, or connected to Discord Inc., and it is not the upstream project.
 
 The upstream project it was studied from is MIT licensed. Any upstream source or substantial
 upstream-derived code reused here must retain its MIT notice and be attributed. See
+[`NOTICE`](NOTICE) for the notices that ship with this project, and
 [`re/README.md`](re/README.md) for the specific obligations this project has accepted.
 
 Discord is a registered trademark of Discord Inc. Use is at your own risk.

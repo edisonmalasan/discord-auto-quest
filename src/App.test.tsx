@@ -14,6 +14,7 @@ vi.mock('./lib/ipc', () => ({
   stubRoot: () => Promise.resolve('C:\\Users\\ed\\AppData\\Local\\discord-auto-quest\\games'),
   currentPlatform: () => Promise.resolve('win32'),
   needsVisibleWindow: () => Promise.resolve(false),
+  appVersion: () => Promise.resolve('0.1.0'),
   listQuests: () => Promise.resolve({ quests: [], error: null }),
   stubStates: () => Promise.resolve([]),
   listQuestsLegacy: () => Promise.resolve([]),

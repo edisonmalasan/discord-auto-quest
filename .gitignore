@@ -6,6 +6,7 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 runner/target/
+target/
 
 # The reverse-engineering study is deliberately kept out of version control.
 re/

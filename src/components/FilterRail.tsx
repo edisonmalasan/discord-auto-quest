@@ -1,6 +1,7 @@
 import { formatCount, platformLabel } from '../lib/format';
 import type { CatalogueStats } from '../types/catalogue';
 
+import { Colophon } from './Colophon';
 import { CompositionReadout } from './CompositionReadout';
 
 export type Scope = 'all' | 'questable' | 'not-questable';
@@ -146,6 +147,9 @@ export function FilterRail({
 
       <div className="mt-auto border-t border-rule-soft">
         <CompositionReadout stats={stats} />
+        <div className="border-t border-rule-soft">
+          <Colophon />
+        </div>
       </div>
     </nav>
   );
