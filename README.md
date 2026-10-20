@@ -7,8 +7,7 @@ local activity detection believe the game is running.
 application fetches, caches, and serves Discord's catalogue of detectable games, and a quest
 writes a silent stub to the path Discord matches and runs it until it is stopped.
 
-Questing is verified on Windows and on Linux. The macOS mechanism is implemented and built, but
-it has not been run on a Mac.
+Questing is verified on Windows, on Linux, and on macOS.
 
 ## What it does
 
@@ -85,7 +84,8 @@ investigation evidence that is intentionally kept out of the product's history.
   records, against ~70 for `darwin` and ~8 for `linux`).
 - **Linux** is supported. The stub needs nothing but the C library, so no graphical toolkit has to
   be installed.
-- **macOS** is implemented and built, but unverified on real hardware.
+- **macOS** is supported. The stub is a real application bundle with a visible window, because
+  that is what Discord's macOS integration detects.
 
 ## Building
 
@@ -123,10 +123,28 @@ cargo test --manifest-path src-tauri/Cargo.toml      # the backend test suite
 cargo test --manifest-path src-tauri/Cargo.toml -- --ignored   # the network-backed tests
 ```
 
-The backend suite includes `src-tauri/tests/questing_linux.rs`, which runs only on Linux: it
-asserts that a quest lands at the mirrored path, that the stub needs no toolkit, that the quest is
-tracked by its process id, and that stopping a quest leaves a process with the same image name
-alone.
+The backend suite includes `src-tauri/tests/questing_linux.rs` and
+`src-tauri/tests/questing_macos.rs`, which run only on their own platform: they assert that a
+quest lands at the mirrored path, that the stub needs no toolkit, that the quest is tracked by
+its process id, and that stopping a quest leaves a process with the same image name alone. The
+macOS one also asks the window server how many windows the runner has, because the window is
+the mechanism there.
+
+### The acceptance cases
+
+```bash
+npm run build              # the bundle has to exist to be inspected
+npm run check:acceptance   # the shipped bundle carries no catalogue snapshot
+```
+
+The acceptance cases in `re/docs/08-reconstruction-map.md` are the contract for "done". Two of
+them are about what ships rather than what the code does, and both are checked against the
+artefacts.
+
+### Continuous integration
+
+A workflow builds and checks the application on Windows, Linux and macOS, and runs each
+platform's own questing tests. A tag cuts a release from the artifacts those builds produced.
 
 ### The version
 
