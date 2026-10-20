@@ -8,13 +8,11 @@ use serde::{Deserialize, Serialize};
 use crate::catalogue::service::CatalogueService;
 use crate::error::{AppError, AppResult};
 
+use super::bundle;
 use super::launch;
 use super::path;
 use super::process;
 use super::records::{self, QuestRecord};
-
-#[cfg(target_os = "macos")]
-use super::bundle;
 
 /// What the interface asks for: an application, and the registered path it wants to
 /// mirror.
@@ -114,6 +112,7 @@ struct Launched {
 }
 
 /// Where a registered path's stub goes.
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct StubLocation {
     /// The path Discord matches: the executable, or the bundle on macOS.
     path: PathBuf,
@@ -300,31 +299,7 @@ impl QuestService {
     /// `.app` bundle, and it is launched the way macOS launches applications.
     /// Everywhere else it is a bare executable, launched directly.
     fn stub_location(&self, app_id: &str, registered_path: &str) -> AppResult<StubLocation> {
-        #[cfg(target_os = "macos")]
-        {
-            if bundle::is_bundle(registered_path) {
-                // The bundle's segments are the registered path's own segments,
-                // with the `.app` extension kept: the bundle is named after what
-                // Discord registered, because the name is what the match is on.
-                let segments = path::raw_segments(registered_path)?;
-                let bundle = bundle::layout(&self.games_root, app_id, &segments)?;
-                path::ensure_inside(&self.games_root, &bundle.path)?;
-
-                return Ok(StubLocation {
-                    path: bundle.path,
-                    executable: bundle.executable,
-                });
-            }
-        }
-
-        let segments = path::segments(registered_path)?;
-        let stub_path = path::stub_path(&self.games_root, app_id, &segments);
-        path::ensure_inside(&self.games_root, &stub_path)?;
-
-        Ok(StubLocation {
-            path: stub_path.clone(),
-            executable: stub_path,
-        })
+        stub_location_for(std::env::consts::OS, &self.games_root, app_id, registered_path)
     }
 
     /// Materialise the stub and start it, in the way the platform asks for.
@@ -336,28 +311,25 @@ impl QuestService {
     ) -> AppResult<Launched> {
         let location = self.stub_location(app_id, registered_path)?;
 
-        #[cfg(target_os = "macos")]
-        {
-            if location.path != location.executable {
-                // A macOS application bundle: the runner goes inside it, and the
-                // bundle is opened the way macOS opens applications.
-                bundle::create(
-                    &bundle::Bundle {
-                        path: location.path.clone(),
-                        executable: location.executable.clone(),
-                    },
-                    display_name,
-                    crate::runner::RUNNER,
-                )?;
+        if location.path != location.executable {
+            // A macOS application bundle: the runner goes inside it, and the
+            // bundle is opened the way macOS opens applications.
+            bundle::create(
+                &bundle::Bundle {
+                    path: location.path.clone(),
+                    executable: location.executable.clone(),
+                },
+                display_name,
+                crate::runner::RUNNER,
+            )?;
 
-                let launched = launch::launch_bundle(&location.path, display_name)?;
+            let launched = launch::launch_bundle(&location.path, display_name)?;
 
-                return Ok(Launched {
-                    pid: launched.pid,
-                    child: launched.child,
-                    stub_path: location.path,
-                });
-            }
+            return Ok(Launched {
+                pid: launched.pid,
+                child: launched.child,
+                stub_path: location.path,
+            });
         }
 
         crate::runner::materialise(&location.executable)?;
@@ -516,6 +488,42 @@ fn quest_id(app_id: &str, registered_path: &str) -> String {
     format!("{app_id}:{registered_path}")
 }
 
+/// Where a registered path's stub goes, on a given platform.
+///
+/// The platform is a parameter rather than a compile-time constant so that the
+/// rule can be tested on any machine: a macOS bundle is a real `.app` bundle on
+/// macOS, and a bare executable everywhere else. The rule is the same either
+/// way; only where it is exercised differs.
+fn stub_location_for(
+    os: &str,
+    games_root: &std::path::Path,
+    app_id: &str,
+    registered_path: &str,
+) -> AppResult<StubLocation> {
+    if os == "macos" && bundle::is_bundle(registered_path) {
+        // The bundle's segments are the registered path's own segments, with the
+        // `.app` extension kept: the bundle is named after what Discord
+        // registered, because the name is what the match is on.
+        let segments = path::raw_segments(registered_path)?;
+        let bundle = bundle::layout(games_root, app_id, &segments)?;
+        path::ensure_inside(games_root, &bundle.path)?;
+
+        return Ok(StubLocation {
+            path: bundle.path,
+            executable: bundle.executable,
+        });
+    }
+
+    let segments = path::segments(registered_path)?;
+    let stub_path = path::stub_path(games_root, app_id, &segments);
+    path::ensure_inside(games_root, &stub_path)?;
+
+    Ok(StubLocation {
+        path: stub_path.clone(),
+        executable: stub_path,
+    })
+}
+
 fn now_seconds() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -637,5 +645,71 @@ mod tests {
             list.error.is_some(),
             "the app must say it could not find out what is running"
         );
+    }
+
+    #[test]
+    fn a_macos_bundle_is_a_bundle_on_macos() {
+        let location = stub_location_for(
+            "macos",
+            Path::new("/games"),
+            "42",
+            "osx64/dota2.app",
+        )
+        .expect("a location");
+
+        assert_eq!(
+            location.path,
+            PathBuf::from("/games/42/osx64/dota2.app"),
+            "the bundle is named after what Discord registered"
+        );
+        assert_eq!(
+            location.executable,
+            PathBuf::from("/games/42/osx64/dota2.app/Contents/MacOS/dota2"),
+            "the runner inside carries the name without the extension"
+        );
+    }
+
+    #[test]
+    fn a_bundle_is_an_ordinary_executable_elsewhere() {
+        for os in ["windows", "linux"] {
+            let location =
+                stub_location_for(os, Path::new("/games"), "42", "osx64/dota2.app").expect("a location");
+
+            assert_eq!(
+                location.path,
+                PathBuf::from("/games/42/osx64/dota2"),
+                "a bundle is only a bundle on macos, and the extension is stripped"
+            );
+        }
+    }
+
+    #[test]
+    fn an_ordinary_executable_is_one_on_every_platform() {
+        for os in ["macos", "windows", "linux"] {
+            let location = stub_location_for(
+                os,
+                Path::new("/games"),
+                "42",
+                "_retail_/overwatch.exe",
+            )
+            .expect("a location");
+
+            assert_eq!(
+                location.path,
+                PathBuf::from("/games/42/_retail_/overwatch"),
+                "the stub mirrors the registered path, with the extension stripped"
+            );
+            assert_eq!(location.executable, location.path);
+        }
+    }
+
+    #[test]
+    fn a_refused_path_is_refused_on_every_platform() {
+        for os in ["macos", "windows", "linux"] {
+            let error = stub_location_for(os, Path::new("/games"), "42", ">hl2_osx")
+                .expect_err("refused");
+
+            assert_eq!(error.code, crate::error::ErrorCode::InvalidPath);
+        }
     }
 }

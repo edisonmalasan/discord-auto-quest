@@ -229,7 +229,7 @@ async fn stopping_a_quest_leaves_a_process_with_the_same_name_alone() {
         .expect("the quest starts");
 
     // A second copy of the runner, standing in for the real game.
-    let mut decoy_dir = dir.path().join("decoy");
+    let decoy_dir = dir.path().join("decoy");
     std::fs::create_dir_all(&decoy_dir).expect("the decoy directory is created");
     let decoy_path = decoy_dir.join(runner::FILE_NAME);
     runner::materialise(&decoy_path).expect("the decoy is written");

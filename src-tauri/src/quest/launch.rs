@@ -71,17 +71,9 @@ pub fn launch_executable(path: &Path, title: &str) -> AppResult<Launched> {
 /// The process `open` returns is `open` itself, and it has already exited by the
 /// time the bundle's runner is up. The runner's own process id is therefore found
 /// afterwards, by the bundle's executable path.
-#[cfg(target_os = "macos")]
 pub fn launch_bundle(bundle: &Path, title: &str) -> AppResult<Launched> {
     let mut command = Command::new("open");
-    command
-        .arg("-n")
-        .arg("-g")
-        .arg("-a")
-        .arg(bundle)
-        .arg("--args")
-        .arg("--title")
-        .arg(title);
+    command.args(open_arguments(bundle, title));
 
     let mut child = command.spawn().map_err(|error| {
         AppError::spawn_failed(format!(
@@ -104,13 +96,28 @@ pub fn launch_bundle(bundle: &Path, title: &str) -> AppResult<Launched> {
     Ok(Launched { pid, child: None })
 }
 
+/// The arguments `open` is given.
+///
+/// The command is written out rather than assembled in place, so the arguments
+/// can be checked on a machine that has no `open` to run them with.
+fn open_arguments(bundle: &Path, title: &str) -> Vec<String> {
+    vec![
+        "-n".to_string(),
+        "-g".to_string(),
+        "-a".to_string(),
+        bundle.display().to_string(),
+        "--args".to_string(),
+        "--title".to_string(),
+        title.to_string(),
+    ]
+}
+
 /// Find the process running a bundle's executable.
 ///
 /// The bundle's executable has a path of its own, inside the bundle, and that
 /// path is what identifies the process. This is the same rule the app uses on
 /// Windows: the process is found by the exact path it was started from, never
 /// by its name.
-#[cfg(target_os = "macos")]
 fn find_bundle_process(bundle: &Path) -> Option<u32> {
     let executable = bundle
         .join("Contents")
@@ -141,4 +148,42 @@ fn find_bundle_process(bundle: &Path) -> Option<u32> {
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_bundle_is_opened_the_way_macos_opens_applications() {
+        let arguments = open_arguments(Path::new("/games/dota2.app"), "Dota 2");
+
+        assert_eq!(
+            arguments,
+            vec![
+                "-n".to_string(),
+                "-g".to_string(),
+                "-a".to_string(),
+                "/games/dota2.app".to_string(),
+                "--args".to_string(),
+                "--title".to_string(),
+                "Dota 2".to_string(),
+            ],
+            "a new instance, in the background, selected by path, with the title forwarded"
+        );
+    }
+
+    #[test]
+    fn the_bundle_is_named_by_its_path_and_not_by_its_name() {
+        let arguments = open_arguments(Path::new("/games/42/osx64/dota2.app"), "Dota 2");
+
+        assert!(
+            arguments.contains(&"/games/42/osx64/dota2.app".to_string()),
+            "the bundle is selected by its path, so the path is what Discord matches"
+        );
+        assert!(
+            !arguments.contains(&"dota2.app".to_string()),
+            "the bundle is not selected by its name"
+        );
+    }
 }

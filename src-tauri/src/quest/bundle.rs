@@ -268,9 +268,48 @@ mod tests {
             b"runner bytes",
             "the runner is written into the bundle"
         );
+        assert!(
+            bundle.executable.starts_with(&bundle.path),
+            "the runner is inside the bundle"
+        );
 
         let plist = std::fs::read_to_string(info_plist_path(&bundle)).expect("readable");
         assert!(plist.contains("<string>APPL</string>"));
         assert!(plist.contains("<string>dota2</string>"));
+    }
+
+    #[test]
+    fn the_property_list_carries_this_projects_own_identifier() {
+        let plist = info_plist("Dota 2", "dota2");
+
+        assert!(
+            plist.contains(BUNDLE_IDENTIFIER),
+            "the bundle identifies itself as this project's, and nobody else's"
+        );
+        assert!(
+            !plist.contains("markterence"),
+            "the bundle must not carry another project's identity"
+        );
+    }
+
+    #[test]
+    fn the_bundle_is_an_application_and_not_a_plain_file() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let bundle = layout(dir.path(), "42", &segments(&["osx64", "dota2.app"])).expect("a bundle");
+
+        create(&bundle, "Dota 2", b"runner bytes").expect("the bundle is written");
+
+        // A bundle is a directory with a property list in it, and an executable
+        // under `Contents/MacOS`. A plain file at the same path is not an
+        // application, and Discord's macOS integration does not see one.
+        assert!(bundle.path.is_dir(), "the bundle is a directory");
+        assert!(
+            bundle.path.join("Contents").join("Info.plist").is_file(),
+            "the property list is where macOS looks for it"
+        );
+        assert!(
+            bundle.path.join("Contents").join("MacOS").join("dota2").is_file(),
+            "the executable is where macOS looks for it"
+        );
     }
 }

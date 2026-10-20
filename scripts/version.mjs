@@ -78,10 +78,12 @@ function readCargoVersion(text) {
  * Write the version into a Cargo manifest.
  *
  * The `[package]` table is located first, so a `version` key elsewhere in the
- * file is never touched.
+ * file is never touched. The line endings the file already had are kept: a
+ * script that rewrites a manifest should change the version and nothing else.
  */
 function writeCargoVersion(text, version) {
-  const lines = text.split('\n');
+  const newline = text.includes('\r\n') ? '\r\n' : '\n';
+  const lines = text.split(/\r?\n/);
   let inPackage = false;
   let written = false;
 
@@ -100,7 +102,7 @@ function writeCargoVersion(text, version) {
     throw new Error('the [package] table has no version to write');
   }
 
-  return lines.join('\n');
+  return lines.join(newline);
 }
 
 /** Every manifest that disagrees with the source. */
