@@ -11,6 +11,9 @@ target/
 # The reverse-engineering study is deliberately kept out of version control.
 re/
 
+# The knowledge graph is derived from the code, and is rebuilt from it.
+graphify-out/
+
 # Editors and operating systems
 .DS_Store
 Thumbs.db
