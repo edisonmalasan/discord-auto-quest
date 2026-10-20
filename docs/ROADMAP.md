@@ -272,15 +272,52 @@ were found by running the tests on the operating system they are about.
 
 *Outcome: The project can be built, tested, and shipped reproducibly.*
 
-- [ ] The version is defined in one place and injected into every artefact and the about panel.
-- [ ] A release archive is produced per platform, and the runner is bundled under a single,
+- [x] The version is defined in one place and injected into every artefact and the about panel.
+- [x] A release archive is produced per platform, and the runner is bundled under a single,
       consistent naming convention.
-- [ ] The build fails, rather than warns, when the platform runner is missing.
-- [ ] The project carries its own MIT notice for reused upstream material and an unaffiliation
+- [x] The build fails, rather than warns, when the platform runner is missing.
+- [x] The project carries its own MIT notice for reused upstream material and an unaffiliation
       disclaimer.
-- [ ] The README documents the real build, test, and run commands.
+- [x] The README documents the real build, test, and run commands.
 
-**Status:** Not started
+**Status:** Complete. Verified by building the release archive on Windows and by running the
+failure paths deliberately: a missing runner fails the build, and a manifest that disagrees with
+the version fails the check.
+
+**One version, and it is the real one.** The version is the `version` field of `package.json`, and
+nothing states one of its own. The Tauri configuration reads that file directly, so the bundle's
+metadata is injected rather than copied. The Rust build script reads it too, and *checks* the
+crate's own manifest against it: a crate that says `0.1.0` while the workspace says `0.2.0`
+fails the build rather than shipping an artefact that cannot say what it is. The about panel shows
+the version the running backend reports, so the number on screen is the number the application
+was shipped as.
+
+**The runner has one name.** It was `discord-auto-quest-runner.exe`, `…-macos` and `…-linux`; it
+is now `discord-auto-quest-runner` on every platform, with the platform's own executable extension.
+One name means a release archive carries the same file whatever it was built for, and it removes
+the class of bug the upstream tree has: three names, and a build script that looked for a fourth.
+
+**The archive is complete and says what it is.** `npm run release` builds the frontend, the runner
+and the application, and writes a portable archive named after the version. It holds the
+application, the runner beside it under its one name, the licence, the notice, and a manifest
+saying what the archive is. The Windows archive was produced and its contents read back: the
+application's own version resource carries `0.1.0`.
+
+**A missing runner stops the build.** The build script asserts that the runner exists, and the
+release script refuses to package an archive without one. This was checked by pointing the build
+at a path that does not exist: the build failed with the reason, and succeeded again once the
+pointer was removed. The upstream build only warned, and shipped a bundle with the wrong runner in
+it.
+
+**The notices ship.** `LICENSE` carries this project's own MIT notice. `NOTICE` retains the
+upstream project's MIT notice — the licence requires it, and the study was of an MIT-licensed
+work — states plainly that this is an independent implementation, and carries the unaffiliation
+disclaimer. Both are in the release archive.
+
+**The README now tells the truth about how to build this.** It lists the runner builds, the
+checks, the tests, the version commands, and the release command, and it says which platforms are
+verified and which are not.
+
 
 ---
 
@@ -310,7 +347,7 @@ complete.*
 | 4 | Honest state | Complete |
 | 5 | macOS | In progress |
 | 6 | Linux | Complete |
-| 7 | Release readiness | Not started |
+| 7 | Release readiness | Complete |
 
 ## Maintenance
 

@@ -6,16 +6,19 @@
   "description": "A desktop app that completes Discord quests for games you do not own.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run version:check && tsc --noEmit && vite build",
     "build:runner": "cargo build --release --manifest-path runner/Cargo.toml",
     "build:runner:macos": "cargo build --release --manifest-path runner-macos/Cargo.toml",
     "build:runner:linux": "cargo build --release --manifest-path runner-linux/Cargo.toml",
     "check:runner": "node scripts/check-runner.mjs",
     "preview": "vite preview",
+    "release": "node scripts/release.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "version:check": "node scripts/version.mjs check",
+    "version:sync": "node scripts/version.mjs sync"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",

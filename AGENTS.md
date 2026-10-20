@@ -61,10 +61,15 @@ _These commands exist in this repository. Run them from the repository root._
 | Install dependencies | `npm install` | Reads `package.json`. |
 | Run locally          | `npm run tauri dev` | Starts Vite on port 1420 and the app against it. |
 | Run the frontend only | `npm run dev` | The frontend in a browser, with no backend. |
-| Build frontend       | `npm run build` | Type-checks, then writes `dist/`. |
+| Build frontend       | `npm run build` | Checks the version, then type-checks and writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
 | Build the runner     | `npm run build:runner` | The Windows stub, into `runner/target/release/`. |
+| Build the runner     | `npm run build:runner:macos` | The macOS stub. |
+| Build the runner     | `npm run build:runner:linux` | The Linux stub. |
 | Check the runner     | `npm run check:runner` | Asserts its size and its PE import table. |
+| Check the version    | `npm run version:check` | Asserts every manifest agrees with `package.json`. |
+| Fix the version      | `npm run version:sync` | Writes the version into the manifests that carry a copy. |
+| Package a release    | `npm run release` | A portable archive for this machine, named after the version. |
 | Test                 | `npm test` | Vitest, the frontend suite. |
 | Test                 | `cargo test --manifest-path src-tauri/Cargo.toml` | The Rust suite. |
 | Test                 | `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored` | The network-backed suite. |

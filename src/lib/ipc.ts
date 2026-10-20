@@ -40,6 +40,17 @@ export async function needsVisibleWindow(): Promise<boolean> {
   return invoke<boolean>('needs_visible_window');
 }
 
+/**
+ * The version of the running application.
+ *
+ * The backend is the authority. The frontend does not carry a version of its
+ * own, because a number in the interface that the application does not confirm
+ * is a number that can be wrong.
+ */
+export async function appVersion(): Promise<string> {
+  return invoke<string>('app_version');
+}
+
 /** A background refresh replaced the catalogue. */
 export function onCatalogueUpdated(handler: (snapshot: CatalogueSnapshot) => void): Promise<UnlistenFn> {
   return listen<CatalogueSnapshot>('catalogue-updated', (event) => handler(event.payload));

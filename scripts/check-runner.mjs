@@ -16,6 +16,10 @@
  * Windows and Linux runners are a process and a sleep, while the macOS one opens
  * a window and therefore carries a windowing library.
  *
+ * The runner is named the same way on every platform: `discord-auto-quest-runner`,
+ * with the platform's own executable extension. One name, so a release archive
+ * carries the same file whatever it was built for.
+ *
  * Run with `npm run check:runner`. A runner for a platform that is not built on this
  * machine is skipped, and says so.
  */
@@ -43,7 +47,7 @@ const RUNNERS = [
   {
     platform: 'macos',
     crate: 'runner-macos',
-    binary: 'discord-auto-quest-runner-macos',
+    binary: 'discord-auto-quest-runner',
     build: 'npm run build:runner:macos',
     // The macOS runner opens a window, so it carries a windowing library and
     // cannot be as small as the other two. The bar is against being fat, not
@@ -54,7 +58,7 @@ const RUNNERS = [
   {
     platform: 'linux',
     crate: 'runner-linux',
-    binary: 'discord-auto-quest-runner-linux',
+    binary: 'discord-auto-quest-runner',
     build: 'npm run build:runner:linux',
     // A statically-linked Linux build carries the whole C library inside it, which
     // measures 370 KB. The bar is above that, because the runner still has to be
