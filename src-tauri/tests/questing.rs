@@ -17,7 +17,9 @@ use discord_auto_quest_lib::catalogue::model::{
     CatalogEntry, CatalogExecutable, CatalogueSnapshot, CatalogueSource,
 };
 use discord_auto_quest_lib::catalogue::service::CatalogueService;
+use discord_auto_quest_lib::quest::records::{self, QuestRecord};
 use discord_auto_quest_lib::quest::service::{QuestRequest, QuestService};
+use discord_auto_quest_lib::quest::QuestState;
 use discord_auto_quest_lib::runner;
 
 /// The application id the Overwatch entry belongs to.
@@ -231,4 +233,173 @@ async fn an_unknown_application_is_refused() {
         error.code,
         discord_auto_quest_lib::error::ErrorCode::NotQuestable
     );
+}
+
+#[tokio::test]
+async fn a_quest_that_outlives_the_application_is_recovered_on_the_next_start() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (catalogue, quests) = services(dir.path()).await;
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    // The application is closed and opened again. The stub keeps running: it is
+    // not a child of the app, and the app does not own it any more.
+    drop(quests);
+    drop(catalogue);
+
+    let (catalogue, quests) = services(dir.path()).await;
+    let list = quests.list();
+
+    assert!(
+        list.error.is_none(),
+        "the records were readable, so there is nothing to report"
+    );
+    assert_eq!(list.quests.len(), 1, "the quest is still running");
+    assert_eq!(list.quests[0].pid, view.pid);
+    assert!(list.quests[0].running);
+    assert_eq!(list.quests[0].state, QuestState::Running);
+
+    // The recovered quest is stopped by its process id, not by its image name.
+    quests.stop(&view.id).expect("the quest stops");
+    assert!(!is_alive(view.pid), "the stub is gone");
+}
+
+#[tokio::test]
+async fn a_quest_whose_process_is_gone_is_dropped_on_the_next_start() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (catalogue, quests) = services(dir.path()).await;
+
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    // The stub is killed behind the application's back, as a crash would kill it.
+    let mut child = Command::new(&view.stub_path)
+        .spawn()
+        .expect("nothing to spawn");
+    drop(child);
+
+    Command::new("taskkill")
+        .args(["/F", "/PID", &view.pid.to_string()])
+        .output()
+        .expect("the taskkill runs");
+    assert!(!is_alive(view.pid), "the stub is gone");
+
+    drop(quests);
+    drop(catalogue);
+
+    let (_catalogue, quests) = services(dir.path()).await;
+    let list = quests.list();
+
+    assert!(
+        list.quests.is_empty(),
+        "a quest whose process is gone must not be reported as running"
+    );
+    assert!(
+        records::read(dir.path()).expect("read").is_empty(),
+        "the dead quest's record must be dropped"
+    );
+}
+
+#[tokio::test]
+async fn a_quest_whose_stub_was_deleted_from_disk_is_idle() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+
+    // A runner that is running, and a record for it whose file is not on disk.
+    //
+    // The file cannot be taken away from under a running executable on Windows —
+    // the loader holds it open — so the state is set up the way it occurs in
+    // practice: the record is written for a process that is running, and the file
+    // it names is not there.
+    let mut runner_process = decoy(&dir.path().join("decoy"));
+    let pid = runner_process.id();
+
+    let record = QuestRecord {
+        id: format!("{APP_ID}:_retail_/overwatch.exe"),
+        app_id: APP_ID.to_string(),
+        display_name: "Overwatch".to_string(),
+        registered_path: "_retail_/overwatch.exe".to_string(),
+        stub_path: dir
+            .path()
+            .join("games")
+            .join(APP_ID)
+            .join("_retail_")
+            .join("overwatch")
+            .display()
+            .to_string(),
+        pid,
+        started_at: 1_700_000_000,
+    };
+    records::write(dir.path(), &[record]).expect("the record is written");
+
+    let (_catalogue, quests) = services(dir.path()).await;
+    let list = quests.list();
+
+    assert_eq!(list.quests.len(), 1, "the process is still running");
+    assert_eq!(
+        list.quests[0].state,
+        QuestState::Missing,
+        "a quest with no file on disk is not a running quest"
+    );
+    assert!(!list.quests[0].running);
+
+    let _ = runner_process.kill();
+    let _ = runner_process.wait();
+}
+
+#[tokio::test]
+async fn the_stub_state_is_a_real_check_of_the_disk() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (_catalogue, quests) = services(dir.path()).await;
+
+    // Nothing has been written yet, so no stub is installed.
+    let states = quests.stub_states(APP_ID).expect("the states are read");
+    assert_eq!(states.len(), 1);
+    assert_eq!(states[0].registered_path, "_retail_/overwatch.exe");
+    assert!(!states[0].installed, "no stub is on disk");
+    assert!(states[0].blocked.is_none());
+    assert!(
+        states[0].path.ends_with("overwatch"),
+        "the path is the mirrored one: {}",
+        states[0].path
+    );
+
+    // After a quest starts, the file is there, and the check says so.
+    let view = quests
+        .start(&QuestRequest {
+            app_id: APP_ID.to_string(),
+            registered_path: "_retail_/overwatch.exe".to_string(),
+        })
+        .expect("the quest starts");
+
+    let states = quests.stub_states(APP_ID).expect("the states are read");
+    assert!(states[0].installed, "the stub is on disk");
+
+    quests.stop(&view.id).expect("the quest stops");
+}
+
+#[tokio::test]
+async fn a_path_the_filesystem_will_not_accept_is_reported_as_blocked() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let (_catalogue, quests) = services(dir.path()).await;
+
+    let states = quests.stub_states(OTHER_APP_ID).expect("the states are read");
+
+    assert_eq!(states.len(), 1);
+    assert_eq!(states[0].registered_path, ILLEGAL_PATH);
+    assert!(!states[0].installed);
+    let blocked = states[0].blocked.as_ref().expect("the path is blocked");
+    assert_eq!(
+        blocked.code,
+        discord_auto_quest_lib::error::ErrorCode::InvalidPath
+    );
+    assert!(blocked.message.contains('>'), "the message names the character");
 }

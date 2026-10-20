@@ -1,7 +1,8 @@
 import { useElapsed } from '../hooks/useElapsed';
 import type { QuestController } from '../hooks/useQuests';
+import { useStubStates } from '../hooks/useStubStates';
 import { platformLabel } from '../lib/format';
-import type { CatalogEntry, CatalogExecutable } from '../types/catalogue';
+import type { CatalogEntry, CatalogExecutable, StubState } from '../types/catalogue';
 
 import { CoverImage } from './CoverImage';
 
@@ -19,6 +20,10 @@ interface EntryPanelProps {
  * what it can say is that a stub is running, with which process id, for how long.
  */
 export function EntryPanel({ entry, quests, currentPlatform }: EntryPanelProps) {
+  // The stub's presence on disk is re-read whenever the quests change, because a
+  // quest writes a stub and a stopped quest leaves one behind.
+  const stubStates = useStubStates(entry?.id ?? null, quests.quests);
+
   return (
     <aside
       aria-label="Selected entry"
@@ -35,6 +40,7 @@ export function EntryPanel({ entry, quests, currentPlatform }: EntryPanelProps) 
           entry={entry}
           quests={quests}
           currentPlatform={currentPlatform}
+          stubStates={stubStates}
         />
       )}
     </aside>
@@ -45,10 +51,12 @@ function SelectedEntry({
   entry,
   quests,
   currentPlatform,
+  stubStates,
 }: {
   entry: CatalogEntry;
   quests: QuestController;
   currentPlatform: string | null;
+  stubStates: Record<string, StubState>;
 }) {
   const detected = entry.executables.length > 0;
   const native =
@@ -56,6 +64,12 @@ function SelectedEntry({
       ? entry.executables.filter((executable) => executable.os === currentPlatform)
       : [];
   const fallback = detected && native.length === 0 ? entry.executables[0] : null;
+
+  // A failure that belongs to one of this entry's executables is shown beside it.
+  // One that belongs to no executable is shown at the foot of the panel.
+  const shownHere = entry.executables.some((executable) =>
+    quests.failureFor(entry.id, executable.path),
+  );
 
   return (
     <div className="flex flex-1 flex-col">
@@ -115,6 +129,7 @@ function SelectedEntry({
                 entry={entry}
                 executable={executable}
                 quests={quests}
+                stub={stubStates[executable.path]}
               />
             ))}
           </ul>
@@ -126,7 +141,7 @@ function SelectedEntry({
         </p>
       )}
 
-      {quests.error ? (
+      {quests.error && !shownHere ? (
         <p
           role="alert"
           className="mt-4 border-t border-rule-soft px-5 py-3 text-[11.5px] leading-snug text-danger"
@@ -145,12 +160,15 @@ function ExecutableRow({
   entry,
   executable,
   quests,
+  stub,
 }: {
   entry: CatalogEntry;
   executable: CatalogExecutable;
   quests: QuestController;
+  stub: StubState | undefined;
 }) {
   const quest = quests.questFor(entry.id, executable.path);
+  const failure = quests.failureFor(entry.id, executable.path);
   const elapsed = useElapsed(quest?.running ? quest.startedAt : null);
 
   return (
@@ -168,7 +186,26 @@ function ExecutableRow({
         {executable.path}
       </p>
 
-      {quest && quest.running ? (
+      {stub ? (
+        <p className="mt-0.5 text-[11px] leading-snug text-ink-3">
+          {stub.blocked
+            ? 'This path cannot be mirrored'
+            : stub.installed
+              ? 'Stub on disk'
+              : 'No stub on disk'}
+        </p>
+      ) : null}
+
+      {stub && stub.blocked ? (
+        <p className="mt-1.5 text-[11.5px] leading-snug text-danger">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.06em]">
+            {stub.blocked.code}
+          </span>
+          <span className="mt-0.5 block text-ink-2">{stub.blocked.message}</span>
+        </p>
+      ) : null}
+
+      {quest && quest.state === 'running' ? (
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <span className="text-[11px] tabular text-ink-3">
             PID <span className="text-ink-2">{quest.pid}</span> · {elapsed}
@@ -182,6 +219,26 @@ function ExecutableRow({
             Stop
           </button>
         </div>
+      ) : quest && quest.state === 'missing' ? (
+        <div className="mt-1.5">
+          <p className="text-[11.5px] leading-snug text-warn">
+            The stub was deleted from disk, so this quest is idle. The process is still there, but
+            there is no file at the path Discord matches.
+          </p>
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            <span className="text-[11px] tabular text-ink-3">
+              PID <span className="text-ink-2">{quest.pid}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => void quests.stop(quest.id)}
+              disabled={quests.busy}
+              className="rounded-[2px] border border-rule px-2 py-1 text-[11px] font-medium text-ink-2 transition-colors duration-150 hover:border-ink-3 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Stop
+            </button>
+          </div>
+        </div>
       ) : (
         <button
           type="button"
@@ -191,12 +248,21 @@ function ExecutableRow({
               registeredPath: executable.path,
             })
           }
-          disabled={quests.busy}
+          disabled={quests.busy || Boolean(stub?.blocked)}
           className="mt-1.5 rounded-[2px] border border-spot px-2 py-1 text-[11px] font-medium text-spot transition-colors duration-150 hover:bg-spot hover:text-ground disabled:cursor-not-allowed disabled:opacity-40"
         >
           Start quest
         </button>
       )}
+
+      {failure ? (
+        <p role="alert" className="mt-1.5 text-[11.5px] leading-snug text-danger">
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.06em]">
+            {failure.code}
+          </span>
+          <span className="mt-0.5 block text-ink-2">{failure.message}</span>
+        </p>
+      ) : null}
     </li>
   );
 }

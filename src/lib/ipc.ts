@@ -4,8 +4,10 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import type {
   AppErrorShape,
   CatalogueSnapshot,
+  QuestList,
   QuestRequest,
   QuestView,
+  StubState,
 } from '../types/catalogue';
 
 /** The backend serves the catalogue; it is never bundled with the frontend. */
@@ -48,9 +50,19 @@ export async function stopQuest(id: string): Promise<QuestView> {
   return invoke<QuestView>('stop_quest', { id });
 }
 
-/** The quests that are running. */
-export async function listQuests(): Promise<QuestView[]> {
-  return invoke<QuestView[]>('list_quests');
+/** The quests that are running, and anything the backend could not work out. */
+export async function listQuests(): Promise<QuestList> {
+  return invoke<QuestList>('list_quests');
+}
+
+/**
+ * What the filesystem says about each of an application's stubs.
+ *
+ * This is the backend's own check of the disk, made now. The interface never
+ * infers that a stub is installed from a flag it set earlier.
+ */
+export async function stubStates(appId: string): Promise<StubState[]> {
+  return invoke<StubState[]>('stub_states', { appId });
 }
 
 /** A quest started or stopped. */

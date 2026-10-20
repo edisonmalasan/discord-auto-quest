@@ -68,6 +68,26 @@ export const CURRENT_PLATFORM: Record<string, string> = {
   linux: 'Linux',
 };
 
+/**
+ * The state of a quest, as the backend reports it.
+ *
+ * The backend reads this from the process table and from the disk, every time it
+ * is asked. It is never a flag the interface set earlier.
+ */
+export type QuestState = 'running' | 'missing' | 'ended';
+
+/**
+ * The quests, and anything the backend could not work out about them.
+ *
+ * The `error` is a failure the backend could not recover from on its own — a quest
+ * records file it could not read, for instance. The quests above are still true;
+ * the error says what could not be checked.
+ */
+export interface QuestList {
+  quests: QuestView[];
+  error: AppErrorShape | null;
+}
+
 /** A quest as the backend sees it. */
 export interface QuestView {
   /** The quest's identity: the application and the executable within it. */
@@ -80,10 +100,42 @@ export interface QuestView {
   pid: number;
   /** When the quest started, as a Unix timestamp in seconds. */
   startedAt: number;
-  /** Whether the process is still running. */
+  /** Whether the quest is running. True only in the `running` state. */
   running: boolean;
+  /** The state of the quest. */
+  state: QuestState;
   /** The registered path the stub is mirroring. */
   registeredPath: string;
+}
+
+/**
+ * The quests that are running, and anything the backend could not work out.
+ *
+ * The quests are read from the process table. The error is a failure the backend
+ * could not recover from on its own — a quest records file it could not read, for
+ * instance — and it is reported rather than swallowed, so the app never claims
+ * that nothing is running when it could not find out.
+ */
+export interface QuestList {
+  quests: QuestView[];
+  error: AppErrorShape | null;
+}
+
+/**
+ * What the filesystem says about one executable's stub.
+ *
+ * This is a check of the disk made at the moment it was asked for, not a flag the
+ * interface set earlier.
+ */
+export interface StubState {
+  /** The catalogue path this stub mirrors. */
+  registeredPath: string;
+  /** Where the stub is written. */
+  path: string;
+  /** Whether a file is there now. */
+  installed: boolean;
+  /** The reason this path cannot be mirrored, when it cannot. */
+  blocked: AppErrorShape | null;
 }
 
 /**
