@@ -2,8 +2,12 @@
 //!
 //! Discord matches the running process against the **registered executable path**,
 //! not against a file name, so the stub has to sit at the same shape of path. The
-//! path is therefore built from the catalogue's own path, segment by segment, with
-//! the file's extension removed — the asymmetry Discord expects.
+//! path is therefore built from the catalogue's own path, segment by segment,
+//! exactly as it was registered — the file's extension included.
+//!
+//! The extension is part of the name Discord registered, so it is part of the name
+//! on disk. A stub at `_retail_/overwatch` is not at the path Discord registered
+//! (`_retail_/overwatch.exe`), and a process at the wrong path is not a match.
 //!
 //! Every segment is checked before anything touches the filesystem. The catalogue
 //! carries paths that the filesystem will not accept, and a name like `>hl2_osx`
@@ -25,9 +29,12 @@ const RESERVED_NAMES: [&str; 22] = [
 
 /// The path a stub takes for a registered executable.
 ///
-/// The segments are the registered path's own segments, with the file's extension
-/// removed from the last one. `_retail_/overwatch.exe` becomes
-/// `_retail_/overwatch`.
+/// The segments are the registered path's own segments, unchanged.
+/// `_retail_/overwatch.exe` stays `_retail_/overwatch.exe`.
+///
+/// The path is split on either separator, because a registered path is written
+/// with forward slashes but a name may carry a backslash, and the last section
+/// is the file's name however the path was written.
 pub fn segments(registered_path: &str) -> AppResult<Vec<String>> {
     let trimmed = registered_path.trim();
 
@@ -39,7 +46,7 @@ pub fn segments(registered_path: &str) -> AppResult<Vec<String>> {
 
     let mut segments: Vec<String> = Vec::new();
 
-    for raw in trimmed.split('/') {
+    for raw in trimmed.split(['/', '\\']) {
         if raw.is_empty() {
             return Err(AppError::invalid_path(format!(
                 "the registered path `{trimmed}` has an empty segment"
@@ -48,16 +55,6 @@ pub fn segments(registered_path: &str) -> AppResult<Vec<String>> {
 
         check_segment(raw, trimmed)?;
         segments.push(raw.to_string());
-    }
-
-    // The file's extension is stripped. Discord's match is asymmetric: the
-    // registered path has one, and the stub on disk does not.
-    if let Some(last) = segments.last_mut() {
-        if let Some((stem, _)) = last.rsplit_once('.') {
-            if !stem.is_empty() {
-                *last = stem.to_string();
-            }
-        }
     }
 
     Ok(segments)
@@ -70,36 +67,6 @@ pub fn stub_path(games_root: &Path, app_id: &str, segments: &[String]) -> PathBu
         path = path.join(segment);
     }
     path
-}
-
-/// The segments of a registered path, with the extension kept.
-///
-/// A macOS application bundle is named after the registered path, extension and
-/// all, because the bundle's name is what Discord's match is on. The extension is
-/// stripped from the executable *inside* the bundle instead.
-pub fn raw_segments(registered_path: &str) -> AppResult<Vec<String>> {
-    let trimmed = registered_path.trim();
-
-    if trimmed.is_empty() {
-        return Err(AppError::invalid_path(
-            "the registered path is empty, so there is nothing to mirror",
-        ));
-    }
-
-    let mut segments: Vec<String> = Vec::new();
-
-    for raw in trimmed.split('/') {
-        if raw.is_empty() {
-            return Err(AppError::invalid_path(format!(
-                "the registered path `{trimmed}` has an empty segment"
-            )));
-        }
-
-        check_segment(raw, trimmed)?;
-        segments.push(raw.to_string());
-    }
-
-    Ok(segments)
 }
 
 /// Check that the resolved path is still inside the games root.
@@ -167,10 +134,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_extension_is_stripped_from_the_file_only() {
+    fn the_file_name_keeps_its_extension() {
         assert_eq!(
             segments("_retail_/overwatch.exe").expect("accepted"),
-            vec!["_retail_".to_string(), "overwatch".to_string()]
+            vec!["_retail_".to_string(), "overwatch.exe".to_string()],
+            "the extension is part of the name Discord registered"
         );
     }
 
@@ -178,8 +146,47 @@ mod tests {
     fn a_directory_segment_keeps_its_extension() {
         assert_eq!(
             segments("bin.x86/game.exe").expect("accepted"),
-            vec!["bin.x86".to_string(), "game".to_string()]
+            vec!["bin.x86".to_string(), "game.exe".to_string()]
         );
+    }
+
+    #[test]
+    fn a_path_written_with_a_backslash_is_split_the_same_way() {
+        assert_eq!(
+            segments("_retail_\\overwatch.exe").expect("accepted"),
+            vec!["_retail_".to_string(), "overwatch.exe".to_string()]
+        );
+    }
+
+    /// The stub sits at the registered path, verbatim.
+    ///
+    /// Discord matches a running process against the registered executable path.
+    /// The stub is only at that path if nothing is added to it and nothing is
+    /// taken from it — the file name included, and its extension with it.
+    #[test]
+    fn the_stub_sits_at_the_registered_path_verbatim() {
+        // Names taken from the live catalogue, one of each shape.
+        for registered in [
+            "overwatch.exe",
+            "_retail_/overwatch.exe",
+            "tom clancy's rainbow six siege/rainbowsix.exe",
+            "csgo_linux64",
+            "terraria.bin.x86",
+            "osx64/dota2.app",
+        ] {
+            let segments = segments(registered).expect("accepted");
+            let written = stub_path(Path::new("/games"), "42", &segments);
+
+            let mut expected = Path::new("/games/42").to_path_buf();
+            for segment in registered.split(['/', '\\']) {
+                expected.push(segment);
+            }
+
+            assert_eq!(
+                written, expected,
+                "`{registered}` must be mirrored exactly, extension and all"
+            );
+        }
     }
 
     #[test]
@@ -245,11 +252,11 @@ mod tests {
         let path = stub_path(
             Path::new("/data/games"),
             "356875221078245376",
-            &["_retail_".into(), "overwatch".into()],
+            &["_retail_".into(), "overwatch.exe".into()],
         );
         assert_eq!(
             path,
-            Path::new("/data/games/356875221078245376/_retail_/overwatch")
+            Path::new("/data/games/356875221078245376/_retail_/overwatch.exe")
         );
     }
 

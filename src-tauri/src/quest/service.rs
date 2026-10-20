@@ -572,11 +572,12 @@ fn stub_location_for(
     app_id: &str,
     registered_path: &str,
 ) -> AppResult<StubLocation> {
+    let segments = path::segments(registered_path)?;
+
     if os == "macos" && bundle::is_bundle(registered_path) {
-        // The bundle's segments are the registered path's own segments, with the
-        // `.app` extension kept: the bundle is named after what Discord
-        // registered, because the name is what the match is on.
-        let segments = path::raw_segments(registered_path)?;
+        // The bundle is named after what Discord registered, extension and all,
+        // because the name is what the match is on. The extension is stripped
+        // from the executable *inside* the bundle instead.
         let bundle = bundle::layout(games_root, app_id, &segments)?;
         path::ensure_inside(games_root, &bundle.path)?;
 
@@ -586,7 +587,6 @@ fn stub_location_for(
         });
     }
 
-    let segments = path::segments(registered_path)?;
     let stub_path = path::stub_path(games_root, app_id, &segments);
     path::ensure_inside(games_root, &stub_path)?;
 
@@ -628,7 +628,7 @@ mod tests {
                 .join("games")
                 .join("1")
                 .join("a")
-                .join("b")
+                .join("b.exe")
                 .display()
                 .to_string(),
             pid,
@@ -750,8 +750,8 @@ mod tests {
 
             assert_eq!(
                 location.path,
-                PathBuf::from("/games/42/osx64/dota2"),
-                "a bundle is only a bundle on macos, and the extension is stripped"
+                PathBuf::from("/games/42/osx64/dota2.app"),
+                "a bundle is only a bundle on macos, and the name keeps its extension"
             );
         }
     }
@@ -765,8 +765,8 @@ mod tests {
 
             assert_eq!(
                 location.path,
-                PathBuf::from("/games/42/_retail_/overwatch"),
-                "the stub mirrors the registered path, with the extension stripped"
+                PathBuf::from("/games/42/_retail_/overwatch.exe"),
+                "the stub mirrors the registered path, extension included"
             );
             assert_eq!(location.executable, location.path);
         }

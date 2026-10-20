@@ -24,7 +24,7 @@ what this app implements.
 ```text
 DISCOVER     fetch Discord's public game catalog (~25,000 entries) and cache a compact copy
 SELECT       browse or search for a game; see cover art, store, and questability at a glance
-MATERIALISE  copy a tiny platform stub to <user data>/games/<app id>/<registered path>/<exe>
+MATERIALISE  copy a tiny platform stub to <user data>/games/<app id>/<registered path>
 LAUNCH       run the stub and track its PID
 STOP         terminate that exact PID — never by image name
 ```

@@ -31,7 +31,7 @@ function quest(overrides: Partial<QuestView> = {}): QuestView {
     id: '356875221078245376:_retail_/overwatch.exe',
     appId: '356875221078245376',
     displayName: 'Overwatch',
-    stubPath: 'C:\\games\\356875221078245376\\_retail_\\overwatch',
+    stubPath: 'C:\\games\\356875221078245376\\_retail_\\overwatch.exe',
     pid: 4321,
     startedAt: 1_700_000_000,
     running: true,

@@ -6,7 +6,9 @@
 //!    The frontend never supplies a path; it names the application, and the backend
 //!    finds the executable itself. That is what keeps the stub inside the user's own
 //!    directory: the path always comes from Discord's data, never from the interface.
-//! 2. Write the runner to that path, with the file's extension removed.
+//! 2. Write the runner to that path, exactly as it was registered — the file's
+//!    extension included, because the extension is part of the name Discord
+//!    registered.
 //! 3. Run it, and remember its PID.
 //!
 //! On macOS the second step is different: a registered path that names an

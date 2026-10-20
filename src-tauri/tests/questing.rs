@@ -17,6 +17,7 @@ use discord_auto_quest_lib::catalogue::model::{
     CatalogEntry, CatalogExecutable, CatalogueSnapshot, CatalogueSource,
 };
 use discord_auto_quest_lib::catalogue::service::CatalogueService;
+use discord_auto_quest_lib::quest::launch;
 use discord_auto_quest_lib::quest::records::{self, QuestRecord};
 use discord_auto_quest_lib::quest::service::{QuestRequest, QuestService};
 use discord_auto_quest_lib::quest::QuestState;
@@ -128,13 +129,23 @@ fn is_alive(pid: u32) -> bool {
     }
 }
 
-/// A copy of the runner, running from somewhere else, with the same file name.
-fn decoy(directory: &Path) -> Child {
+/// A copy of the runner, running from somewhere else, under the given file name.
+///
+/// The name matters: a stub is written under the name Discord registered, so a
+/// decoy that shares that name is the only honest stand-in for the real game.
+///
+/// The decoy is started through the application's own launch, so it is subject
+/// to the same rules as a real quest — including the one that says a start is
+/// tried again while the file is still open for writing.
+fn decoy(directory: &Path, file_name: &str) -> (u32, Child) {
     std::fs::create_dir_all(directory).expect("the decoy directory is created");
-    let path: PathBuf = directory.join(runner::FILE_NAME);
+    let path: PathBuf = directory.join(file_name);
     runner::materialise(&path).expect("the decoy is written");
 
-    Command::new(&path).spawn().expect("the decoy starts")
+    let launched = launch::launch_executable(&path, "Overwatch").expect("the decoy starts");
+    let child = launched.child.expect("the decoy is this process's child");
+
+    (launched.pid, child)
 }
 
 #[tokio::test]
@@ -149,13 +160,13 @@ async fn a_quest_writes_the_stub_to_the_mirrored_path_and_runs_it() {
         })
         .expect("the quest starts");
 
-    // The path mirrors the registered path, with the file's extension removed.
+    // The path mirrors the registered path, extension included.
     let expected = dir
         .path()
         .join("games")
         .join(APP_ID)
         .join("_retail_")
-        .join("overwatch");
+        .join("overwatch.exe");
     assert_eq!(PathBuf::from(&view.stub_path), expected);
     assert!(expected.exists(), "the stub is written to disk");
 
@@ -181,14 +192,14 @@ async fn stopping_a_quest_leaves_a_process_with_the_same_name_alone() {
         .expect("the quest starts");
 
     // A second process with the same image name, standing in for the real game.
-    let mut decoy = decoy(&dir.path().join("decoy"));
-    assert!(is_alive(decoy.id()));
+    let (decoy_pid, mut decoy) = decoy(&dir.path().join("decoy"), "overwatch.exe");
+    assert!(is_alive(decoy_pid));
 
     quests.stop(&view.id).expect("the quest stops");
 
     assert!(!is_alive(view.pid), "the stub is gone");
     assert!(
-        is_alive(decoy.id()),
+        is_alive(decoy_pid),
         "a process with the same image name must not be touched"
     );
 
@@ -272,8 +283,8 @@ async fn a_foreign_platform_executable_can_be_started() {
     // backend has to honour that: the stub is written at the mirrored path for
     // that executable, whatever platform it names.
     //
-    // The path is the Windows one, with the extension stripped — the rule is
-    // the same on every platform. The `.app` bundle treatment is macOS's alone,
+    // The path is the Windows one, with the extension kept — the rule is the
+    // same on every platform. The `.app` bundle treatment is macOS's alone,
     // because only macOS treats a bundle as an application.
     let view = quests
         .start(&QuestRequest {
@@ -287,7 +298,7 @@ async fn a_foreign_platform_executable_can_be_started() {
         .join("games")
         .join(FOREIGN_APP_ID)
         .join("osx64")
-        .join("dota2");
+        .join("dota2.app");
     assert_eq!(
         PathBuf::from(&view.stub_path),
         expected,
@@ -368,7 +379,7 @@ async fn a_quest_started_from_a_read_only_application_directory_still_works() {
         .join("games")
         .join(APP_ID)
         .join("_retail_")
-        .join("overwatch");
+        .join("overwatch.exe");
     assert_eq!(
         PathBuf::from(&view.stub_path),
         expected,
@@ -585,8 +596,8 @@ async fn a_quest_whose_stub_was_deleted_from_disk_is_idle() {
     // the loader holds it open — so the state is set up the way it occurs in
     // practice: the record is written for a process that is running, and the file
     // it names is not there.
-    let mut runner_process = decoy(&dir.path().join("decoy"));
-    let pid = runner_process.id();
+    let (pid, mut runner_process) =
+        decoy(&dir.path().join("decoy"), "discord-auto-quest-runner.exe");
 
     let record = QuestRecord {
         id: format!("{APP_ID}:_retail_/overwatch.exe"),
@@ -598,7 +609,7 @@ async fn a_quest_whose_stub_was_deleted_from_disk_is_idle() {
             .join("games")
             .join(APP_ID)
             .join("_retail_")
-            .join("overwatch")
+            .join("overwatch.exe")
             .display()
             .to_string(),
         pid,
@@ -633,7 +644,7 @@ async fn the_stub_state_is_a_real_check_of_the_disk() {
     assert!(!states[0].installed, "no stub is on disk");
     assert!(states[0].blocked.is_none());
     assert!(
-        states[0].path.ends_with("overwatch"),
+        states[0].path.ends_with("overwatch.exe"),
         "the path is the mirrored one: {}",
         states[0].path
     );

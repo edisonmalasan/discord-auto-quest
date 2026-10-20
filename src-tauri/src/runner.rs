@@ -134,11 +134,11 @@ mod tests {
         let path = stub_path(
             root,
             "356875221078245376",
-            &["_retail_".into(), "overwatch".into()],
+            &["_retail_".into(), "overwatch.exe".into()],
         );
         assert_eq!(
             path,
-            Path::new("/data/games/356875221078245376/_retail_/overwatch")
+            Path::new("/data/games/356875221078245376/_retail_/overwatch.exe")
         );
     }
 }
