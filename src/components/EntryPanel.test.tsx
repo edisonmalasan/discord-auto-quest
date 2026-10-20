@@ -7,6 +7,10 @@ import type { CatalogEntry, QuestView } from '../types/catalogue';
 
 import { EntryPanel } from './EntryPanel';
 
+vi.mock('../hooks/useStubStates', () => ({
+  useStubStates: () => ({}),
+}));
+
 function entry(overrides: Partial<CatalogEntry> = {}): CatalogEntry {
   return {
     id: '356875221078245376',
@@ -31,6 +35,7 @@ function quest(overrides: Partial<QuestView> = {}): QuestView {
     pid: 4321,
     startedAt: 1_700_000_000,
     running: true,
+    state: 'running',
     registeredPath: '_retail_/overwatch.exe',
     ...overrides,
   };
@@ -40,6 +45,7 @@ function controller(overrides: Partial<QuestController> = {}): QuestController {
   return {
     quests: [],
     questFor: () => undefined,
+    failureFor: () => undefined,
     busy: false,
     error: null,
     start: vi.fn(async () => {}),
@@ -106,16 +112,33 @@ describe('EntryPanel', () => {
     expect(screen.queryByRole('button', { name: 'Start quest' })).not.toBeInTheDocument();
   });
 
-  it('reports a failure with the backend\'s own code', () => {
+  it('explains a quest whose stub was deleted from disk', () => {
     render(
       <EntryPanel
         entry={entry()}
         quests={controller({
-          error: {
+          quests: [quest({ running: false, state: 'missing' })],
+          questFor: () => quest({ running: false, state: 'missing' }),
+        })}
+        currentPlatform="win32"
+      />,
+    );
+
+    expect(screen.getByText(/deleted from disk/)).toBeInTheDocument();
+    // The process is still there, so it can still be stopped.
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+  });
+
+  it('reports a failure with the backend\'s own code, next to the game it happened to', () => {
+    render(
+      <EntryPanel
+        entry={entry()}
+        quests={controller({
+          failureFor: () => ({
             code: 'INVALID_PATH',
             message: 'the registered path contains `>`, which the filesystem will not accept',
             retryable: false,
-          },
+          }),
         })}
         currentPlatform="win32"
       />,

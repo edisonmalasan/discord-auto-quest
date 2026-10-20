@@ -11,8 +11,15 @@
 //!
 //! Stopping a quest terminates that one process, by its handle. Nothing is ever
 //! stopped by image name, so a real game the user is running is never touched.
+//!
+//! A quest outlives the application, so the app has to be able to answer honestly
+//! about a quest it did not start in this session. That answer comes from two
+//! places, and never from a flag the app set earlier: the process table
+//! (`process`) and the filesystem (`records`).
 
 pub mod path;
+pub mod process;
+pub mod records;
 pub mod service;
 
-pub use service::{QuestRequest, QuestService, QuestView};
+pub use service::{QuestList, QuestRequest, QuestService, QuestState, QuestView, StubState};

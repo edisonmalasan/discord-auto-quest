@@ -7,7 +7,7 @@ pub mod runner;
 use catalogue::model::CatalogueSnapshot;
 use catalogue::service::CatalogueService;
 use error::{AppError, AppResult};
-use quest::{QuestRequest, QuestService, QuestView};
+use quest::{QuestList, QuestRequest, QuestService, QuestView, StubState};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Emitted after a background refresh has replaced the catalogue.
@@ -103,10 +103,21 @@ async fn stop_quest(
     Ok(view)
 }
 
-/// The quests that are running.
+/// The quests that are running, and anything the backend could not work out.
 #[tauri::command]
-fn list_quests(state: State<'_, AppState>) -> Vec<QuestView> {
+fn list_quests(state: State<'_, AppState>) -> QuestList {
     state.quests.list()
+}
+
+/// What the filesystem says about each of an application's registered executables.
+///
+/// The answer is a real check of the file on disk, made now. The interface never
+/// infers that a stub is installed from a flag the backend set earlier, and it
+/// never asks for a path: the backend resolves the executables from the catalogue
+/// it holds.
+#[tauri::command]
+fn stub_states(state: State<'_, AppState>, app_id: String) -> AppResult<Vec<StubState>> {
+    state.quests.stub_states(&app_id)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -131,7 +142,8 @@ pub fn run() {
             current_platform,
             start_quest,
             stop_quest,
-            list_quests
+            list_quests,
+            stub_states
         ])
         .run(tauri::generate_context!())
         .expect("error while running the discord-auto-quest application");

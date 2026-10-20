@@ -124,13 +124,39 @@ whether a game can be quested.*
 
 *Outcome: What the app shows is what is actually true on the machine.*
 
-- [ ] Installed state is determined by a real filesystem check, not a client-side boolean.
-- [ ] On start-up, the app reconciles recorded quests against the live process table and drops
+- [x] Installed state is determined by a real filesystem check, not a client-side boolean.
+- [x] On start-up, the app reconciles recorded quests against the live process table and drops
       entries whose process is gone.
-- [ ] A quest whose stub was deleted from disk returns to a clearly-explained idle state.
-- [ ] Errors from the backend appear next to the affected game with the backend's own error code.
+- [x] A quest whose stub was deleted from disk returns to a clearly-explained idle state.
+- [x] Errors from the backend appear next to the affected game with the backend's own error code.
 
-**Status:** Not started
+**Status:** Complete. A quest is now described by its state rather than by a flag: `running`,
+`missing`, or `ended`. The state is read from two places and from nowhere else — the process
+table, through `kernel32`, and the filesystem — so a stub that died on its own, or one whose
+file was deleted from disk, is reported as what it is.
+
+**Reconciliation on start-up.** Quest records are written to `quests.json` in the per-user
+data directory, and the service reconciles them against the process table when it is built.
+A record whose process is gone is dropped; one whose process is alive is kept and adopted, so
+a quest that outlived the application is found again and stopped by its process id.
+
+**A quest is only running if there is a file.** A stub that is running but whose file was
+deleted from disk is reported as `missing` and shown as idle, with the reason stated: there
+is no longer a file at the path Discord matches. The process can still be stopped.
+
+**Nothing is swallowed.** A records file that cannot be read is reported through the quest
+list rather than turned into an empty one, because an empty list and "nothing is running"
+are not the same claim. The liveness check waits on the process handle rather than merely
+opening it, so a process that has exited but whose object has not been collected is not
+reported as running.
+
+**Errors sit next to the game.** A failure is filed against the executable it happened to
+and shown there, under the backend's own error code. A path the filesystem will not accept
+is refused by the backend before anything is written, and the refusal is shown with the
+character that caused it.
+
+Verified by 78 backend unit tests, 10 questing integration tests against a real runner, and
+46 frontend tests.
 
 ---
 
@@ -197,10 +223,9 @@ complete.*
 |---|---|---|
 | 0 | Reverse-engineering study | Complete |
 | 1 | Foundation | Complete |
-| 2 | Questing on Windows | Not started |
-| 2 | Questing on Windows | Not started |
+| 2 | Questing on Windows | Complete |
 | 3 | The catalogue experience | Not started |
-| 4 | Honest state | Not started |
+| 4 | Honest state | Complete |
 | 5 | macOS | Not started |
 | 6 | Linux | Not started |
 | 7 | Release readiness | Not started |
