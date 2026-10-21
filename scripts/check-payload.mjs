@@ -1,0 +1,88 @@
+/**
+ * N2: the quest script is not readable in the application.
+ *
+ * The script is the one piece of this project that must not be handed over
+ * with the application. It is encrypted when the payload is built and
+ * embedded as ciphertext, and this checks the artefact rather than the source:
+ * a check against the source cannot see what the compiler produced.
+ *
+ *   node scripts/check-payload.mjs <path to the built application>
+ *
+ * The markers are strings that appear in the script and nowhere else — the
+ * application never needs to know the name of Discord's module registry, or
+ * the names of the events the script listens for. If one of them turns up in
+ * the binary, the payload is not encrypted.
+ */
+import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
+
+/** Strings that only the quest script would carry. */
+export const SCRIPT_MARKS = [
+  'webpackChunkdiscord_app',
+  'getStreamerActiveStreamMetadata',
+  'RUNNING_GAMES_CHANGE',
+  'QUESTS_SEND_HEARTBEAT_SUCCESS',
+  'video-progress',
+  'getSFWDefaultChannel',
+];
+
+/**
+ * Check a built application for the script.
+ *
+ * @param {string} path the built application
+ * @returns {string[]} the markers that were found, empty when there were none
+ */
+export function findScriptMarks(path) {
+  const bytes = readFileSync(path);
+
+  const found = [];
+
+  for (const mark of SCRIPT_MARKS) {
+    // A binary may hold a string as narrow or as wide characters, so both
+    // encodings are looked for.
+    if (bytes.includes(mark, 0, 'latin1')) {
+      found.push(mark);
+      continue;
+    }
+
+    if (bytes.includes(Buffer.from(mark, 'utf16le'))) {
+      found.push(mark);
+    }
+  }
+
+  return found;
+}
+
+/**
+ * Check a built application, and fail if the script is readable in it.
+ *
+ * @param {string} path the built application
+ */
+export function checkPayload(path) {
+  const found = findScriptMarks(path);
+
+  if (found.length > 0) {
+    console.error(
+      `payload check failed: ${basename(path)} contains ${found
+        .map((mark) => `"${mark}"`)
+        .join(', ')}, so the quest script is readable in the application`,
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `N2: ${basename(path)} carries none of the quest script's strings`,
+  );
+}
+
+// Run as a program, rather than imported.
+if (process.argv[1] && process.argv[1].endsWith('check-payload.mjs')) {
+  const path = process.argv[2];
+
+  if (!path) {
+    console.error('usage: check-payload.mjs <path to the built application>');
+    process.exit(2);
+  }
+
+  checkPayload(path);
+}

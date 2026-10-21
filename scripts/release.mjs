@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, basename, join } from 'node:path';
 
 import { readVersion } from './version.mjs';
+import { checkPayload } from './check-payload.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -148,6 +149,10 @@ const app = artefactPath('src-tauri', shape.app);
 if (!app) {
   fail(`the ${platform} application was not built, so there is nothing to package`);
 }
+
+// The quest script is the one thing that must not be readable in what we
+// ship, so the artefact is checked rather than the source.
+checkPayload(app);
 
 // The archive: the application, the runner, and the notices.
 const stage = join(root, 'target', 'release', `discord-auto-quest-${version}-${platform}`);

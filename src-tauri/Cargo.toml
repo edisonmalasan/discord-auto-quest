@@ -27,9 +27,14 @@ reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
     "charset",
     "http2",
+    "json",
     "macos-system-configuration",
 ] }
 dirs = "6"
+tokio-tungstenite = "0.29.0"
+tokio = { version = "1", features = ["net", "rt", "macros", "time", "sync"] }
+futures-util = "0.3.34"
+aes-gcm = "0.10.3"
 
 [dev-dependencies]
 tempfile = "3"
