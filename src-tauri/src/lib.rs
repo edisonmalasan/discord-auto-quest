@@ -1,4 +1,5 @@
 pub mod catalogue;
+pub mod discord;
 pub mod error;
 pub mod paths;
 pub mod quest;
@@ -29,6 +30,8 @@ pub const QUESTS_CHANGED_EVENT: &str = "quests-changed";
 pub struct AppState {
     pub catalogue: CatalogueService,
     pub quests: QuestService,
+    /// The application's connection to Discord.
+    pub discord: discord::DiscordState,
 }
 
 /// Serve the catalogue.
@@ -149,6 +152,52 @@ fn stub_states(state: State<'_, AppState>, app_id: String) -> AppResult<Vec<Stub
     state.quests.stub_states(&app_id)
 }
 
+/// Where Discord stands, and what the user has to do about it.
+///
+/// The answer is a check, made now: whether Discord is installed, whether the
+/// application can talk to it, and what has to happen before it can.
+#[tauri::command]
+async fn discord_status(state: State<'_, AppState>) -> AppResult<discord::DiscordStatus> {
+    Ok(state.discord.status().await)
+}
+
+/// Restart Discord so the application can drive it.
+///
+/// The application never calls this on its own: restarting Discord ends
+/// whatever the user was doing in it. The interface asks first.
+#[tauri::command]
+async fn relaunch_discord(state: State<'_, AppState>) -> AppResult<()> {
+    let install = quest::discord::Install::locate()
+        .ok_or_else(|| AppError::not_supported("Discord is not installed on this machine"))?;
+
+    install.launch_with_debugger()?;
+    state.discord.attach().await
+}
+
+/// Attach to Discord's renderer.
+#[tauri::command]
+async fn attach_discord(state: State<'_, AppState>) -> AppResult<()> {
+    state.discord.attach().await
+}
+
+/// The quests Discord has: the ones on offer, and the ones already accepted.
+#[tauri::command]
+async fn list_discord_quests(state: State<'_, AppState>) -> AppResult<quest::reader::QuestList> {
+    state.discord.quests().await
+}
+
+/// Run the quest script in Discord.
+#[tauri::command]
+async fn run_quest_script(state: State<'_, AppState>) -> AppResult<bool> {
+    state.discord.run_script().await
+}
+
+/// Put Discord's own methods back.
+#[tauri::command]
+async fn stop_quest_script(state: State<'_, AppState>) -> AppResult<()> {
+    state.discord.stop_script().await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -160,7 +209,11 @@ pub fn run() {
             let catalogue = CatalogueService::new(dir.clone(), catalogue::service::DEFAULT_TTL)?;
             let quests = QuestService::new(catalogue.clone(), dir);
 
-            app.manage(AppState { catalogue, quests });
+            app.manage(AppState {
+                catalogue,
+                quests,
+                discord: discord::DiscordState::default(),
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -173,7 +226,13 @@ pub fn run() {
             start_quest,
             stop_quest,
             list_quests,
-            stub_states
+            stub_states,
+            discord_status,
+            relaunch_discord,
+            attach_discord,
+            list_discord_quests,
+            run_quest_script,
+            stop_quest_script
         ])
         .run(tauri::generate_context!())
         .expect("error while running the discord-auto-quest application");
