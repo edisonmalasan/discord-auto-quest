@@ -89,54 +89,24 @@ export function useDiscord(): DiscordController {
     }
   }, []);
 
-  const look = useCallback(async () => {
+  const look = useCallback(async (): Promise<DiscordStatus | null> => {
     try {
       const found = await discordStatus();
       if (!mounted.current) {
-        return;
+        return found;
       }
       setStatus(found);
       setPhase(found.ready ? 'ready' : 'blocked');
+      return found;
     } catch (failure) {
       if (!mounted.current) {
-        return;
+        return null;
       }
       setError(toAppError(failure));
       setPhase('error');
+      return null;
     }
   }, []);
-
-  // On mount: where Discord stands, and then the quests, if it can be asked.
-  useEffect(() => {
-    let cancelled = false;
-
-    const start = async () => {
-      await look();
-      if (cancelled) {
-        return;
-      }
-      await read();
-    };
-
-    void start();
-    return () => {
-      cancelled = true;
-    };
-  }, [look, read]);
-
-  // The quests are read again and again, because a quest counts in Discord's
-  // time and the interface has to keep up with it.
-  useEffect(() => {
-    if (phase !== 'ready') {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      void read();
-    }, POLL_MS);
-
-    return () => window.clearInterval(timer);
-  }, [phase, read]);
 
   const attach = useCallback(() => {
     setBusy(true);
@@ -158,6 +128,52 @@ export function useDiscord(): DiscordController {
       }
     })();
   }, [look, read]);
+
+  // On mount: where Discord stands, then attach to it if it can be attached
+  // to, and then ask it for its quests. The quests cannot be read without a
+  // connection, so the attachment is not optional.
+  useEffect(() => {
+    let cancelled = false;
+
+    const start = async () => {
+      const found = await look();
+      if (cancelled || !found?.ready) {
+        return;
+      }
+
+      try {
+        await attachDiscord();
+      } catch (failure) {
+        if (!cancelled) {
+          setError(toAppError(failure));
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        await read();
+      }
+    };
+
+    void start();
+    return () => {
+      cancelled = true;
+    };
+  }, [look, read]);
+
+  // The quests are read again and again, because a quest counts in Discord's
+  // time and the interface has to keep up with it.
+  useEffect(() => {
+    if (phase !== 'ready') {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      void read();
+    }, POLL_MS);
+
+    return () => window.clearInterval(timer);
+  }, [phase, read]);
 
   const restart = useCallback(() => {
     setBusy(true);
