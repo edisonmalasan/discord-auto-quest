@@ -7,13 +7,9 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run version:check && tsc --noEmit && vite build",
-    "build:runner": "cargo build --release --manifest-path runner/Cargo.toml",
-    "build:runner:macos": "cargo build --release --manifest-path runner-macos/Cargo.toml",
-    "build:runner:linux": "cargo build --release --manifest-path runner-linux/Cargo.toml",
     "build:payload": "node scripts/build-payload.mjs",
     "check:acceptance": "node scripts/check-acceptance.mjs",
     "check:payload": "node scripts/check-payload.mjs",
-    "check:runner": "node scripts/check-runner.mjs",
     "preview": "vite preview",
     "release": "node scripts/release.mjs",
     "typecheck": "tsc --noEmit",
@@ -25,7 +21,6 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
-    "fuse.js": "^7.5.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

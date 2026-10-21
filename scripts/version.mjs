@@ -35,12 +35,7 @@ export const SOURCE = join(root, 'package.json');
  * The manifests that carry a copy of the version, because Cargo insists on a
  * literal in `[package]`.
  */
-const CARGO_MANIFESTS = [
-  join(root, 'src-tauri', 'Cargo.toml'),
-  join(root, 'runner', 'Cargo.toml'),
-  join(root, 'runner-macos', 'Cargo.toml'),
-  join(root, 'runner-linux', 'Cargo.toml'),
-];
+const CARGO_MANIFESTS = [join(root, 'src-tauri', 'Cargo.toml')];
 
 /** The version, read from the workspace manifest. */
 export function readVersion() {

@@ -1,14 +1,14 @@
 /**
  * Package a release archive for the platform this machine builds.
  *
- * The archive is a portable directory: the application, the runner beside it,
- * and the notices that ship with it. It is named after the version, which comes
- * from the one place the version is defined.
+ * The archive is a portable directory: the application, and the notices that
+ * ship with it. It is named after the version, which comes from the one place
+ * the version is defined.
  *
- * The runner is *inside* the application binary — the app embeds it so there is
- * always one to write and never a resource file to find. The copy in the archive
- * is the same bytes under the same name, so a user can see what the app will
- * run, and so the archive is complete on its own.
+ * The quest script is *inside* the application binary, as ciphertext. The
+ * build fails rather than warns if the payload is missing, and the check
+ * below reads the built artefact rather than the source, because a check
+ * against the source cannot see what the compiler produced.
  *
  * Run with `npm run release`. The version comes from `package.json`; nothing
  * here states one of its own.
@@ -27,17 +27,14 @@ const root = join(here, '..');
 /** The platform the archive is for, and the name its artefacts take. */
 const PLATFORMS = {
   windows: {
-    runner: { crate: 'runner', binary: 'discord-auto-quest-runner.exe' },
     app: 'discord-auto-quest.exe',
     extension: '.zip',
   },
   macos: {
-    runner: { crate: 'runner-macos', binary: 'discord-auto-quest-runner' },
     app: 'discord-auto-quest',
     extension: '.tar.gz',
   },
   linux: {
-    runner: { crate: 'runner-linux', binary: 'discord-auto-quest-runner' },
     app: 'discord-auto-quest',
     extension: '.tar.gz',
   },
@@ -58,7 +55,7 @@ function hostPlatform() {
     case 'linux':
       return 'linux';
     default:
-      return fail(`this platform (${process.platform}) has no runner`);
+      return fail(`this platform (${process.platform}) is not one we ship for`);
   }
 }
 
@@ -90,8 +87,8 @@ function run(command, args) {
 /**
  * Run an npm script.
  *
- * `npm` is a shell script on Unix and a `.cmd` file on Windows, and neither is
- * a program that can be started directly. The script that is behind the `npm`
+ * `npm` is a shell script on Unix and a `.cmd` file on Windows, and neither
+ * is a program that can be started directly. The script that is behind the `npm`
  * on the path is a JavaScript file, and Node can run that.
  */
 function runNpm(args) {
@@ -116,25 +113,8 @@ console.log(`packaging the ${platform} release of ${version}`);
 console.log('building the frontend');
 run('npm', ['run', 'build']);
 
-// The runner is built first, and its absence stops the release: an archive
-// without the runner is an archive that cannot quest.
-console.log('building the runner');
-run('cargo', [
-  'build',
-  '--release',
-  '--manifest-path',
-  join(root, shape.runner.crate, 'Cargo.toml'),
-]);
-
-const runner = artefactPath(shape.runner.crate, shape.runner.binary);
-if (!runner) {
-  fail(
-    `the ${platform} runner was not built, so there is nothing to package`,
-  );
-}
-
-// The application. The runner is embedded in it, so the build fails rather than
-// warns if the runner is missing.
+// The application. The payload is embedded in it, so the build fails rather
+// than warns if the payload is missing.
 console.log('building the application');
 run('cargo', [
   'build',
@@ -154,13 +134,12 @@ if (!app) {
 // ship, so the artefact is checked rather than the source.
 checkPayload(app);
 
-// The archive: the application, the runner, and the notices.
+// The archive: the application, and the notices.
 const stage = join(root, 'target', 'release', `discord-auto-quest-${version}-${platform}`);
 rmSync(stage, { recursive: true, force: true });
 mkdirSync(stage, { recursive: true });
 
 cpSync(app, join(stage, shape.app));
-cpSync(runner, join(stage, shape.runner.binary));
 cpSync(join(root, 'LICENSE'), join(stage, 'LICENSE'));
 cpSync(join(root, 'NOTICE'), join(stage, 'NOTICE'));
 cpSync(join(root, 'README.md'), join(stage, 'README.md'));
@@ -171,10 +150,10 @@ writeFileSync(
   [
     `discord-auto-quest ${version}`,
     `platform: ${platform}`,
-    `runner: ${shape.runner.binary}`,
     '',
-    'The application embeds its own copy of the runner. The copy beside it is',
-    'the same bytes, kept here so the archive is complete on its own.',
+    'The application drives the Discord desktop client. It has to be running,',
+    'and it has to be running with a debugging port; the application says so',
+    'and offers to restart it.',
     '',
   ].join('\n'),
 );
@@ -190,6 +169,4 @@ if (shape.extension === '.zip') {
 }
 
 const bytes = statSync(output).size;
-console.log(
-  `wrote ${output} (${bytes} bytes) with ${shape.app} and ${shape.runner.binary}`,
-);
+console.log(`wrote ${output} (${bytes} bytes) with ${shape.app}`);

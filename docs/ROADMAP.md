@@ -29,7 +29,7 @@ they have accepted — without installing a single game.*
 | N6 | The application runs the quest script in the client and stops it, and the client's own heartbeat counts the quest | Complete |
 | N7 | The interface shows the quests as one register, and says what needs doing now | Complete |
 | N8 | A fresh accept-and-work cycle is verified end to end by a person, against the real client | **Unverified** — needs the user's hands |
-| N9 | The old catalogue, the stub mechanism, and the runner crates are retired, and this document describes only the new product | **Pending** |
+| N9 | The old catalogue, the stub mechanism, and the runner crates are retired, and this document describes only the new product | **Complete** |
 
 **N7 was distilled.** The interface began as two columns of cards, each repeating the quest's
 task, duration, reward, expiry and a progress bar. It is now one list, hairline-ruled: the quests
@@ -46,6 +46,14 @@ reward could still be claimed. The second is now a rule in `src/lib/quests.ts` a
 **The application attaches on its own.** The quests cannot be read without a connection, so the
 backend makes one when it reads them. A connection that was lost — Discord restarted, the client
 reloaded — is made again rather than reported as a failure the user cannot act on.
+
+**N9 removed 4,180 lines and three crates.** The catalogue module, the stub mechanism, the
+runner, and the per-platform runner crates are gone from the tree, along with their tests. The
+backend is now the transport, the payload, the reader, the driver, and the Tauri shell; the
+frontend is the register. The build script no longer builds a helper executable, the release
+archive no longer carries one, and the continuous integration no longer has three platforms'
+worth of runner to build and check. What the application writes to disk at run time is now
+nothing at all: the script is decrypted in memory and evaluated in the renderer.
 
 ---
 

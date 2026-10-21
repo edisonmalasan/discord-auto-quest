@@ -19,7 +19,7 @@
 //! available and what is running when the script has stopped working. What it
 //! must never do is go quiet.
 
-use crate::error::{AppError, AppResult};
+use crate::error::AppResult;
 use crate::quest::cdp::Session;
 use crate::quest::payload;
 
@@ -153,11 +153,6 @@ pub async fn is_desktop_app(session: &mut Session) -> AppResult<bool> {
         .await?;
 
     Ok(value.as_bool().unwrap_or(false))
-}
-
-/// A message that says what went wrong, in the words of the failure.
-pub fn describe(error: &AppError) -> String {
-    error.message.clone()
 }
 
 #[cfg(test)]

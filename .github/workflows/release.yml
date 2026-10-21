@@ -50,9 +50,6 @@ jobs:
         with:
           workspaces: |
             src-tauri -> target
-            runner -> target
-            runner-linux -> target
-            runner-macos -> target
       - name: the libraries the window renders through
         run: |
           sudo apt-get update
@@ -64,21 +61,9 @@ jobs:
       - name: the version
         run: npm run version:check
       - name: formatting
-        run: |
-          cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-          cargo fmt --manifest-path runner/Cargo.toml -- --check
-          cargo fmt --manifest-path runner-linux/Cargo.toml -- --check
-          cargo fmt --manifest-path runner-macos/Cargo.toml -- --check
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
       - name: lint
-        run: |
-          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-          cargo clippy --manifest-path runner-linux/Cargo.toml --all-targets -- -D warnings
-          cargo clippy --manifest-path runner-macos/Cargo.toml --all-targets -- -D warnings
-          # The Windows runner is `no_std` and `no_main`, so it has no test
-          # harness: a test binary would need the standard library and an
-          # unwinder the runner does not have. Its binary target is linted
-          # instead, and it carries no tests to run.
-          cargo clippy --manifest-path runner/Cargo.toml --bins -- -D warnings
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
       - name: the frontend tests
         run: npm test -- --run
       - name: the backend tests
@@ -103,7 +88,6 @@ jobs:
         with:
           workspaces: |
             src-tauri -> target
-            runner-linux -> target
       - name: the libraries the window renders through
         run: |
           sudo apt-get update
@@ -118,17 +102,13 @@ jobs:
           # Without it the build fails with "the frontendDist configuration is
           # set to ../dist but this path doesn't exist".
           npm run build
-          cargo build --release --manifest-path runner-linux/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: check the runner
-        run: npm run check:runner
-      - name: the linux questing tests
-        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_linux
+      - name: the payload is not readable
+        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest
       - uses: actions/upload-artifact@v4
         with:
           name: linux-archive
           path: |
-            runner-linux/target/release/discord-auto-quest-runner
             src-tauri/target/release/discord-auto-quest
 
   windows:
@@ -146,23 +126,18 @@ jobs:
         with:
           workspaces: |
             src-tauri -> target
-            runner -> target
       - run: npm ci
       - name: build
         run: |
           # The application embeds the frontend, so the frontend is built first.
           npm run build
-          cargo build --release --manifest-path runner/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: check the runner
-        run: npm run check:runner
-      - name: the windows questing tests
-        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing
+      - name: the payload is not readable
+        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest.exe
       - uses: actions/upload-artifact@v4
         with:
           name: windows-archive
           path: |
-            runner/target/release/discord-auto-quest-runner.exe
             src-tauri/target/release/discord-auto-quest.exe
 
   macos:
@@ -180,28 +155,18 @@ jobs:
         with:
           workspaces: |
             src-tauri -> target
-            runner-macos -> target
       - run: npm ci
       - name: build
         run: |
           # The application embeds the frontend, so the frontend is built first.
           npm run build
-          cargo build --release --manifest-path runner-macos/Cargo.toml
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: check the runner
-        run: npm run check:runner
-      - name: the macos questing tests
-        # The macOS runner opens a window, so these tests need a session with a
-        # window server. The runner that hosts this job has one.
-        #
-        # The output is not captured, because what the tests have to say about
-        # the window server is part of the evidence.
-        run: cargo test --release --manifest-path src-tauri/Cargo.toml --test questing_macos -- --nocapture
+      - name: the payload is not readable
+        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest
       - uses: actions/upload-artifact@v4
         with:
           name: macos-archive
           path: |
-            runner-macos/target/release/discord-auto-quest-runner
             src-tauri/target/release/discord-auto-quest
 
   # The release is cut from the artifacts the three builds produced, so what is
@@ -223,8 +188,7 @@ jobs:
       - name: the files to publish
         run: |
           mkdir -p publish
-          find artifacts -type f \( -name '*.exe' -o -name 'discord-auto-quest' \
-            -o -name 'discord-auto-quest-runner' \) \
+          find artifacts -type f \( -name '*.exe' -o -name 'discord-auto-quest' \) \
             -exec bash -c 'for file; do cp "$file" "publish/$(basename "$file")"; done' _ {} +
           cp LICENSE NOTICE README.md publish/
           echo "publish: the files that will be published"
