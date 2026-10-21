@@ -39,6 +39,7 @@ pub enum QuestState {
 
 /// One quest, as Discord describes it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestSummary {
     /// Discord's identifier for it.
     pub id: String,
@@ -67,6 +68,7 @@ impl QuestSummary {
 
 /// Everything the application needs to know about Discord's quests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestList {
     /// The quests that are on offer and have not expired.
     pub available: Vec<QuestSummary>,
@@ -85,6 +87,7 @@ pub struct QuestList {
 
 /// A game the client believes is running.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RunningGame {
     pub id: String,
     pub name: String,
@@ -124,7 +127,26 @@ const READ_STATE: &str = r#"(function () {
       return false;
     };
 
-    const findStore = function (method, isTheRightOne) {
+    const findStore = function (method, isTheRightOne, names) {
+      // The fast way: the export names the quest script uses. They are quick,
+      // and they are right until Discord renames something.
+      for (const name of names) {
+        for (const module of modules) {
+          const exports = module && module.exports;
+          if (!exports) continue;
+          let candidate;
+          try { candidate = exports[name]; } catch (error) { continue; }
+          if (!candidate) continue;
+          try {
+            if (!hasAccessor(candidate, method)) continue;
+            if (!isTheRightOne(candidate)) continue;
+            return candidate;
+          } catch (error) { /* not this one */ }
+        }
+      }
+
+      // The slow way, and the one that survives a rename: look at everything
+      // every module exports.
       for (const module of modules) {
         const exports = module && module.exports;
         if (!exports) continue;
@@ -141,19 +163,24 @@ const READ_STATE: &str = r#"(function () {
           } catch (error) { /* not this one */ }
         }
       }
+
       return null;
     };
 
     // The quest store is the one whose collection is a map of quests, and the
     // running-games store is the one that can look a game up by its process
     // id. Either test is enough on its own; together they are certain.
-    const questStore = findStore('getQuest', function (candidate) {
-      return candidate.quests instanceof Map;
-    });
+    const questStore = findStore(
+      'getQuest',
+      function (candidate) { return candidate.quests instanceof Map; },
+      ['A'],
+    );
 
-    const gameStore = findStore('getRunningGames', function (candidate) {
-      return typeof candidate.getGameForPID === 'function';
-    });
+    const gameStore = findStore(
+      'getRunningGames',
+      function (candidate) { return typeof candidate.getGameForPID === 'function'; },
+      ['Ay'],
+    );
 
     if (!questStore) {
       report.error = 'the quest store could not be found in this version of Discord';
@@ -268,16 +295,16 @@ mod tests {
                 "id": "1",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": "2026-10-23T00:00:00+00:00",
+                "expiresAt": "2026-10-23T00:00:00+00:00",
                 "state": "available",
-                "progress_seconds": 0,
-                "target_seconds": 900,
-                "reward_orbs": 700,
+                "progressSeconds": 0,
+                "targetSeconds": 900,
+                "rewardOrbs": 700,
             }],
             "claimed": [],
             "expired": 64,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
@@ -301,15 +328,15 @@ mod tests {
                 "id": "2",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": null,
+                "expiresAt": null,
                 "state": "claimed",
-                "progress_seconds": 119,
-                "target_seconds": 900,
-                "reward_orbs": null,
+                "progressSeconds": 119,
+                "targetSeconds": 900,
+                "rewardOrbs": null,
             }],
             "expired": 0,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
@@ -325,15 +352,15 @@ mod tests {
                 "id": "3",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": null,
+                "expiresAt": null,
                 "state": "completed",
-                "progress_seconds": 900,
-                "target_seconds": 900,
-                "reward_orbs": 700,
+                "progressSeconds": 900,
+                "targetSeconds": 900,
+                "rewardOrbs": 700,
             }],
             "expired": 0,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
