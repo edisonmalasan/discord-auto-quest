@@ -36,11 +36,6 @@ export async function relaunchDiscord(): Promise<void> {
   await invoke<void>('relaunch_discord');
 }
 
-/** Attach to Discord's renderer. */
-export async function attachDiscord(): Promise<void> {
-  await invoke<void>('attach_discord');
-}
-
 /** The quests Discord has: the ones on offer, and the ones already accepted. */
 export async function listDiscordQuests(): Promise<QuestFeed> {
   return invoke<QuestFeed>('list_discord_quests');

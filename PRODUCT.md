@@ -1,3 +1,5 @@
+---
+
 # Product
 
 Durable product truth for **discord-auto-quest**. This file changes only when the product itself
@@ -6,36 +8,35 @@ observed* about the upstream app, see [`re/docs/`](re/docs/).
 
 ## What this is
 
-A desktop application that completes Discord quests for games the user does not own, by making
-Discord's local activity detection report the game as running.
+A desktop application that completes Discord's quests for games the user does not own, by driving
+the Discord desktop client the user is already signed in to.
 
 ## Who it is for
 
-A user who wants to complete Discord's game quests without buying and installing every game in
-the catalogue. The person is:
+A user who wants to clear a seasonal quest list without buying and installing every game in the
+catalogue. The person is:
 
-- comfortable with a desktop utility that writes to their user data directory and spawns
-  background processes,
+- comfortable with a desktop utility that reads their Discord client and runs a script inside it,
 - in the Discord ecosystem for play, not for automation,
-- and unwilling to spend money or disk space on dozens of titles to clear a seasonal quest list.
+- and unwilling to spend money or disk space on dozens of titles to clear a seasonal list.
 
 ## The mechanism, stated once
 
-Discord has **no quest-completion API**. Quests credit activity that Discord's local Rich
-Presence integration reports. So the app:
+Discord has **no quest-completion API**. Quests credit activity that Discord's own client
+reports. So the application:
 
-1. Fetches Discord's public game catalogue (`discord.com/api/applications/detectable`).
-2. Resolves the game's registered executable path for the target platform.
-3. Materialises a small platform-specific stub binary at a path that mirrors that registered path.
-4. Launches the stub and tracks its child PID.
-5. Terminates that PID on request.
+1. Finds the Discord desktop client, and makes sure it is running with a debugging port — which
+   means restarting Discord, once, with the user's agreement.
+2. Attaches to the client's renderer over the Chrome DevTools Protocol.
+3. Reads the quest state out of the client's own store: the quests on offer and not expired, and
+   the quests the user has accepted, with their progress.
+4. Runs the quest script inside that renderer, which is what makes the client's own quest
+   heartbeat count the quest.
+5. Shows the user what is happening, and what they still have to do themselves.
 
-Discord observes the running process, reports the game as active, and credits the quest.
-
-**The path mirror is load-bearing.** Discord matches on the registered executable path, not merely
-the file name. The stub is placed at
-`<user data>/games/<app id>/<registered path>`, exactly as registered — the file's extension
-included, because the extension is part of the name Discord registered.
+The script is the mechanism, and it is the one piece of this project that must not be readable by
+anyone who has the application. It is encrypted when the payload is built and embedded as
+ciphertext; it is decrypted into memory, evaluated in the renderer, and never written to disk.
 
 ## Product principles
 
@@ -43,57 +44,56 @@ These are the decisions that must survive implementation changes.
 
 ### 1. Honesty about state beats optimistic UI
 
-The app shows what it knows, not what it hopes. A stub that is running is reported as a running
-stub. If the app cannot confirm Discord-side state, it does not claim Discord-side state. Quest
-progress is Discord's business, not the app's to assert.
+The app shows what it knows, not what it hopes. If the app cannot confirm Discord-side state, it
+does not claim Discord-side state. Quest progress is Discord's business, not the app's to assert.
+A quest is reported as finished only when Discord says it is finished.
 
-### 2. Questability is a first-class property
+### 2. The quest list is the product, and it is Discord's list
 
-Most of the catalogue has no registered executable and can never be quested by this
-mechanism — 51.5% in upstream's snapshot, 57.7% live. The UI must make that visible — marked,
-explained, and non-actionable — rather than letting the user select an entry and hit a dead end.
+The application does not maintain a catalogue of games, and it does not decide what is worth
+accepting. It shows the quests Discord is running — the ones on offer and not expired, and the ones
+already accepted — and it says what each one takes, what it gives, and when it ends. The user
+accepts a quest in Discord; the application works the ones they have accepted.
 
-### 3. Real cover art, always
+### 3. Never act on the user's account without their say-so
 
-The catalogue carries `cover_image_hash` and `icon_hash` for most entries. The app renders them.
-A catalogue of ~25,000 games should be browsable by eye, not only by search.
+The application never accepts a quest, never claims a reward, and never restarts Discord without
+being asked. It works quests the user has already accepted, and it tells them when a reward is
+waiting to be claimed. Every action the user did not ask for is a sentence, not a decision the
+application takes for them.
 
-### 4. Never touch another process
+### 4. Nothing is touched that is not the user's
 
-The app starts and stops **its own** children, identified by PID. It never kills by image name.
-A user running the real game must never have it killed by this tool.
+The application reads and drives the user's own Discord client, on the user's own session. It
+starts no process, kills no process, and writes nothing outside the user's own data directory. The
+application directory is treated as read-only.
 
-### 5. Write only to the user's own space
+### 5. The script is a payload, and it is not exposed
 
-All state — the catalogue cache, the materialised stubs, the quest records — lives under a
-per-user application data directory. The application directory itself is treated as read-only.
+The quest script lives in the ignored `re/` folder and ships encrypted. What the executable
+carries is ciphertext. A check runs against the built artefact, not the source, because a check
+against the source cannot see what the compiler produced.
 
-### 6. The catalogue is data, not a payload
+### 6. Quiet by default
 
-The catalogue is fetched at runtime and cached. It is never bundled into the shipped application.
-A ~25,000-entry catalogue compiled into the frontend is a defect.
+Working a quest opens nothing. The application is a window, and that is all.
 
-### 7. Quiet by default
+### 7. No borrowed identity
 
-Starting a quest should not open a dozen windows or tray icons. The runner is silent where the
-platform allows it. On macOS a visible window is required by the platform's detection behaviour,
-and that is stated plainly in the UI rather than hidden.
-
-### 8. No borrowed identity
-
-The app does not use another publisher's Discord application ID, does not spoof Rich Presence, and
-does not present itself as Discord or as the upstream project. It is unaffiliated with Discord Inc.
-
+The app does not present itself as Discord or as any other project, does not use another
+publisher's Discord application ID, and carries its own statement that it is unaffiliated with and
+not endorsed by Discord Inc.
 
 ## Explicit non-goals
 
 | Non-goal | Reason |
 |---|---|
-| Discord RPC Rich Presence spoofing | Does not complete quests. Requires application IDs the project does not own. Upstream's own UI warns it may flag the account as self-botting. |
-| A Discord bot or account automation | Out of scope, and against Discord's terms. |
-| Bundling a catalogue snapshot | Fetched and cached instead. |
+| Accepting quests on the user's behalf | Claiming a quest is the user's decision. |
+| Claiming rewards | The reward is the user's, and the claim is theirs to make. |
+| A catalogue of games Discord can detect | It carries no quest information, and it is 25,000 rows of noise. |
+| Bundling a catalogue snapshot | Discord's own list is read at run time, from the client. |
 | A developer playground page | A debug surface, not a product feature. |
-| An installer | A portable archive matches the upstream distribution model and keeps the download small. |
+| An installer | A portable archive keeps the download small. |
 
 ## Technical constraints
 
@@ -101,20 +101,18 @@ These are constraints the implementation must respect. They are not preferences.
 
 | Constraint | Reason |
 |---|---|
-| The stub path must mirror the registered executable path | Discord's match is path-sensitive. |
-| The on-disk name must keep the registered file's extension | The extension is part of the name Discord registered, so a stub named `overwatch` is not at the path Discord registered (`overwatch.exe`) and does not match. |
-| The macOS stub must be a real `.app` bundle with a valid `Info.plist`, launched via `open -n -g -a` | macOS treats a bare executable differently from an application. |
-| The macOS stub must present a visible window | Discord on macOS detects applications with a visible window. |
-| The Windows runner's PE import table must contain no `user32`, `gdi32`, or `shell32` import | It has no window, tray icon, or console, so the Win32 GUI stack is dead weight; skipping it keeps the runner dependency-free on minimal Windows installs. Target ≤ 300 KB. This deliberately diverges from upstream, whose runner links all three because it draws a window and a tray icon. |
-| The Linux runner must not require GTK to be installed | GTK cannot be assumed on a user's machine. |
-| The catalogue endpoint is unauthenticated and undocumented | The fetch and cache layer must be defensive and must degrade to the cache. |
-| The catalogue source of truth is Discord's endpoint | Any mirror is operator-controlled and can drift. Discord is primary; a mirror is at most a fallback. |
+| The script must not be readable in the shipped executable | It is the mechanism, and it is the one piece that must not be handed over. |
+| The plaintext script must never touch disk at run time | It is decrypted in memory and evaluated in the renderer. |
+| The application must not restart Discord without being asked | Restarting Discord ends whatever the user was doing in it. |
+| The debugging port must be bound to loopback only | It is a local attack surface while the client runs with it. |
+| The application must work only in the Discord **desktop** client | The mechanism reaches into the client, and a browser has no such internals. |
+| The application must survive Discord updating | The script is pinned to a client version. When it stops attaching, the application must say so rather than go quiet. |
+| The quest list comes from the client, read at run time | Discord is the only authority on what quests exist and what has been accepted. |
 
 ## Acceptance
 
-A build is acceptable when the acceptance cases in
-[`re/docs/08-reconstruction-map.md`](re/docs/08-reconstruction-map.md) all pass. Those cases are
-written as observable outcomes, and they are the contract — not the implementation.
+A build is acceptable when the acceptance cases in the plan are all pass. Those cases are written
+as observable outcomes, and they are the contract — not the implementation.
 
 ## Attribution obligations
 
@@ -122,5 +120,4 @@ The upstream project studied in `re/` is MIT licensed. This project:
 
 1. Retains the MIT notice on any upstream source or substantial upstream-derived code.
 2. Does not present itself as the upstream project, and does not use its name, logo, or branding.
-3. Does not ship upstream's catalogue snapshot as its own artefact.
-4. Carries its own disclaimer that it is unaffiliated with and not endorsed by Discord Inc.
+3. Carries its own disclaimer that it is unaffiliated with and not endorsed by Discord Inc.
