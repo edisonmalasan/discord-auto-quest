@@ -222,6 +222,34 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('says so when the quest script cannot attach, rather than claiming to work', async () => {
+    // A script that raises did not attach: Discord has probably moved its
+    // internals. The backend says so in words, and the interface shows it.
+    runQuestScript.mockRejectedValue({
+      code: 'NOT_SUPPORTED',
+      message:
+        'The quest script did not attach to Discord. Discord has probably moved its ' +
+        'internals, and the script needs updating.',
+      retryable: false,
+    });
+
+    render(<App />);
+
+    const work = await screen.findByRole('button', { name: /work my quests/i });
+    await waitFor(() => expect(work).toBeEnabled());
+    await userEvent.click(work);
+
+    expect(
+      await screen.findByText(
+        'The quest script did not attach to Discord. Discord has probably moved its ' +
+          'internals, and the script needs updating.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Working your quests. Discord counts them; this window only shows it.'),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows a failure as the backend worded it', async () => {
     listDiscordQuests.mockRejectedValue({
       code: 'NOT_SUPPORTED',
