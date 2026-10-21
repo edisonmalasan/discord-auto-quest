@@ -1,20 +1,26 @@
-//! Attach to a browser's debugger and evaluate one expression.
+//! Run a JavaScript file inside a browser's renderer and print what it returns.
 //!
-//!   cargo run --manifest-path src-tauri/Cargo.toml --example cdp_probe -- <port>
+//!   cargo run --manifest-path src-tauri/Cargo.toml --example cdp_probe -- <port> <file.js>
 //!
-//! Used to work out why the transport misbehaves, and to poke at a live
-//! Discord without going through the application.
+//! Used to work out why the transport misbehaves, to explore what Discord's
+//! internals look like today, and to poke at a live Discord without going
+//! through the application.
 
 use discord_auto_quest_lib::quest::cdp::Session;
 
 #[tokio::main]
 async fn main() {
-    let Some(port) = std::env::args()
-        .nth(1)
-        .and_then(|arg| arg.parse::<u16>().ok())
-    else {
-        eprintln!("usage: cdp_probe <port>");
+    let mut arguments = std::env::args().skip(1);
+
+    let Some(port) = arguments.next().and_then(|arg| arg.parse::<u16>().ok()) else {
+        eprintln!("usage: cdp_probe <port> [file.js]");
         std::process::exit(2);
+    };
+
+    let script = match arguments.next() {
+        Some(path) => std::fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("the script could not be read: {error}")),
+        None => "1 + 1".to_string(),
     };
 
     let url = format!("http://127.0.0.1:{port}/json/list");
@@ -33,12 +39,15 @@ async fn main() {
         .find(|target| target.is_page())
         .expect("a page to attach to");
 
-    println!("\nthrough the client:");
+    println!("\nattaching to {}", page.web_socket_url);
     let mut session = Session::connect(&page.web_socket_url)
         .await
         .expect("the session connects");
-    println!("through the client: connected");
 
-    let value = session.evaluate("1 + 1").await.expect("it runs");
-    println!("through the client: 1 + 1 = {value}");
+    let value = session.evaluate(&script).await.expect("it runs");
+    println!("\n--- result ---");
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&value).unwrap_or_default()
+    );
 }
