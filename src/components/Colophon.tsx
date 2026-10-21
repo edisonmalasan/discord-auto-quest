@@ -11,8 +11,18 @@ import { useAppVersion } from '../hooks/useAppVersion';
  * The version comes from the backend. The interface does not keep a copy of its
  * own, because a number it cannot confirm is a number that can be wrong.
  */
-export function Colophon() {
+export function Colophon({ compact = false }: { compact?: boolean } = {}) {
   const version = useAppVersion();
+
+  if (compact) {
+    return (
+      <p className="text-[11px] leading-snug text-ink-3">
+        <span className="font-mono tabular text-ink-2">{version ?? '—'}</span>
+        {' · MIT · '}
+        An independent project. Not affiliated with, endorsed by, or connected to Discord Inc.
+      </p>
+    );
+  }
 
   return (
     <section aria-labelledby="colophon-heading" className="px-4 py-5">

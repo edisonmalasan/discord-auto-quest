@@ -39,6 +39,7 @@ pub enum QuestState {
 
 /// One quest, as Discord describes it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestSummary {
     /// Discord's identifier for it.
     pub id: String,
@@ -67,6 +68,7 @@ impl QuestSummary {
 
 /// Everything the application needs to know about Discord's quests.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QuestList {
     /// The quests that are on offer and have not expired.
     pub available: Vec<QuestSummary>,
@@ -85,6 +87,7 @@ pub struct QuestList {
 
 /// A game the client believes is running.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RunningGame {
     pub id: String,
     pub name: String,
@@ -98,7 +101,7 @@ pub struct RunningGame {
 /// finding the quest store are tried in turn: the export names first, because
 /// they are quick, and the shape second, because they survive a rename.
 const READ_STATE: &str = r#"(function () {
-  const report = { available: [], claimed: [], expired: 0, desktop_app: false, running_games: [] };
+  const report = { available: [], claimed: [], expired: 0, desktopApp: false, runningGames: [] };
 
   try {
     const wpRequire = webpackChunkdiscord_app.push([[Symbol()], {}, function (r) { return r; }]);
@@ -124,7 +127,26 @@ const READ_STATE: &str = r#"(function () {
       return false;
     };
 
-    const findStore = function (method, isTheRightOne) {
+    const findStore = function (method, isTheRightOne, names) {
+      // The fast way: the export names the quest script uses. They are quick,
+      // and they are right until Discord renames something.
+      for (const name of names) {
+        for (const module of modules) {
+          const exports = module && module.exports;
+          if (!exports) continue;
+          let candidate;
+          try { candidate = exports[name]; } catch (error) { continue; }
+          if (!candidate) continue;
+          try {
+            if (!hasAccessor(candidate, method)) continue;
+            if (!isTheRightOne(candidate)) continue;
+            return candidate;
+          } catch (error) { /* not this one */ }
+        }
+      }
+
+      // The slow way, and the one that survives a rename: look at everything
+      // every module exports.
       for (const module of modules) {
         const exports = module && module.exports;
         if (!exports) continue;
@@ -141,19 +163,24 @@ const READ_STATE: &str = r#"(function () {
           } catch (error) { /* not this one */ }
         }
       }
+
       return null;
     };
 
     // The quest store is the one whose collection is a map of quests, and the
     // running-games store is the one that can look a game up by its process
     // id. Either test is enough on its own; together they are certain.
-    const questStore = findStore('getQuest', function (candidate) {
-      return candidate.quests instanceof Map;
-    });
+    const questStore = findStore(
+      'getQuest',
+      function (candidate) { return candidate.quests instanceof Map; },
+      ['A'],
+    );
 
-    const gameStore = findStore('getRunningGames', function (candidate) {
-      return typeof candidate.getGameForPID === 'function';
-    });
+    const gameStore = findStore(
+      'getRunningGames',
+      function (candidate) { return typeof candidate.getGameForPID === 'function'; },
+      ['Ay'],
+    );
 
     if (!questStore) {
       report.error = 'the quest store could not be found in this version of Discord';
@@ -195,13 +222,13 @@ const READ_STATE: &str = r#"(function () {
         id: quest.id,
         name: (config.messages && config.messages.questName) || quest.id,
         tasks: taskNames,
-        expires_at: config.expiresAt || null,
+        expiresAt: config.expiresAt || null,
         state: quest.userStatus && quest.userStatus.completedAt
           ? 'completed'
           : (quest.userStatus && quest.userStatus.enrolledAt ? 'claimed' : 'available'),
-        progress_seconds: progress,
-        target_seconds: target,
-        reward_orbs: rewards.length ? (rewards[0].orbQuantity || null) : null,
+        progressSeconds: progress,
+        targetSeconds: target,
+        rewardOrbs: rewards.length ? (rewards[0].orbQuantity || null) : null,
       };
     };
 
@@ -220,17 +247,17 @@ const READ_STATE: &str = r#"(function () {
       try {
         const games = gameStore.getRunningGames() || [];
         for (const game of games) {
-          report.running_games.push({
+          report.runningGames.push({
             id: String(game.id),
             name: game.name,
-            exe_name: game.exeName || null,
+            exeName: game.exeName || null,
             pid: typeof game.pid === 'number' ? game.pid : null,
           });
         }
       } catch (error) { /* the store is not readable right now */ }
     }
 
-    report.desktop_app = typeof DiscordNative !== 'undefined';
+    report.desktopApp = typeof DiscordNative !== 'undefined';
   } catch (error) {
     report.error = String(error);
   }
@@ -268,16 +295,16 @@ mod tests {
                 "id": "1",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": "2026-10-23T00:00:00+00:00",
+                "expiresAt": "2026-10-23T00:00:00+00:00",
                 "state": "available",
-                "progress_seconds": 0,
-                "target_seconds": 900,
-                "reward_orbs": 700,
+                "progressSeconds": 0,
+                "targetSeconds": 900,
+                "rewardOrbs": 700,
             }],
             "claimed": [],
             "expired": 64,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
@@ -301,15 +328,15 @@ mod tests {
                 "id": "2",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": null,
+                "expiresAt": null,
                 "state": "claimed",
-                "progress_seconds": 119,
-                "target_seconds": 900,
-                "reward_orbs": null,
+                "progressSeconds": 119,
+                "targetSeconds": 900,
+                "rewardOrbs": null,
             }],
             "expired": 0,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
@@ -325,15 +352,15 @@ mod tests {
                 "id": "3",
                 "name": "Deadzone Rogue 2",
                 "tasks": ["PLAY_ON_DESKTOP"],
-                "expires_at": null,
+                "expiresAt": null,
                 "state": "completed",
-                "progress_seconds": 900,
-                "target_seconds": 900,
-                "reward_orbs": 700,
+                "progressSeconds": 900,
+                "targetSeconds": 900,
+                "rewardOrbs": 700,
             }],
             "expired": 0,
-            "desktop_app": true,
-            "running_games": [],
+            "desktopApp": true,
+            "runningGames": [],
         });
 
         let list: QuestList = serde_json::from_value(value).expect("the list is understood");
@@ -342,5 +369,45 @@ mod tests {
             !list.claimed[0].is_running(),
             "a finished quest is not running"
         );
+    }
+
+    /// The expression and the struct have to agree on the field names.
+    ///
+    /// The expression is JavaScript and the struct is Rust, and nothing else
+    /// connects them. If one says `progress_seconds` and the other says
+    /// `progressSeconds`, the application reads nothing at all — and says so
+    /// in the least helpful way. This is the check that would have caught it,
+    /// and it is here because the two sides are edited separately.
+    #[test]
+    fn the_expression_and_the_struct_agree_on_the_field_names() {
+        for field in [
+            "id",
+            "name",
+            "tasks",
+            "expiresAt",
+            "state",
+            "progressSeconds",
+            "targetSeconds",
+            "rewardOrbs",
+        ] {
+            assert!(
+                READ_STATE.contains(field),
+                "the expression does not produce `{field}`"
+            );
+        }
+
+        for field in [
+            "available",
+            "claimed",
+            "expired",
+            "desktopApp",
+            "runningGames",
+            "exeName",
+        ] {
+            assert!(
+                READ_STATE.contains(field),
+                "the expression does not produce `{field}`"
+            );
+        }
     }
 }

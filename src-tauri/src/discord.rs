@@ -26,6 +26,7 @@ use crate::quest::reader::{self, QuestList, RunningGame};
 
 /// What the application needs to know about Discord.
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DiscordStatus {
     /// Whether Discord is installed on this machine.
     pub installed: bool,

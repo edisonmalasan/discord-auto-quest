@@ -1,222 +1,160 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { EntryList, SkeletonList } from './components/EntryList';
-import { EntryPanel } from './components/EntryPanel';
-import { ErrorPanel } from './components/ErrorPanel';
-import { FilterRail, type Scope } from './components/FilterRail';
-import { IndexHead } from './components/IndexHead';
-import { SearchIcon } from './components/Icons';
-import { StatusHeader } from './components/StatusHeader';
-import { useCatalogue } from './hooks/useCatalogue';
-import { useQuests } from './hooks/useQuests';
-import { currentPlatform, needsVisibleWindow } from './lib/ipc';
-import { createSearchIndex, searchCatalogue } from './lib/search';
-import type { CatalogEntry } from './types/catalogue';
-
-/** The debounce the upstream study recorded. It keeps search responsive over 25,000 entries. */
-const SEARCH_DEBOUNCE_MS = 300;
+import { AppMark } from './components/AppMark';
+import { Colophon } from './components/Colophon';
+import { DiscordGate } from './components/DiscordGate';
+import { QuestColumn } from './components/QuestColumn';
+import { useDiscord } from './hooks/useDiscord';
 
 export default function App() {
-  const { status, snapshot, error, refreshing, refreshError, refresh, retry } = useCatalogue();
-  const quests = useQuests();
+  const discord = useDiscord();
+  const [failure, setFailure] = useState<string | null>(null);
 
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [scope, setScope] = useState<Scope>('all');
-  const [platform, setPlatform] = useState('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [thisPlatform, setThisPlatform] = useState<string | null>(null);
-  const [needsWindow, setNeedsWindow] = useState(false);
-
+  // The backend's failure is the one that matters, so it is shown as it came.
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const read = async () => {
-      try {
-        const os = await currentPlatform();
-        if (cancelled) {
-          return;
-        }
-        setThisPlatform(os);
-      } catch {
-        // The panel can be shown without it; the platform is only used to label a
-        // fallback.
-      }
-
-      try {
-        const needed = await needsVisibleWindow();
-        if (cancelled) {
-          return;
-        }
-        setNeedsWindow(needed);
-      } catch {
-        // The same: the notice is an addition, not a requirement.
-      }
-    };
-    void read();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const entries = useMemo(() => snapshot?.entries ?? EMPTY_ENTRIES, [snapshot]);
-
-  // The search index is built after the list has painted, not during render.
-  // Building it over 25,000 entries takes long enough to be felt, and there is no
-  // reason to pay for it before the visitor has typed anything.
-  const [index, setIndex] = useState<ReturnType<typeof createSearchIndex> | null>(null);
-  useEffect(() => {
-    if (entries.length === 0) {
-      setIndex(null);
-      return;
+    if (discord.error) {
+      setFailure(discord.error.message);
     }
-    const timer = window.setTimeout(() => setIndex(createSearchIndex(entries)), 0);
-    return () => window.clearTimeout(timer);
-  }, [entries]);
+  }, [discord.error]);
 
-  // Every match is returned, not a capped page of them. The index is a catalogue
-  // of everything Discord has registered, and a reader is entitled to reach every
-  // entry in it, whether they typed a query or not.
-  const matches = useMemo(() => {
-    if (!index || debouncedQuery.trim().length < 2) {
-      return null;
-    }
-    return searchCatalogue(index, debouncedQuery);
-  }, [index, debouncedQuery]);
+  const feed = discord.feed;
+  const claimed = feed?.claimed ?? [];
+  const available = feed?.available ?? [];
 
-  const platformEntryCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const entry of entries) {
-      for (const executable of entry.executables) {
-        if (!counts.has(executable.os)) {
-          counts.set(executable.os, 0);
-        }
-        counts.set(executable.os, (counts.get(executable.os) ?? 0) + 1);
-      }
-    }
-    return [...counts.entries()]
-      .map(([os, count]) => ({ os, count }))
-      .sort((left, right) => right.count - left.count);
-  }, [entries]);
+  const handleWork = () => {
+    setFailure(null);
+    discord.work();
+  };
 
-  const visible = useMemo(() => {
-    const base = matches ?? entries;
-    return base.filter((entry) => {
-      const detected = entry.executables.length > 0;
-      if (scope === 'questable' && !detected) {
-        return false;
-      }
-      if (scope === 'not-questable' && detected) {
-        return false;
-      }
-      if (platform !== 'all' && !entry.executables.some((e) => e.os === platform)) {
-        return false;
-      }
-      return true;
-    });
-  }, [matches, entries, scope, platform]);
-
-  const selected = useMemo(
-    () => entries.find((entry) => entry.id === selectedId) ?? null,
-    [entries, selectedId],
-  );
-
-  const handleSelect = (entry: CatalogEntry) => {
-    setSelectedId(entry.id);
+  const handleStop = () => {
+    setFailure(null);
+    discord.stop();
   };
 
   return (
     <div className="flex h-full flex-col bg-ground">
-      <StatusHeader
-        status={status}
-        snapshot={snapshot}
-        refreshing={refreshing}
-        refreshError={refreshError}
-        onRefresh={refresh}
+      <header className="flex h-14 shrink-0 items-center justify-between gap-6 border-b border-rule px-5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <AppMark className="size-6 shrink-0" />
+          <span className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink">
+            discord-auto-quest
+          </span>
+        </div>
+
+        <div className="flex min-w-0 items-center gap-4">
+          <p
+            role="status"
+            aria-live="polite"
+            className={`truncate text-[12px] tabular ${
+              discord.phase === 'ready' ? 'text-ink-2' : 'text-warn'
+            }`}
+          >
+            {describe(discord.phase, discord.status?.ready ?? false)}
+          </p>
+        </div>
+      </header>
+
+      <DiscordGate
+        status={discord.status}
+        busy={discord.busy}
+        onRestart={discord.restart}
+        onAttach={discord.attach}
       />
 
-      {status === 'error' && error ? (
-        <ErrorPanel error={error} onRetry={retry} />
-      ) : (
-        <div className="flex min-h-0 flex-1">
-          <FilterRail
-            scope={scope}
-            onScopeChange={setScope}
-            platform={platform}
-            onPlatformChange={setPlatform}
-            stats={snapshot?.stats ?? EMPTY_STATS}
-            platformEntryCounts={platformEntryCounts}
-          />
-
-          <main className="flex min-w-0 flex-1 flex-col">
-            <div className="shrink-0 border-b border-rule px-5 py-3">
-              <div className="relative max-w-[420px]">
-                <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search titles, aliases, or registered paths"
-                  aria-label="Search the catalogue"
-                  className="w-full rounded-[3px] border border-rule bg-surface py-1.5 pl-9 pr-3 text-[13px] text-ink placeholder:text-ink-3 focus:border-ink-3 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <IndexHead
-              shown={visible.length}
-              total={matches === null ? entries.length : matches.length}
-              searching={matches !== null && debouncedQuery.trim() !== query.trim()}
-            />
-
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              {status === 'loading' ? (
-                <SkeletonList />
-              ) : (
-                <EntryList
-                  entries={visible}
-                  selectedId={selectedId}
-                  quests={quests.quests}
-                  onSelect={handleSelect}
-                  emptyReason={
-                    matches !== null && matches.length === 0
-                      ? 'Nothing in the catalogue matches that. Registered paths are searched too, so a file name works.'
-                      : scope === 'questable'
-                        ? 'No entry in this scope has a registered executable.'
-                        : 'Nothing matches the current filters.'
-                  }
-                />
-              )}
-            </div>
-          </main>
-
-          <EntryPanel
-            entry={selected}
-            quests={quests}
-            currentPlatform={thisPlatform}
-            needsVisibleWindow={needsWindow}
-          />
+      {failure && (
+        <div className="flex items-center justify-between gap-3 border-b border-rule bg-surface px-5 py-3">
+          <p className="text-[12px] text-danger">{failure}</p>
+          <button
+            type="button"
+            onClick={() => setFailure(null)}
+            className="shrink-0 rounded-[3px] border border-rule px-3 py-1.5 text-[12px] text-ink-2 transition-colors duration-150 hover:border-ink-3 hover:text-ink"
+          >
+            Dismiss
+          </button>
         </div>
       )}
+
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-rule px-5 py-3">
+          <div className="min-w-0">
+            <p className="text-[12px] text-ink-2">
+              {discord.working
+                ? 'Working your accepted quests. Discord counts them; this window only shows it.'
+                : 'Accept a quest in Discord, then work it from here.'}
+            </p>
+            {feed && !feed.desktopApp && (
+              <p className="mt-1 text-[11px] text-warn">
+                The quest script needs the Discord desktop application, not Discord in a browser.
+              </p>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {discord.working ? (
+              <button
+                type="button"
+                onClick={handleStop}
+                disabled={discord.busy}
+                className="rounded-[3px] border border-rule px-3 py-1.5 text-[12px] text-ink-2 transition-colors duration-150 hover:border-ink-3 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Stop
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleWork}
+                disabled={discord.busy || discord.phase !== 'ready'}
+                className="rounded-[3px] border border-spot/60 bg-spot/10 px-3 py-1.5 text-[12px] font-semibold text-spot transition-colors duration-150 hover:bg-spot/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Work my quests
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex min-h-0 flex-1 divide-x divide-rule">
+          <QuestColumn
+            title="On offer"
+            note="Quests Discord is running that you have not accepted. Accept one in Discord to work it."
+            quests={available}
+            working={discord.working}
+            empty={
+              discord.phase === 'loading'
+                ? 'Reading Discord…'
+                : 'Nothing on offer, or nothing this application can read.'
+            }
+          />
+
+          <QuestColumn
+            title="Accepted"
+            note="The quests you have accepted, and how far along each one is."
+            quests={claimed}
+            working={discord.working}
+            empty={
+              discord.phase === 'loading'
+                ? 'Reading Discord…'
+                : 'No accepted quests. Accept one in the Quests tab of Discord.'
+            }
+          />
+        </div>
+      </div>
+
+      <footer className="shrink-0 border-t border-rule px-5 py-3">
+        <Colophon compact />      </footer>
     </div>
   );
 }
 
-const EMPTY_STATS = {
-  total: 0,
-  questable: 0,
-  notQuestable: 0,
-  questableRatio: 0,
-  platformSplits: [],
-  withCoverArt: 0,
-  withIcon: 0,
-  withAliases: 0,
-  droppedEntries: 0,
-};
-
-/** A stable empty list, so the memoised entries do not change identity each render. */
-const EMPTY_ENTRIES: CatalogEntry[] = [];
+/** Where the application stands with Discord, in a few words. */
+function describe(phase: string, ready: boolean): string {
+  switch (phase) {
+    case 'loading':
+      return 'Looking for Discord…';
+    case 'error':
+      return 'Discord could not be reached';
+    case 'blocked':
+      return 'Discord needs a restart';
+    default:
+      return ready ? 'Discord · ready' : 'Discord';
+  }
+}

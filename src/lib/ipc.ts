@@ -1,44 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
-import type {
-  AppErrorShape,
-  CatalogueSnapshot,
-  QuestList,
-  QuestRequest,
-  QuestView,
-  StubState,
-} from '../types/catalogue';
-
-/** The backend serves the catalogue; it is never bundled with the frontend. */
-export async function loadCatalogue(): Promise<CatalogueSnapshot> {
-  return invoke<CatalogueSnapshot>('load_catalogue');
-}
-
-/** Ask Discord for a fresh catalogue, replacing the cached copy. */
-export async function refreshCatalogue(): Promise<CatalogueSnapshot> {
-  return invoke<CatalogueSnapshot>('refresh_catalogue');
-}
-
-/** Where the stubs are written. */
-export async function stubRoot(): Promise<string> {
-  return invoke<string>('stub_root');
-}
-
-/** The platform this build runs on, in the catalogue's own vocabulary. */
-export async function currentPlatform(): Promise<string> {
-  return invoke<string>('current_platform');
-}
-
-/**
- * Whether this platform needs a visible window for a quest to be detected.
- *
- * On macOS it does: Discord's local integration looks for an application, not a
- * bare process, so a stub with no window is not a quest.
- */
-export async function needsVisibleWindow(): Promise<boolean> {
-  return invoke<boolean>('needs_visible_window');
-}
+import type { AppErrorShape } from '../types/errors';
+import type { DiscordStatus, QuestFeed } from '../types/quests';
 
 /**
  * The version of the running application.
@@ -51,44 +14,46 @@ export async function appVersion(): Promise<string> {
   return invoke<string>('app_version');
 }
 
-/** A background refresh replaced the catalogue. */
-export function onCatalogueUpdated(handler: (snapshot: CatalogueSnapshot) => void): Promise<UnlistenFn> {
-  return listen<CatalogueSnapshot>('catalogue-updated', (event) => handler(event.payload));
-}
+/* ------------------------------------------------------------------ *
+ * Discord
+ *
+ * The application drives the Discord desktop client: it attaches to the
+ * client's renderer, reads its quests, and runs the quest script inside it.
+ * ------------------------------------------------------------------ */
 
-/** A background refresh failed. The cached copy stays on screen. */
-export function onCatalogueRefreshFailed(handler: (error: AppErrorShape) => void): Promise<UnlistenFn> {
-  return listen<AppErrorShape>('catalogue-refresh-failed', (event) => handler(event.payload));
-}
-
-/** Start a quest: the backend writes the stub and runs it. */
-export async function startQuest(request: QuestRequest): Promise<QuestView> {
-  return invoke<QuestView>('start_quest', { request });
-}
-
-/** Stop a quest. Only that process is terminated. */
-export async function stopQuest(id: string): Promise<QuestView> {
-  return invoke<QuestView>('stop_quest', { id });
-}
-
-/** The quests that are running, and anything the backend could not work out. */
-export async function listQuests(): Promise<QuestList> {
-  return invoke<QuestList>('list_quests');
+/** Where Discord stands, and what the user has to do about it. */
+export async function discordStatus(): Promise<DiscordStatus> {
+  return invoke<DiscordStatus>('discord_status');
 }
 
 /**
- * What the filesystem says about each of an application's stubs.
+ * Restart Discord so the application can drive it.
  *
- * This is the backend's own check of the disk, made now. The interface never
- * infers that a stub is installed from a flag it set earlier.
+ * The application never calls this on its own: restarting Discord ends
+ * whatever the user was doing in it. The interface asks first.
  */
-export async function stubStates(appId: string): Promise<StubState[]> {
-  return invoke<StubState[]>('stub_states', { appId });
+export async function relaunchDiscord(): Promise<void> {
+  await invoke<void>('relaunch_discord');
 }
 
-/** A quest started or stopped. */
-export function onQuestsChanged(handler: (view: QuestView) => void): Promise<UnlistenFn> {
-  return listen<QuestView>('quests-changed', (event) => handler(event.payload));
+/** Attach to Discord's renderer. */
+export async function attachDiscord(): Promise<void> {
+  await invoke<void>('attach_discord');
+}
+
+/** The quests Discord has: the ones on offer, and the ones already accepted. */
+export async function listDiscordQuests(): Promise<QuestFeed> {
+  return invoke<QuestFeed>('list_discord_quests');
+}
+
+/** Run the quest script in Discord. */
+export async function runQuestScript(): Promise<boolean> {
+  return invoke<boolean>('run_quest_script');
+}
+
+/** Put Discord's own methods back. */
+export async function stopQuestScript(): Promise<void> {
+  await invoke<void>('stop_quest_script');
 }
 
 /**
