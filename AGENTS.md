@@ -61,10 +61,11 @@ _These commands exist in this repository. Run them from the repository root._
 | Purpose              | Command | Evidence / notes |
 | -------------------- | ------- | ---------------- |
 | Install dependencies | `npm install` | Reads `package.json`. |
-| Run locally          | `npm run tauri dev` | Starts Vite on port 1420 and the app against it. |
+| Run locally          | `npm run tauri dev` | Starts Vite and the app against it, on whatever port is free. |
 | Run the frontend only | `npm run dev` | The frontend in a browser, with no backend. |
 | Build frontend       | `npm run build` | Checks the version, then type-checks and writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
+| Verify the mechanism | `npm run verify` | Runs the whole loop against the real client and reports on it. |
 | Rebuild the payload  | `npm run build:payload` | Re-encrypts `re/scripts/auto-quest.js` into the embedded ciphertext. |
 | Check the payload    | `npm run check:payload -- <path>` | Asserts the built binary carries none of the script's strings. |
 | Check the acceptance cases | `npm run check:acceptance` | Asserts the shipped bundle and notices. |
@@ -76,6 +77,15 @@ _These commands exist in this repository. Run them from the repository root._
 | Test                 | `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored` | The suite that starts a browser. |
 | Drive Discord by hand | `cargo run --manifest-path src-tauri/Cargo.toml --example drive` | The mechanism, without the window. |
 | Lint / type-check    | `npm run typecheck` | `tsc --noEmit`. |
+| Lint                 | `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` | What CI runs. |
+
+**The dev server takes whatever port is free.** `npm run tauri dev` chooses a free port, hands it
+to the dev server through `DEV_PORT`, and points the Tauri shell at it through a configuration
+override in `src-tauri/tauri.dev.json`. The port is never hard-coded on both sides, so a second
+copy of the application does not stop you working.
+
+**If a build fails with "the paging file is too small", the machine is out of memory.** Build with
+`cargo test --manifest-path src-tauri/Cargo.toml -j 1`, and close whatever is holding it.
 
 **Documentation checks available today.** There is no Markdown linter configured in this
 repository, so link and fence integrity is verified by reading the diff:

@@ -176,9 +176,18 @@ const READ_STATE: &str = r#"(function () {
       ['A'],
     );
 
+    // The running-games store has to be recognised by what it *returns*.
+    // Discord ships an internationalisation proxy that answers every property
+    // name with a function, so a store that merely has something called
+    // `getGameForPID` can be that proxy — and asking the proxy for its games
+    // returns a message rather than a list, and logs a warning in the user's
+    // own console every time.
     const gameStore = findStore(
       'getRunningGames',
-      function (candidate) { return typeof candidate.getGameForPID === 'function'; },
+      function (candidate) {
+        if (typeof candidate.getGameForPID !== 'function') return false;
+        try { return Array.isArray(candidate.getRunningGames()); } catch (error) { return false; }
+      },
       ['Ay'],
     );
 

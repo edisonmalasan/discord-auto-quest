@@ -8,6 +8,9 @@ src-tauri/gen/
 runner/target/
 target/
 
+# The development configuration, written each time the application is run.
+src-tauri/tauri.dev.json
+
 # The reverse-engineering study is deliberately kept out of version control.
 re/
 

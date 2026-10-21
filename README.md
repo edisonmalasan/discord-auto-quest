@@ -70,6 +70,71 @@ npm run build                            # check the version, then type-check an
 npm run tauri build                      # build the desktop application
 ```
 
+### The dev server takes whatever port is free
+
+The dev server does not have one fixed port. `npm run tauri dev` finds a free port, gives it to
+the dev server, and tells the Tauri shell where to find it — so a second copy of the application,
+or anything else on the machine already holding port 1420, does not stop you working.
+
+It prints the port it took:
+
+```text
+the dev server will take port 1421
+```
+
+`npm run dev` on its own — the frontend in a browser, with no backend — also moves on to the next
+free port.
+
+### Verifying the mechanism
+
+```bash
+npm run verify
+```
+
+That runs the whole loop against your real Discord, and reports on it: whether Discord is
+reachable, what quests it has, what the script said, whether the progress moved, and whether
+Discord's own methods were put back. It is the same loop you would run by hand — accept a quest,
+press "Work my quests", watch the progress climb — with the watching done for you.
+
+```text
+discord-auto-quest — verification
+================================
+
+1. Discord
+   installed:       yes
+   debugger port:   58913
+   answering:       yes
+
+2. The quests, read out of Discord
+   on offer:    15
+   accepted:    6
+   expired:     64
+   desktop app: yes
+
+3. The quest script
+   the script ran.
+   | You don't have any uncompleted quests!
+
+4. The progress, after the script has run
+     Deadzone Rogue 2                         900/900s  no change
+
+summary
+-------
+  quests on offer:        15
+  quests accepted:        6
+  a game was spoofed:     no
+  the script said:        1 lines
+  the progress moved:     no
+  Discord was restored:   yes
+
+  The mechanism is fine, and there was nothing to work on: every quest you have
+  accepted is finished, or its task is one the script does not handle. Accept a
+  fresh quest and run this again.
+```
+
+**Discord has to be running with a debugging port.** The application offers to restart it, because
+that ends whatever you were doing in it — so it asks first, and the answer is yours.
+
 ### Testing
 
 ```bash
