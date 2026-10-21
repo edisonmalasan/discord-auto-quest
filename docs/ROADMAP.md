@@ -52,12 +52,15 @@ Four things, and they are the whole of it:
 
 ### What the interface is
 
-**One register.** The interface began as two columns of cards, each repeating the quest's task,
-duration, reward, expiry and a progress bar. It is now one list, hairline-ruled: the quests the
-user has accepted first, the quests on offer below them, and five columns per row — the name, the
-task, the progress, the reward, and the day it ends. Every figure is mono and tabular, because
-every figure is a measurement. The band under the title bar carries one sentence and one control,
-and the sentence says what needs doing now.
+**Discord's own card, in this project's ink.** The quests are drawn the way Discord draws them,
+because every quest already has a face: the game's own artwork across the top, the wordmark over
+it, the publisher's name, the day it ends, the reward, the multiplier, and the progress ring with
+its percentage. Every word and every picture on the card came out of Discord's quest object at
+run time; the ground, the type and the spot colour are this project's.
+
+Two registers, and the order is the product: **the quests the user has accepted come first**,
+because those are the ones that can be worked; the ones on offer follow, because those are the
+ones they might accept. The band under the title bar carries one sentence and one control.
 
 **Two faults were found by running the application, and both are fixed.** The interface claimed to
 be working a quest it was not working, because a quest left counting by an earlier run still
