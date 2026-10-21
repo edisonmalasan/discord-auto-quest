@@ -10,6 +10,10 @@ const runQuestScript = vi.fn<() => Promise<boolean>>();
 const stopQuestScript = vi.fn<() => Promise<void>>();
 const relaunchDiscord = vi.fn<() => Promise<void>>();
 
+vi.mock('@tauri-apps/plugin-opener', () => ({
+  openUrl: (url: string) => Promise.resolve(url),
+}));
+
 vi.mock('./lib/ipc', () => ({
   discordStatus: () => discordStatus(),
   listDiscordQuests: () => listDiscordQuests(),
@@ -30,12 +34,22 @@ function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
   return {
     id: '1558176501663272961',
     name: 'Clean Crew',
+    gameTitle: 'Clean Crew',
+    publisher: 'Some Studio',
     tasks: ['PLAY_ON_DESKTOP'],
     expiresAt: '2026-10-25T00:00:00+00:00',
     state: 'available',
     progressSeconds: 0,
     targetSeconds: 900,
     rewardOrbs: 700,
+    rewardName: '700 Orbs',
+    premiumOrbs: 840,
+    banner: 'quests/1558176501663272961/1550549569828298842.jpg',
+    logotype: 'quests/1558176501663272961/1550549568544964759.png',
+    tile: 'quests/1558176501663272961/1550549569249480745.png',
+    ctaLabel: 'Play Now',
+    ctaLink: 'https://store.steampowered.com/app/2715900/Team_Red_Collection/',
+    accent: '#4752C4',
     ...overrides,
   };
 }
@@ -88,8 +102,8 @@ describe('App', () => {
 
     await screen.findByText('Clean Crew');
 
-    const accepted = screen.getByRole('heading', { name: /accepted/i }).closest('section');
-    const offered = screen.getByRole('heading', { name: /on offer/i }).closest('section');
+    const accepted = screen.getByRole('heading', { name: /accepted quests/i }).closest('section');
+    const offered = screen.getByRole('heading', { name: /available quests/i }).closest('section');
 
     expect(accepted).not.toBeNull();
     expect(offered).not.toBeNull();
@@ -97,19 +111,30 @@ describe('App', () => {
     expect(within(offered as HTMLElement).getByText('Clean Crew')).toBeInTheDocument();
   });
 
-  it('prints the figures, in the register’s own columns', async () => {
+  it('draws each quest as a card, with what Discord puts on it', async () => {
     render(<App />);
 
     await screen.findByText('Clean Crew');
 
-    // The task, in words. Both rows are desktop quests, so both say it.
-    expect(screen.getAllByText('Play on desktop')).toHaveLength(2);
-    // The reward.
+    // The quest's own name, in the place Discord puts it.
+    expect(screen.getByText('Deadzone Rogue 2')).toBeInTheDocument();
+    // The reward, as Discord words it.
     expect(screen.getAllByText('700 Orbs')).toHaveLength(2);
-    // The progress of an accepted quest, in seconds.
-    expect(screen.getByText('612/900s')).toBeInTheDocument();
-    // How long a quest on offer takes.
-    expect(screen.getByText('15 min')).toBeInTheDocument();
+    // The publisher, and the day it ends.
+    expect(screen.getAllByText('Some Studio')).toHaveLength(2);
+    expect(screen.getAllByText('Ends 10/25')).toHaveLength(2);
+    // Discord's own buttons.
+    expect(screen.getAllByText('Play Now')).toHaveLength(2);
+    expect(screen.getAllByText('Accept Quest')).toHaveLength(1);
+  });
+
+  it('shows the progress of an accepted quest as a percentage', async () => {
+    render(<App />);
+
+    await screen.findByText('Clean Crew');
+
+    // 612 of 900 seconds is 68%.
+    expect(screen.getByText('68%')).toBeInTheDocument();
   });
 
   it('says what needs doing now', async () => {

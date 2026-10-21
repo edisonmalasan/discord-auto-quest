@@ -3,18 +3,27 @@
  *
  * These mirror the backend's own types. The frontend never holds a quest of its
  * own making: every one of them came out of Discord, and the interface shows
- * what Discord says.
+ * what Discord said.
  */
 
 /** How a quest stands. */
 export type QuestState = 'available' | 'claimed' | 'completed';
 
-/** One quest. */
+/**
+ * One quest.
+ *
+ * The fields are the ones Discord's own quest card is drawn from, so the
+ * interface can show a quest the way the client shows it.
+ */
 export interface QuestSummary {
   /** Discord's identifier for it. */
   id: string;
-  /** The name to show. */
+  /** The quest's own name: "ROR2 Hallowed Concepts". */
   name: string;
+  /** The game's name: "Risk of Rain 2: Hallowed Concepts". */
+  gameTitle: string | null;
+  /** Who published the game: "2K Games". */
+  publisher: string | null;
   /**
    * What has to be done: `PLAY_ON_DESKTOP`, `WATCH_VIDEO`, and so on.
    *
@@ -32,6 +41,22 @@ export interface QuestSummary {
   targetSeconds: number;
   /** The reward, in orbs, if it has one. */
   rewardOrbs: number | null;
+  /** The reward as Discord words it: "200 Orbs". */
+  rewardName: string | null;
+  /** What a premium member gets, if it is more. */
+  premiumOrbs: number | null;
+  /** The banner across the top of the card. */
+  banner: string | null;
+  /** The game's wordmark, drawn over the banner. */
+  logotype: string | null;
+  /** The game's icon, drawn beside the reward. */
+  tile: string | null;
+  /** What Discord calls the button that leads to the game: "Play Now". */
+  ctaLabel: string | null;
+  /** Where that button goes. */
+  ctaLink: string | null;
+  /** The quest's own colour, as Discord writes it: "#4752C4". */
+  accent: string | null;
 }
 
 /** A game Discord believes is running. */
@@ -44,7 +69,7 @@ export interface RunningGame {
 
 /** Everything the interface needs to know about Discord's quests. */
 export interface QuestFeed {
-  /** The quests on offer, and not expired. */
+  /** The quests that are on offer, and not expired. */
   available: QuestSummary[];
   /** The quests that have been accepted, finished or not. */
   claimed: QuestSummary[];

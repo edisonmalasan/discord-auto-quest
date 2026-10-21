@@ -17,12 +17,22 @@ function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
   return {
     id: '1',
     name: 'Deadzone Rogue 2',
+    gameTitle: 'Deadzone Rogue 2',
+    publisher: 'Some Studio',
     tasks: ['PLAY_ON_DESKTOP'],
     expiresAt: '2026-10-25T00:00:00+00:00',
     state: 'available',
     progressSeconds: 0,
     targetSeconds: 900,
     rewardOrbs: 700,
+    rewardName: '700 Orbs',
+    premiumOrbs: null,
+    banner: null,
+    logotype: null,
+    tile: null,
+    ctaLabel: null,
+    ctaLink: null,
+    accent: null,
     ...overrides,
   };
 }

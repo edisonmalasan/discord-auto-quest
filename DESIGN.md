@@ -1,6 +1,6 @@
 ---
 name: discord-auto-quest
-description: A printed register of the quests Discord is running, and how far along each one is.
+description: The quests Discord is running, drawn as the cards Discord draws them, in this project's own ink.
 colors:
   ground: "#0f1214"
   surface: "#151a1d"
@@ -13,6 +13,8 @@ colors:
   spot: "#4fc3b0"
   warn: "#d9a441"
   danger: "#d9534f"
+  quest-blue: "#7c9cff"
+  quest-green: "#3ba55d"
 typography:
   display:
     fontFamily: "Archivo, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif"
@@ -51,6 +53,7 @@ rounded:
   hairline: "1px"
   small: "2px"
   medium: "3px"
+  card: "6px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -59,87 +62,81 @@ spacing:
   xl: "20px"
 components:
   button-ghost:
-    backgroundColor: "transparent"
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink-secondary}"
     rounded: "{rounded.medium}"
     padding: "8px 12px"
-  button-ghost-hover:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.medium}"
   button-primary:
     backgroundColor: "{colors.spot}"
     textColor: "{colors.ground}"
     rounded: "{rounded.medium}"
     padding: "8px 12px"
-  register-row:
-    backgroundColor: "{colors.ground}"
-    textColor: "{colors.ink}"
-    height: "34px"
+  quest-card:
+    backgroundColor: "{colors.surface-raised}"
+    rounded: "{rounded.card}"
+    border: "1px {colors.rule}"
 ---
 
 # Design System: discord-auto-quest
 
 ## Overview
 
-**Creative North Star: "The Register"**
+**Creative North Star: "The Card"**
 
-This product is a ledger, and the system is built like one. A working register is a printed
-thing: a ground, a set of rules, a column of names, and a column of figures that line up. The
-app takes that grammar and puts it on a screen where the list is live, where it changes, and
-where most of it cannot be worked at all without leaving the app. The honesty of the page depends
-on the page looking like it is reporting rather than selling.
+This product shows a list of things the user can act on, and every one of those things already
+has a face: Discord draws its quests as cards, with the game's own artwork, the publisher's name,
+the reward and a progress ring. A separate, invented shape for the same information would be
+worse in every way — it would hide the artwork, it would take a second language to learn, and it
+would look like a different application from the one it lives inside.
 
-That is the whole thesis. A list of quests, of which most cannot be worked until the user
-accepts them in Discord, is a document with a marginal annotation on every line. The task beside
-the title says what has to be done. The figures at the end of the line say what it gives and when
-it goes. Nothing is a tile with a rounded corner and a play button; the mechanism is printed
-beside the name, because the mechanism is the product.
+So the card is Discord's card. The banner is Discord's banner. The wordmark over it is Discord's
+wordmark. The publisher, the end date, the reward, the multiplier, the ring and the buttons are
+Discord's, read out of Discord's own quest data at run time.
 
-The world is a printed register rendered as ink on a cold ground. The type is a workhorse
-grotesque with a slightly technical mono for the figures — a reference typeface and a measurement
-typeface, the pairing you get on the printed page. Depth is tonal: a hairline separates, a
-surface lifts, and there are no shadows at all. The single spot colour appears on the one
-control that starts the work, and nowhere else.
+What is this project's is the ink. The ground, the type, the spot colour that marks the one
+control that starts the work, and the discipline about what the application says. The card is
+Discord's; the application around it is ours, and it never claims a quest is finished unless
+Discord says it is.
 
 **Key Characteristics:**
 
-- A column of figures that lines up, because every figure is a measurement.
-- Hairlines divide. Boxes and cards do not.
-- One spot colour, on one thing.
-- Every figure is tabular.
-- The page states what needs doing before it states anything else.
+- Real artwork, at the size Discord draws it, never a placeholder.
+- One accent per card, and it is on the data: the ring, the reward, the check.
+- Every figure is a measurement, and it lines up.
+- Two registers, and the one that can be worked comes first.
+- Nothing on the card is invented. Every word on it came out of Discord.
 
 ## Colors
 
-A cold ink ground with one printer's spot colour, and two state colours that only appear when
-they mean something.
+A cold ink ground with one printer's spot colour, and two colours that only appear where Discord
+puts them.
 
 ### Primary
 
-- **Spot Cyan** (#4FC3B0): the one control that starts the work, and the focus ring. It is the
-  only colour on the page that says "this one is the thing to press".
+- **Spot Cyan** (#4FC3B0): the one control that starts the work, and the focus ring.
+- **Quest Blue** (#7C9CFF): the quest's own name, where Discord puts it.
+- **Quest Green** (#3BA55D): the check beside a publisher's name, and the filled arc of the ring.
 
 ### Neutral
 
-- **Cold Ground** (#0F1214): the page and the register background.
-- **Surface** (#151A1D): the raised band a hovered row takes.
-- **Surface Raised** (#1C2327): the selected row.
-- **Rule** (#232C31): the 1px hairline that divides the header, the band, and the section rules.
-- **Rule Soft** (#1A2125): the hairline between register rows, one step quieter than Rule.
+- **Cold Ground** (#0F1214): the page and the card's frame.
+- **Surface** (#151A1D): the card's body.
+- **Surface Raised** (#1C2327): the band and the footer's rule.
+- **Rule** (#232C31): the card's edge, and the rule under the buttons.
+- **Rule Soft** (#1A2125): the quiet rules.
 - **Paper** (#E7EAE8): primary text.
 - **Pencil** (#9BA5A6): secondary text.
-- **Faint** (#667173): tertiary text, section headings, and the figures that are not in play.
+- **Faint** (#667173): tertiary text, the end date, and the orb glyph.
 
 ### Named Rules
 
 **The One Spot Rule.** The spot colour appears on the control that starts the work and on the
-focus ring. It appears nowhere else. Its rarity is what makes the one thing to press legible on
-a page that is otherwise all ink and rules.
+focus ring. It appears nowhere else. Its rarity is what makes the one thing to press legible on a
+page that is otherwise all ink, artwork and rules.
 
-**The Hairline Rule.** Structure is made from 1px rules and tonal steps. No card, no panel
-border, no drop shadow, no coloured accent bar. If something needs to be divided, a rule
-divides it.
+**Discord's Colours Are Not Ours.** The quest blue and the quest green belong to Discord's card,
+and they appear only on the parts Discord puts them on. They are never used for anything this
+application says.
 
 ## Typography
 
@@ -147,128 +144,108 @@ divides it.
 **Body Font:** Archivo (with 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif)
 **Label/Mono Font:** Azeret Mono (with 'Cascadia Mono', Consolas, monospace)
 
-**Character:** One grotesque does the reading; a mono does the measuring. Archivo is a
-workhorse with flat terminals and a tight fit, and it carries the whole interface without
-needing a display face to lean on. Azeret Mono is set only where the content is a figure — the
-things that are literally measurements and should line up in a column.
+**Character:** One grotesque does the reading; a mono does the measuring, and only where a figure
+has to line up with the figure under it. The card is mostly artwork and names, so the type is
+quiet and the pictures are loud.
 
 ### Hierarchy
 
-- **Display** (600, 17px, 1.25, -0.01em): the selected quest's name. The only large type in the
-  application.
-- **Headline** (600, 15px, 1.3, -0.01em): the application name in the title bar.
-- **Title** (500, 13px, 1.4): a quest's name in the register.
-- **Body** (400, 12.5px, 1.6): the explanatory sentence in the band, and a quest's task.
-- **Label** (500, 11px, 0.11em, uppercase): section headings — ACCEPTED, ON OFFER.
-- **Mono** (400, 11.5px): the progress figure, the reward, the end date, and every number in
-  the interface. Always with `font-variant-numeric: tabular-nums`.
+- **Display** (600, 17px, 1.25, -0.01em): the application name in the title bar.
+- **Headline** (600, 15px, 1.3, -0.01em): a section's name — "Accepted Quests".
+- **Title** (500, 13px, 1.4): a quest's name, in Discord's own capitals and blue.
+- **Body** (400, 12.5px, 1.6): the publisher's line and the card's description.
+- **Label** (500, 11px, 0.11em, uppercase): reserved for the parts of the shell that are not a
+  card.
+- **Mono** (400, 11.5px): a figure that has to line up — the version, and the state readout.
 
 ### Named Rules
 
-**The Tabular Rule.** Every number in the interface is set with tabular figures. Progress,
-rewards, durations and dates are read down a column, and they must line up.
+**The Tabular Rule.** Every figure is set with tabular figures. Progress, rewards, durations and
+dates are read down a column, and they must line up.
 
-**The Figure Rule.** A figure is never truncated and never dressed. The progress is a figure, the
-reward is a figure, the date is a figure; the app prints them and lets them line up.
+**The Figure Rule.** A figure is never truncated and never dressed. The reward is a figure, the end
+date is a figure, the percentage is a figure; the application prints them and lets them line up.
+
+**No Monospace for Words.** The mono face is for figures and for the code-like. A word set in mono
+reads as a label of something, and nothing on this screen is that.
 
 ## Layout
 
 One full-height column. A 56px title bar across the top, a band beneath it carrying the one
-action and the one sentence that says what needs doing, and then the register itself, which is
-the only scrolling region in normal use. A quiet rule and the colophon close the page.
+action and the one sentence that says what needs doing, and then the cards, which are the only
+scrolling region in normal use. A quiet rule and the colophon close the page.
 
-Density is high and even: register rows are 34px, and the spacing rhythm is a 4px base with 8,
-12, 16, and 20px steps. Space above a heading is always larger than the space below it.
+**Two registers, and the order is the product.** The quests the user has accepted come first,
+because those are the ones that can be worked. The quests on offer follow, because those are the
+ones they might accept. Each register has a heading and a count, and the count is in mono because it
+is a figure.
 
-The register is divided into two sections — the quests that have been accepted, and the quests on
-offer — each with a heading and a count, separated by a rule. A section is a list, and a list is
-read down; the columns are fixed so the figures line up between the two sections.
+**The grid.** Cards are laid on one grid with one gutter — 16px, everywhere. The column count is
+chosen by the width, not by the data: as many cards as fit at a minimum of 19rem, and no more. A
+register with one card left over in a row of three has a hole in it, so a lone card spans.
+
+**The card's own proportions.** The banner is 16:7. The reward row is a 64px square on the left
+and the words on the right. The buttons are a pair across the foot, split evenly.
 
 ## Elevation & Depth
 
-This system uses **no shadows**. Depth is tonal: the ground (#0F1214), the surface (#151A1D),
-and the raised surface (#1C2327) form three flat levels, and a 1px rule separates regions. The
-only light in the interface is the focus ring, which is the spot colour at 2px.
+This system uses **no shadows**. Depth is tonal: the ground, the surface and the raised surface are
+three flat levels, and a 1px rule separates regions. The only light in the interface is the focus
+ring, which is the spot colour at 2px.
 
 ### Named Rules
 
-**The Flat Rule.** Nothing floats. A raised surface means "this is where the reading is", not
-"this is above the page". Shadows are decoration, and decoration is not in this system.
+**The Flat Rule.** Nothing floats. A card is a surface on the ground, and it is separated by its
+edge, not by a shadow.
+
+**The Scrim Rule.** The one gradient in the system is the neutral scrim under a wordmark drawn
+over artwork, because artwork does not always leave room for a word. It is a scrim and nothing
+else: no gradient on a button, no gradient in a fill, no gradient behind text that is not on a
+picture.
 
 ## Shapes
 
-Corners are barely rounded: 3px on the buttons, 1px where a rule needs an edge. Nothing is
-pill-shaped and nothing is round. A mark in the margin earned its place once, on a register of
-twenty-five thousand games, where the eye needed to sort usable from unusable at a glance. This
-register is twenty-one rows in two labelled sections, and the labels do that work. The mark would
-have repeated them, so it is gone.
+The card is 6px round. Buttons are 3px. Nothing is a pill and nothing is round. The artwork keeps
+its own square corners, because it is artwork.
 
-## Components
+### Components
 
-### Buttons
+**The card.** Discord's card, drawn from Discord's own data.
 
-- **Shape:** barely rounded (3px radius), 1px rule, no fill.
-- **Ghost:** transparent ground, secondary text. The stop control.
-- **Ghost hover:** the surface tone, full-strength text, the rule steps to the tertiary text
-  colour.
-- **Disabled:** 40% opacity, and the hover treatment is withdrawn — a disabled control does not
-  invite the pointer.
-- **Primary:** the spot colour on the cold ground. One control starts the work, and it is the
-  only one that is filled.
+- **The banner.** `assets.questBarHero`, at 16:7, cropped to fill. The wordmark
+  (`assets.logotypeDark`) sits over its lower left, on a neutral scrim.
+- **The publisher and the end date.** "Promoted by ✓ NC" on the left, "Ends 10/12" on the right,
+  in tertiary ink.
+- **The reward row.** A 64px square on the left: the game's icon (`assets.gameTileDark`), or a
+  progress ring when the quest has counted something. On the right: the quest's own name in
+  Discord's capitals and blue, then "Claim ◈ 200 Orbs" with the orb glyph, then the multiplier
+  badge — "Unlock 1.2x" — when a premium member gets more. Then the sentence that says what the
+  quest takes.
+- **The buttons.** Discord's own call to action on the left, in the card's own surface colour; the
+  application's own action on the right, in Discord's blue.
 
-### Inputs / Fields
+**The progress ring.** A thin arc in the quest's green, on a grey track, with the percentage in the
+middle. The percentage is the quest's own progress, read from Discord.
 
-- **Style:** the surface tone, 1px rule, 3px radius, 32px tall.
-- **Focus:** the browser's focus ring — the spot colour at 2px — is left in place rather than
-  suppressed.
-
-### Chips
-
-There are no chips. Status is carried by words, coloured where it means something: the client's
-state in the title bar, and the sentence in the band. No pills, no badges, no tags.
-
-### The band
-
-The line under the title bar, and the one place the application says what needs doing now.
-
-- **One sentence and one control.** Never two sentences, never two controls.
-- **What it says** is the most urgent thing: a quest that has been finished and is waiting to be
-  claimed; a quest that cannot count without the user; the work running; or the instruction to
-  accept a quest and work it.
-- **The control** is the one action: work the quests, or stop. It changes between them and is
-  never both at once.
-
-### The register row
-
-The signature component, and the reason the system exists.
-
-- **Shape:** a grid of five columns — the quest's name, the task it takes, the progress, the
-  reward, and the day it ends — separated by a 1px soft rule.
-- **Task:** what has to be done, in words: "Play on desktop", "Watch a video". When a quest
-  offers several ways, the first is printed; the alternatives are the same job.
-- **Progress:** the count, in mono, as `612/900s`. An accepted quest that has not been started
-  reads `0/1s`.
-- **Reward:** the orbs, in mono. A quest with no orb reward reads an em dash.
-- **Ends:** the day, in mono. A quest with no end date reads an em dash.
-- **Nothing else.** No state label, no badge, no bar, no icon. The section heading says which
-  list a row is in, and the figures say everything else.
+**The buttons.** Flat, one fill colour, one corner radius, decided once. The ghost button is the
+card's surface; the primary is Discord's blue or this project's spot colour.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** print the mechanism beside the name. The task and the figures are the product.
-- **Do** set every figure in tabular numerals.
-- **Do** divide with 1px rules and let tone carry the rest.
+- **Do** show the artwork. It is the whole reason a card is better than a row.
+- **Do** take every word on the card from Discord — the publisher, the reward, the call to action.
+- **Do** set every figure with tabular figures.
+- **Do** put the quests that can be worked first.
 - **Do** say what needs doing, once, in one sentence.
 
 ### Don't:
 
-- **Don't** wrap a quest in a card. A register made of cards is a gallery, not a register.
-- **Don't** print the same fact twice. A progress bar beside a progress figure says it again.
-- **Don't** use the spot colour for anything that is not the one action, or the focus ring.
-- **Don't** use colour to imply a state the client has not confirmed.
-- **Don't** use emoji or unicode glyphs as icons. Every icon in this app is drawn SVG on one
-  16-unit grid at one stroke weight.
-- **Don't** add a drop shadow, a glow, or a blurred backdrop. This system is flat.
+- **Don't** draw a card that is not Discord's. A card with the artwork left out is a worse card.
+- **Don't** repeat a fact. The reward is on the card once.
+- **Don't** use the spot colour for anything but the one action and the focus ring.
+- **Don't** use colour to imply a state Discord has not confirmed.
+- **Don't** use emoji or unicode glyphs as icons. Every icon here is drawn SVG.
+- **Don't** add a drop shadow, a glow, or a blurred backdrop.
 - **Don't** hard-code a count. Every number is read from the client.

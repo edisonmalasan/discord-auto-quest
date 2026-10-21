@@ -38,13 +38,21 @@ pub enum QuestState {
 }
 
 /// One quest, as Discord describes it.
+///
+/// The fields are the ones Discord's own quest card is drawn from, so the
+/// interface can show a quest the way the client shows it rather than
+/// inventing a shape of its own.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuestSummary {
     /// Discord's identifier for it.
     pub id: String,
-    /// The name to show.
+    /// The quest's own name: "ROR2 Hallowed Concepts".
     pub name: String,
+    /// The game's name: "Risk of Rain 2: Hallowed Concepts".
+    pub game_title: Option<String>,
+    /// Who published the game: "2K Games".
+    pub publisher: Option<String>,
     /// What has to be done: `PLAY_ON_DESKTOP`, `WATCH_VIDEO`, and so on.
     pub tasks: Vec<String>,
     /// When it stops being available.
@@ -57,6 +65,22 @@ pub struct QuestSummary {
     pub target_seconds: u64,
     /// The reward, in orbs, if it has one.
     pub reward_orbs: Option<u64>,
+    /// The reward as Discord words it: "200 Orbs".
+    pub reward_name: Option<String>,
+    /// What a premium member gets, if it is more.
+    pub premium_orbs: Option<u64>,
+    /// The banner across the top of the card.
+    pub banner: Option<String>,
+    /// The game's wordmark, drawn over the banner.
+    pub logotype: Option<String>,
+    /// The game's icon, drawn beside the reward.
+    pub tile: Option<String>,
+    /// What Discord calls the button that leads to the game: "Play Now".
+    pub cta_label: Option<String>,
+    /// Where that button goes.
+    pub cta_link: Option<String>,
+    /// The quest's own colour, as Discord writes it: "#4752C4".
+    pub accent: Option<String>,
 }
 
 impl QuestSummary {
@@ -208,6 +232,12 @@ const READ_STATE: &str = r#"(function () {
 
     const summarise = function (quest) {
       const config = quest.config || {};
+      const messages = config.messages || {};
+      const assets = config.assets || {};
+      const rewards = (config.rewardsConfig && config.rewardsConfig.rewards) || [];
+      const reward = rewards[0] || {};
+      const cta = config.ctaConfig || {};
+
       const tasks = config.taskConfigV2 && config.taskConfigV2.tasks
         ? config.taskConfigV2.tasks
         : (config.taskConfig && config.taskConfig.tasks ? config.taskConfig.tasks : {});
@@ -224,12 +254,18 @@ const READ_STATE: &str = r#"(function () {
         progress = Math.max(progress, seconds);
       }
 
-      const rewards = config.rewardsConfig && config.rewardsConfig.rewards
-        ? config.rewardsConfig.rewards : [];
+      // The artwork the card is drawn from. Discord writes "PLACEHOLDER" for an
+      // asset a quest does not have, and a placeholder is not an image.
+      const asset = function (name) {
+        const value = assets[name];
+        return value && value !== 'PLACEHOLDER' ? value : null;
+      };
 
       return {
         id: quest.id,
-        name: (config.messages && config.messages.questName) || quest.id,
+        name: messages.questName || quest.id,
+        gameTitle: messages.gameTitle || null,
+        publisher: messages.gamePublisher || null,
         tasks: taskNames,
         expiresAt: config.expiresAt || null,
         state: quest.userStatus && quest.userStatus.completedAt
@@ -237,7 +273,17 @@ const READ_STATE: &str = r#"(function () {
           : (quest.userStatus && quest.userStatus.enrolledAt ? 'claimed' : 'available'),
         progressSeconds: progress,
         targetSeconds: target,
-        rewardOrbs: rewards.length ? (rewards[0].orbQuantity || null) : null,
+        rewardOrbs: rewards.length ? (reward.orbQuantity || null) : null,
+        rewardName: rewards.length
+          ? ((reward.messages && reward.messages.name) || reward.name || null)
+          : null,
+        premiumOrbs: rewards.length ? (reward.premiumOrbQuantity || null) : null,
+        banner: asset('questBarHero') || asset('hero'),
+        logotype: asset('logotypeDark') || asset('logotypeLight'),
+        tile: asset('gameTileDark') || asset('gameTileLight'),
+        ctaLabel: cta.buttonLabel || null,
+        ctaLink: cta.link || null,
+        accent: config.colors && config.colors.primary ? config.colors.primary : null,
       };
     };
 
