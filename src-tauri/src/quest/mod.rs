@@ -46,10 +46,12 @@
 pub mod bundle;
 pub mod cdp;
 pub mod discord;
+pub mod driver;
 pub mod launch;
 pub mod path;
 pub mod payload;
 pub mod process;
+pub mod reader;
 pub mod records;
 pub mod service;
 
