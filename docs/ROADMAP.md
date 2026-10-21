@@ -114,6 +114,11 @@ end to end by a person. So has N3.
 Both need the user's hands: accept a quest, press "Work my quests", and watch the progress climb
 in Discord's own interface.
 
+**`npm run verify` is the machinery for that.** It runs the whole loop against the real client and
+reports on it — whether Discord is reachable, what quests it has, what the script said, whether the
+progress moved, and whether Discord's own methods were put back. It is the loop, run without a
+person watching, so the two cases above can be settled in one command rather than by eye.
+
 **One thing the application cannot yet tell the user.** The script prints what it is doing, and
 the transport can read it — but the driver does not read it, so the application knows whether a
 game is being spoofed and not whether the script is working on a *video* quest, which is spoofed
