@@ -11,8 +11,6 @@
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
-use serde_json::Value;
-
 use crate::error::{AppError, AppResult};
 use crate::quest::cdp::{Session, Target};
 
@@ -149,30 +147,10 @@ pub fn pick_renderer(targets: &[Target]) -> Option<&Target> {
     pages.first().copied()
 }
 
-/// Attach to Discord's renderer and evaluate `expression` in it.
-///
-/// This is the whole of the mechanism in one call: find the page, connect to
-/// it, and run the script.
-pub async fn evaluate_in_discord(install: &Install, expression: &str) -> AppResult<Value> {
-    let port = install.debug_port().ok_or_else(|| {
-        AppError::not_supported(
-            "Discord is not running with a debugging port, so the quest script cannot be run in it",
-        )
-    })?;
-
-    let targets = list_targets(port).await?;
-    let target = pick_renderer(&targets).ok_or_else(|| {
-        AppError::not_supported("Discord's debugger exposes no page to run the quest script in")
-    })?;
-
-    let mut session = Session::connect(&target.web_socket_url).await?;
-    session.evaluate(expression).await
-}
-
 /// Attach to Discord's renderer and hand the session back.
 ///
-/// Used when the caller needs to keep reading what the page prints, which is
-/// how the quest script's progress is followed.
+/// The session is kept, because reading the quest state means asking Discord
+/// again and again, and running the script means driving the same page.
 pub async fn attach_to_discord(install: &Install) -> AppResult<Session> {
     let port = install.debug_port().ok_or_else(|| {
         AppError::not_supported(

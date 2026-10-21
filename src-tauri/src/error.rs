@@ -6,25 +6,18 @@ use serde::Serialize;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorCode {
-    /// The catalogue endpoint could not be reached, or answered with a failure status.
+    /// The Discord debugger could not be reached, or answered with a failure status.
     NetworkUnavailable,
-    /// The endpoint answered, but the payload was not a usable catalogue.
+    /// Discord answered, but the payload was not a usable quest state.
     InvalidPayload,
-    /// No cached catalogue exists to fall back on.
-    CacheUnavailable,
     /// A filesystem operation failed.
     IoError,
-    /// A registered path contains a character or a name the filesystem will not accept.
-    InvalidPath,
-    /// The entry has no registered executable, so there is nothing to mirror.
-    NotQuestable,
     /// The application is not allowed to write or read the path.
     Permission,
-    /// The runner could not be started.
-    SpawnFailed,
-    /// There is no quest with that identity, or no runner for this platform.
+    /// Discord is not installed on this machine.
     NotInstalled,
-    /// The operation is not available on this platform yet.
+    /// The operation is not available in this state — most often because
+    /// Discord is not running with a debugging port.
     NotSupported,
 }
 
@@ -54,28 +47,12 @@ impl AppError {
         Self::new(ErrorCode::InvalidPayload, message, false)
     }
 
-    pub fn cache_unavailable(message: impl Into<String>) -> Self {
-        Self::new(ErrorCode::CacheUnavailable, message, true)
-    }
-
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(ErrorCode::IoError, message, true)
     }
 
-    pub fn invalid_path(message: impl Into<String>) -> Self {
-        Self::new(ErrorCode::InvalidPath, message, false)
-    }
-
-    pub fn not_questable(message: impl Into<String>) -> Self {
-        Self::new(ErrorCode::NotQuestable, message, false)
-    }
-
     pub fn permission(message: impl Into<String>) -> Self {
         Self::new(ErrorCode::Permission, message, false)
-    }
-
-    pub fn spawn_failed(message: impl Into<String>) -> Self {
-        Self::new(ErrorCode::SpawnFailed, message, true)
     }
 
     pub fn not_installed(message: impl Into<String>) -> Self {

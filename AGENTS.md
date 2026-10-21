@@ -5,12 +5,13 @@
 ## Project
 
 - **Name:** `discord-auto-quest`
-- **Purpose:** A desktop app that completes Discord quests for games the user does not own, by
-  launching a stub process from a path that mirrors the game's registered install location, so
-  Discord's local activity detection reports the game as running.
-- **Current state:** The reverse-engineering study is **complete** (`re/docs/`, git-ignored). The
-  product itself is **not yet implemented** — there is no application source, manifest, or test
-  suite in this repository yet. Verify before claiming otherwise.
+- **Purpose:** A desktop app that completes Discord quests, by running a script inside the Discord
+  desktop client the user is already signed in to, so that the client's own quest heartbeat counts
+  the quest.
+- **Current state:** The mechanism is **proved** on the real client — an accepted quest was driven
+  to `completed` and its reward became claimable. The reverse-engineering study is **complete**
+  (`re/docs/`, git-ignored). The old catalogue browser and stub mechanism are **retired** and gone
+  from the tree.
 
 ## Source of Truth
 
@@ -43,14 +44,15 @@ supersedes it._
 | ------------------ | ---------------------------- | ------------------------------------ |
 | Frontend / UI      | React 19, TypeScript 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
 | Backend / runtime  | Rust 1.82+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
-| Runner             | Rust, `no_std` + `no_main`, 3 KB, kernel32 only | `runner/`                  |
-| Database / storage | Per-user JSON catalogue cache | `src-tauri/src/catalogue/cache.rs`    |
+| Mechanism          | Chrome DevTools Protocol over a websocket | `src-tauri/src/quest/cdp.rs` |
+| Payload            | AES-256-GCM, embedded as ciphertext | `src-tauri/src/quest/payload.rs` |
+| Storage            | None. The quest script is decrypted in memory and never written to disk. | `src-tauri/src/quest/payload.rs` |
 | Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
 | Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/tests/` |
 
-**Target shape:** a Tauri v2 desktop app with a TypeScript webview frontend and a Rust
-backend, plus small per-platform runner executables. The frontend, the backend, and the
-Windows runner are established; the macOS and Linux runners land with their own groups.
+**Target shape:** a Tauri v2 desktop app with a TypeScript webview frontend and a Rust backend.
+There are no helper executables: the application drives Discord's own renderer, and the quest
+script ships encrypted inside the binary.
 
 ## Build, Test, and Development Commands
 
@@ -63,16 +65,16 @@ _These commands exist in this repository. Run them from the repository root._
 | Run the frontend only | `npm run dev` | The frontend in a browser, with no backend. |
 | Build frontend       | `npm run build` | Checks the version, then type-checks and writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
-| Build the runner     | `npm run build:runner` | The Windows stub, into `runner/target/release/`. |
-| Build the runner     | `npm run build:runner:macos` | The macOS stub. |
-| Build the runner     | `npm run build:runner:linux` | The Linux stub. |
-| Check the runner     | `npm run check:runner` | Asserts its size and its PE import table. |
+| Rebuild the payload  | `npm run build:payload` | Re-encrypts `re/scripts/auto-quest.js` into the embedded ciphertext. |
+| Check the payload    | `npm run check:payload -- <path>` | Asserts the built binary carries none of the script's strings. |
+| Check the acceptance cases | `npm run check:acceptance` | Asserts the shipped bundle and notices. |
 | Check the version    | `npm run version:check` | Asserts every manifest agrees with `package.json`. |
 | Fix the version      | `npm run version:sync` | Writes the version into the manifests that carry a copy. |
 | Package a release    | `npm run release` | A portable archive for this machine, named after the version. |
 | Test                 | `npm test` | Vitest, the frontend suite. |
 | Test                 | `cargo test --manifest-path src-tauri/Cargo.toml` | The Rust suite. |
-| Test                 | `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored` | The network-backed suite. |
+| Test                 | `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored` | The suite that starts a browser. |
+| Drive Discord by hand | `cargo run --manifest-path src-tauri/Cargo.toml --example drive` | The mechanism, without the window. |
 | Lint / type-check    | `npm run typecheck` | `tsc --noEmit`. |
 
 **Documentation checks available today.** There is no Markdown linter configured in this
@@ -86,22 +88,24 @@ git diff --check   # whitespace errors only; not a link or fence checker
 
 _Verified constraints from `PRODUCT.md`. These are load-bearing, not preferences._
 
-- **The stub path must mirror the game's registered executable path**, exactly as registered —
-  the file extension included. Discord's match is sensitive to both.
-- **Catalogue data and runtime state are separate.** Runtime state is always read from the
-  backend, never inferred optimistically in the frontend.
-- **Processes are stopped by PID**, never by image name. A user running the real game must never
-  have it killed by this tool.
-- **The catalogue is fetched at runtime and cached.** It is never bundled into the shipped
-  frontend.
-- **All writes go to a per-user data directory.** The application directory is read-only.
-- **Path sanitisation happens in the backend**, before any filesystem call.
+- **The quest script must not be readable in the shipped executable.** It ships as ciphertext and
+  is decrypted in memory. The check runs against the built artefact, not the source.
+- **The plaintext script never touches disk at run time.** It is evaluated in the renderer and
+  forgotten.
+- **The application never restarts Discord on its own.** Restarting Discord ends whatever the user
+  was doing in it. The application says what is needed and the user decides.
+- **The application never accepts a quest, and never claims a reward.** It works the quests the
+  user has already accepted.
+- **The quest list comes from Discord's client, read at run time.** It is never cached, and never
+  bundled into the shipped frontend.
+- **A quest is reported as finished only when Discord says it is.** The interface shows what the
+  backend read, never what it hopes.
+- **The application must work only in the Discord desktop client.** The browser has no such
+  internals to drive.
 - **No Discord RPC Rich Presence.** It does not complete quests, it requires application IDs this
   project does not own, and it risks the user's account.
-- **The catalogue source of truth is Discord's endpoint.** Any mirror is operator-controlled and
-  may drift.
-- **On macOS the stub is a real `.app` bundle with a visible window.** On Windows and Linux the
-  runner is silent by default.
+- **The reader finds Discord's internals by shape, not by a pinned export name.** The quest script
+  is pinned; the reader must survive a rename, so the application can still say what it can see.
 
 ## Working Method (Lightweight ICM)
 

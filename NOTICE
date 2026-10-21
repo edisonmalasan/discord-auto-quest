@@ -41,9 +41,13 @@ SOFTWARE.
 ```
 
 What was taken from upstream is what upstream made public under that licence:
-the *behaviour* of the quest mechanism, the shape of the catalogue's data, and
-the requirements each platform places on a stub. The implementation in this
-repository is new. No upstream source file, snapshot, or bundled artefact is
+the *behaviour* of the quest mechanism, and the fact that Discord has no
+quest API — that a quest is counted by the client, from the running-games
+store the client keeps. The implementation in this repository is new, and it
+does not use upstream's mechanism: this project runs the quest script inside
+the Discord desktop client over the Chrome DevTools Protocol, where the
+upstream materialised a stub process at a mirrored path. No upstream source
+file, snapshot, or bundled artefact is shipped here, and none was ever
 shipped here.
 
 ## Discord
