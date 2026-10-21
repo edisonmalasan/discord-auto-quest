@@ -121,7 +121,16 @@ impl DiscordState {
     }
 
     /// Read Discord's quest state.
+    ///
+    /// A connection is made if there is not one already: the application
+    /// attaches on its own, so a connection that was lost — because Discord
+    /// restarted, or because the client reloaded — is made again rather than
+    /// reported as a failure the user cannot act on.
     pub async fn quests(&self) -> AppResult<QuestList> {
+        if self.session.lock().await.is_none() {
+            self.attach().await?;
+        }
+
         let mut guard = self.session.lock().await;
         let session = guard.as_mut().ok_or_else(|| {
             AppError::not_supported("Discord has to be attached to before its quests can be read")

@@ -1,14 +1,53 @@
 # discord-auto-quest — Roadmap
 
-> **This roadmap describes the previous product and is being replaced.** The project was replanned
-> in October 2026: the mechanism is now a script run inside the Discord desktop client, rather than
-> a stub executable at a mirrored path. The plan is in
+> **The product was replanned in October 2026.** The mechanism is no longer a stub executable at a
+> mirrored path. It is a script run inside the Discord desktop client, over the Chrome DevTools
+> Protocol, so that the client's own quest heartbeat counts the quest. The plan is in
 > `C:\Users\Edison\.opencode\plan\discord-auto-quest-replan.md`, and it carries the new acceptance
-> contract. This document is kept until the rewrite lands.
+> contract.
+>
+> **The groups below describe the previous product.** They are kept as the record of what was
+> built and verified for it, and they are not the plan for what comes next. The current work is in
+> **The new product**, below.
 
 > **Purpose:** A grouped, outcome-based guide to **what** should be built and in what order — not an
 > implementation plan. The acceptance cases in `re/docs/08-reconstruction-map.md` (A1–A15) are the
-> contract for "done".
+> contract for "done" for the previous product.
+
+## The new product
+
+*Outcome: the user opens the application, sees the quests Discord is running, and works the ones
+they have accepted — without installing a single game.*
+
+| # | Outcome | Status |
+|---|---|---|
+| N1 | The application finds the Discord desktop client and can restart it with a debugging port, on the user's say-so only | Complete |
+| N2 | The application attaches to the client's renderer over the DevTools Protocol, and evaluates expressions in it | Complete |
+| N3 | The quest script is encrypted in the built artefact, decrypted in memory, and never written to disk | Complete |
+| N4 | The application's own reader finds the quest state in the client's store by shape rather than by a pinned export name, and reports the failure when Discord changes | Complete |
+| N5 | The application reads the quests on offer and not expired, and the quests the user has accepted, with their progress | Complete |
+| N6 | The application runs the quest script in the client and stops it, and the client's own heartbeat counts the quest | Complete |
+| N7 | The interface shows the quests as one register, and says what needs doing now | Complete |
+| N8 | A fresh accept-and-work cycle is verified end to end by a person, against the real client | **Unverified** — needs the user's hands |
+| N9 | The old catalogue, the stub mechanism, and the runner crates are retired, and this document describes only the new product | **Pending** |
+
+**N7 was distilled.** The interface began as two columns of cards, each repeating the quest's
+task, duration, reward, expiry and a progress bar. It is now one list, hairline-ruled: the quests
+the user has accepted first, the quests on offer below them, and five columns per row — the name,
+the task, the progress, the reward, and the day it ends. Every figure is mono and tabular,
+because every figure is a measurement. The band under the title bar carries one sentence and one
+control.
+
+**Two faults were found by running the application, and both are fixed.** The interface claimed to
+be working a quest it was not working, because a quest left counting by an earlier run still
+showed as running; and the band named a quest whose reward had expired rather than the one whose
+reward could still be claimed. The second is now a rule in `src/lib/quests.ts` and a test.
+
+**The application attaches on its own.** The quests cannot be read without a connection, so the
+backend makes one when it reads them. A connection that was lost — Discord restarted, the client
+reloaded — is made again rather than reported as a failure the user cannot act on.
+
+---
 
 ## Status Rules
 

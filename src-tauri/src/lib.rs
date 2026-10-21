@@ -174,12 +174,6 @@ async fn relaunch_discord(state: State<'_, AppState>) -> AppResult<()> {
     state.discord.attach().await
 }
 
-/// Attach to Discord's renderer.
-#[tauri::command]
-async fn attach_discord(state: State<'_, AppState>) -> AppResult<()> {
-    state.discord.attach().await
-}
-
 /// The quests Discord has: the ones on offer, and the ones already accepted.
 #[tauri::command]
 async fn list_discord_quests(state: State<'_, AppState>) -> AppResult<quest::reader::QuestList> {
@@ -229,7 +223,6 @@ pub fn run() {
             stub_states,
             discord_status,
             relaunch_discord,
-            attach_discord,
             list_discord_quests,
             run_quest_script,
             stop_quest_script

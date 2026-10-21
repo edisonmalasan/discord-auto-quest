@@ -5,89 +5,79 @@ primary_target: "src/App.tsx"
 related_targets: []
 ---
 
-# Surface brief — discord-auto-quest catalogue
+# Surface brief — discord-auto-quest quest register
 
-**Scope:** the catalogue surface. The app's first screen: the index of games Discord
-can detect, their questability, the registered path behind each one, and the quest that
-runs on it.
+**Scope:** the quest surface. The app's only screen: the quests Discord is
+running, the quests the user has accepted, how far along each one is, and the
+one action that works them.
 
-**Visitor mode:** Operate. The visitor arrived to do a job — find a game, see whether it
-can be quested, and start it. They come back to this screen often and for minutes at a
-time.
+**Visitor mode:** Operate. The visitor arrived to do a job — clear a quest
+list — and they come back to this screen while it counts.
 
-**Audience:** a Discord player clearing a seasonal quest list, at their desk, usually with
-the Discord client open in the next window.
+**Audience:** a Discord player clearing a seasonal quest list, at their desk,
+usually with the Discord client open in the next window.
 
-**Job:** find the game in a catalogue of ~25,000 entries, know before clicking whether it
-can be quested at all, and run it.
+**Job:** see what Discord is asking for, see what is counting, and work the
+quests.
 
-**Action:** browse or search the index; read the questability mark and the registered path;
-start and stop the quest.
+**Action:** work the quests; stop working them.
 
-**Proof/content:** the live catalogue, fetched at runtime. Every count is derived from the
-catalogue in hand.
+**Proof/content:** the live quest state, read out of the client's own store.
+Every count is derived from the client in hand.
 
 **Constraints:**
-- The catalogue is never bundled. It is fetched and cached in the backend.
+- The quest list is Discord's, read at run time. It is never cached or bundled.
 - The app is unaffiliated with Discord and does not borrow Discord's visual language.
 - Runtime state is never asserted optimistically; what the app knows is what it shows.
-- 58% of the catalogue cannot be quested. That has to be visible, not a dead end.
-- A stub is written only where Discord's own data points, and is stopped by process id.
+- A quest is reported as finished only when Discord says it is.
+- The app never accepts a quest, never claims a reward, and never restarts
+  Discord without being asked.
 
-**Chosen direction:** the working index — a printed catalogue of detected applications,
-with a margin key.
+**Chosen direction:** the register — a printed ledger of quests on uncoated
+stock, rendered as ink on a cold ground, with the figures set like a ledger's.
 
-**Memorable moment:** the margin mark. A filled square means Discord has registered an
-executable for that title; a hollow square means it has not. Beside it, in the reference
-column, the exact registered path the stub will mirror. The mechanism is printed in the
-margin of every line.
+**Memorable moment:** the figure column. Every measurement — the progress, the
+reward, the day it ends — is set in mono and lines up down the column, so the
+list reads as a ledger rather than a list of cards.
 
-**Unresolved decisions:** reconciling quests across restarts, the store and theme filters,
-and the macOS and Linux runners, all of which belong to later groups.
+**Unresolved decisions:** whether the available-quest list earns its place beside
+the accepted one in the first viewport, and what the band says when several
+quests are finished at once.
 
 ## Direction contract
 
-**THESIS:** A printed index, not a launcher. This product's truth is that most of the
-catalogue is un-questable and that the path is the mechanism; the index prints both facts
-in the margin of every line instead of hiding them behind a card and a play button.
+**THESIS:** A printed register, not a launcher. This product's truth is that the
+quests belong to Discord, that the user accepts them there, and that the
+application only works them. So the page prints them as a ledger: the task
+beside the name, the figures at the end of the line, and one sentence saying
+what needs doing now.
 
-**OWN-WORLD:** A working printed catalogue on uncoated stock, rendered as ink on a cold
-ink ground. Rules: hairline rules divide, never boxes or cards; flat fields, no texture
-or grain; the margin mark is the only decoration; one spot colour (`#4FC3B0`) carries
-detection, selection, and focus; amber carries a stale cached copy, red carries an
-unreachable endpoint; figures and registered paths are set in Azeret Mono; names and
-interface are set in Archivo, hierarchy by scale and weight alone. Raised by the
-orienteering legend: the keyed symbol table at the head of the index. Raised by the
-boarding pass: the selected entry's facts segmented into a pass of labelled rows with
-tabular figures. Raised by the type specimen: hierarchy from scale contrast, not
+**OWN-WORLD:** A working register on uncoated stock, rendered as ink on a cold
+ink ground. Rules: hairline rules divide, never boxes or cards; flat fields, no
+texture or grain; one spot colour (`#4FC3B0`) carries the one action and the
+focus ring; amber carries a client that needs a restart, red a failure; figures
+are set in Azeret Mono and names and interface in Archivo, hierarchy by scale and
+weight alone. Raised by the type specimen: hierarchy from scale contrast, not
 decoration. Raised by the design annual: 1px hairlines do all the dividing.
 
-**STORY:** You open the app and land in an index of every game Discord can detect, already
-sorted and already counted. The header tells you where the data came from and when it
-arrived, in the same words every time: live from Discord, or a cached copy from four
-hours ago. In the margin of every line, a mark tells you whether that title can be
-quested at all. Select a line and the right column prints the registered path the stub
-will mirror, the platform, and whether Discord marked it a launcher — and offers the quest
-itself. Start it, and the panel shows the stub's process id and how long it has been
-running. Nothing on the screen claims Discord has credited anything.
+**STORY:** You open the app and land in a register of the quests Discord is
+running, already counted and already sorted: the ones you have accepted first,
+and the ones on offer below them. The title bar says whether the client is
+ready. The band says what needs doing now, in one sentence, and carries the one
+control that does it. The register prints each quest's name, what it takes, how
+far along it is, what it gives, and the day it ends. Nothing on the screen
+claims Discord has credited anything.
 
-**FIRST VIEWPORT:** Three columns at 1440x900. A 232px left rail carries the app mark,
-the three scope filters (All / Questable / Not questable), the platform filter, and the
-composition readout: total entries, the questable share as a proportion bar with its
-counts, and the per-platform executable split. The centre column is the index itself: a
-sticky head row with the column labels (Title, Registered path) and the keyed legend
-under it, then hairline-ruled entry rows — margin mark, 36px cover art, title, the
-registered path in mono, a platform tag — with the selected row marked by a spot-colour
-caret in the margin and a running quest marked at the row's edge. The 320px right column
-is the selected entry's fact pass: cover art at 112px, the entry's facts as labelled rows,
-and then the **registered executables** — each one showing its platform, its registered
-path, and the control that starts or stops that executable's quest. A running quest shows
-its process id and its elapsed time in place of the start control, and the stub's path
-beneath it. An entry with no registered executable says so in the place where the
-executables would be, and offers no control at all.
+**FIRST VIEWPORT:** One column at 1200x820. A 56px title bar with the app mark, the
+application name, and the client's state in mono at the right. A band beneath
+it, ruled, carrying the one sentence and the one control. Then the register:
+the ACCEPTED section, a heading, a count, a rule, and hairline-ruled rows of
+thirty-four pixels; then the ON OFFER section, the same shape. The register is
+the only scrolling region. A quiet rule and the colophon close the page.
 
-**FORM:** chosen form — the working printed index; position 3 of the grounded list by
+**FORM:** chosen form — the working register; position 3 of the grounded list by
 resonance; seed:1b3ae4cf96fcb263.
 
-**FINISH:** unreviewed and undocumented is unfinished; this build ends with the finish
-review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+**FINISH:** unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, DESIGN.md, and every shipping raster carrying its
+provenance

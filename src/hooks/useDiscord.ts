@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
-  attachDiscord,
   discordStatus,
   listDiscordQuests,
   relaunchDiscord,
@@ -27,8 +26,6 @@ export interface DiscordController {
   busy: boolean;
   /** True while the script is working a quest. */
   working: boolean;
-  /** Attach to Discord, without restarting it. */
-  attach: () => void;
   /** Restart Discord so the application can drive it. */
   restart: () => void;
   /** Run the quest script. */
@@ -108,51 +105,18 @@ export function useDiscord(): DiscordController {
     }
   }, []);
 
-  const attach = useCallback(() => {
-    setBusy(true);
-    void (async () => {
-      try {
-        await attachDiscord();
-        if (mounted.current) {
-          await look();
-          await read();
-        }
-      } catch (failure) {
-        if (mounted.current) {
-          setError(toAppError(failure));
-        }
-      } finally {
-        if (mounted.current) {
-          setBusy(false);
-        }
-      }
-    })();
-  }, [look, read]);
-
-  // On mount: where Discord stands, then attach to it if it can be attached
-  // to, and then ask it for its quests. The quests cannot be read without a
-  // connection, so the attachment is not optional.
+  // On mount: where Discord stands, and then its quests. The connection is
+  // made by the backend when it reads them, so the interface never has to
+  // know whether it is attached.
   useEffect(() => {
     let cancelled = false;
 
     const start = async () => {
-      const found = await look();
-      if (cancelled || !found?.ready) {
+      await look();
+      if (cancelled) {
         return;
       }
-
-      try {
-        await attachDiscord();
-      } catch (failure) {
-        if (!cancelled) {
-          setError(toAppError(failure));
-        }
-        return;
-      }
-
-      if (!cancelled) {
-        await read();
-      }
+      await read();
     };
 
     void start();
@@ -249,7 +213,6 @@ export function useDiscord(): DiscordController {
     error,
     busy,
     working,
-    attach,
     restart,
     work,
     stop,

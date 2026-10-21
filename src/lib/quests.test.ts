@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  expiry,
-  fraction,
-  isCounting,
+  awaitingClaim,
+  awaitingUser,
+  duration,
+  ends,
   isFinished,
-  remaining,
-  requirement,
+  needsUser,
   reward,
-  stateLabel,
+  requirement,
   taskLabel,
 } from './quests';
 import type { QuestSummary } from '../types/quests';
@@ -34,47 +34,11 @@ describe('the quest vocabulary', () => {
     expect(taskLabel('SOMETHING_NEW')).toBe('SOMETHING_NEW');
   });
 
-  it('knows a quest is counting only while it is accepted and short of its target', () => {
-    expect(isCounting(quest({ state: 'claimed', progressSeconds: 10 }))).toBe(true);
-    expect(isCounting(quest({ state: 'claimed', progressSeconds: 900 }))).toBe(false);
-    expect(isCounting(quest({ state: 'available', progressSeconds: 10 }))).toBe(false);
-    expect(isCounting(quest({ state: 'completed', progressSeconds: 900 }))).toBe(false);
-  });
-
-  it('knows a quest is finished only when Discord says it is', () => {
-    expect(isFinished(quest({ state: 'completed' }))).toBe(true);
-    expect(isFinished(quest({ state: 'claimed', progressSeconds: 900 }))).toBe(false);
-  });
-
-  it('measures a quest as a fraction of its target, and never past it', () => {
-    expect(fraction(quest({ progressSeconds: 450, targetSeconds: 900 }))).toBe(0.5);
-    expect(fraction(quest({ progressSeconds: 2000, targetSeconds: 900 }))).toBe(1);
-    expect(fraction(quest({ progressSeconds: 0, targetSeconds: 0 }))).toBe(0);
-  });
-
-  it('says what is left in a way a person can read', () => {
-    expect(remaining(quest({ progressSeconds: 870, targetSeconds: 900 }))).toBe('30s left');
-    expect(remaining(quest({ progressSeconds: 300, targetSeconds: 900 }))).toBe('10 min left');
-    expect(remaining(quest({ targetSeconds: 0 }))).toBe('');
-  });
-
-  it('tells the user what a streaming quest still needs from them', () => {
-    expect(
-      requirement(quest({ state: 'claimed', tasks: ['STREAM_ON_DESKTOP'] })),
-    ).toBe('Be in a voice channel with somebody while this counts.');
-
-    expect(requirement(quest({ state: 'claimed', tasks: ['WATCH_VIDEO'] }))).toBe(
-      'A video has to be playing for this to count.',
-    );
-
-    // A quest that has not been accepted needs nothing from the user yet.
-    expect(requirement(quest({ state: 'available' }))).toBeNull();
-  });
-
-  it('says when a quest stops being available', () => {
-    expect(expiry(quest())).toContain('ends');
-    expect(expiry(quest({ expiresAt: null }))).toBeNull();
-    expect(expiry(quest({ expiresAt: 'not a date' }))).toBeNull();
+  it('says how long a quest takes, in a way a person can read', () => {
+    expect(duration(900)).toBe('15 min');
+    expect(duration(142)).toBe('2 min');
+    expect(duration(42)).toBe('42s');
+    expect(duration(0)).toBe('—');
   });
 
   it('says the reward, and says nothing when there is none', () => {
@@ -82,9 +46,78 @@ describe('the quest vocabulary', () => {
     expect(reward(quest({ rewardOrbs: null }))).toBeNull();
   });
 
-  it('names the state of a quest', () => {
-    expect(stateLabel('available')).toBe('On offer');
-    expect(stateLabel('claimed')).toBe('Accepted');
-    expect(stateLabel('completed')).toBe('Completed');
+  it('says when a quest stops being available', () => {
+    expect(ends(quest())).toMatch(/Oct/);
+    expect(ends(quest({ expiresAt: null }))).toBe('—');
+    expect(ends(quest({ expiresAt: 'not a date' }))).toBe('—');
+  });
+
+  it('knows a quest is finished only when Discord says it is', () => {
+    expect(isFinished(quest({ state: 'completed' }))).toBe(true);
+    expect(isFinished(quest({ state: 'claimed', progressSeconds: 900 }))).toBe(false);
+  });
+
+  it('knows a quest that needs the user before it can count', () => {
+    expect(needsUser(quest())).toBe(false);
+    expect(needsUser(quest({ tasks: ['STREAM_ON_DESKTOP'] }))).toBe(true);
+    expect(needsUser(quest({ tasks: ['WATCH_VIDEO'] }))).toBe(true);
+  });
+
+  it('says what the user still has to do, and nothing when there is nothing', () => {
+    expect(requirement(quest({ tasks: ['STREAM_ON_DESKTOP'] }))).toBe(
+      'counts only while you are in a voice channel with somebody',
+    );
+    expect(requirement(quest({ tasks: ['PLAY_ACTIVITY'] }))).toBe(
+      'counts only while you are in a voice channel',
+    );
+    expect(requirement(quest({ tasks: ['WATCH_VIDEO'] }))).toBe(
+      'counts only while a video is playing',
+    );
+    expect(requirement(quest())).toBeNull();
+  });
+
+  it('finds the one that is waiting, in each sense', () => {
+    const quests = [
+      quest({ id: '1', state: 'claimed' }),
+      quest({ id: '2', state: 'completed', name: 'Done one' }),
+      quest({ id: '3', state: 'claimed', tasks: ['STREAM_ON_DESKTOP'], name: 'Stream one' }),
+    ];
+
+    expect(awaitingClaim(quests)?.name).toBe('Done one');
+    expect(awaitingUser(quests)?.name).toBe('Stream one');
+    expect(awaitingClaim([])).toBeNull();
+    expect(awaitingUser([])).toBeNull();
+  });
+
+  it('names a quest whose reward can still be claimed, not one whose reward has gone', () => {
+    const quests = [
+      quest({
+        id: '1',
+        name: 'Gone one',
+        state: 'completed',
+        expiresAt: '2020-01-01T00:00:00+00:00',
+      }),
+      quest({
+        id: '2',
+        name: 'Claimable one',
+        state: 'completed',
+        expiresAt: '2099-01-01T00:00:00+00:00',
+      }),
+    ];
+
+    expect(awaitingClaim(quests)?.name).toBe('Claimable one');
+  });
+
+  it('falls back to the finished quest when every reward has expired', () => {
+    const quests = [
+      quest({
+        id: '1',
+        name: 'Gone one',
+        state: 'completed',
+        expiresAt: '2020-01-01T00:00:00+00:00',
+      }),
+    ];
+
+    expect(awaitingClaim(quests)?.name).toBe('Gone one');
   });
 });
