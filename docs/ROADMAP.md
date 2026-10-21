@@ -117,7 +117,18 @@ in Discord's own interface.
 **`npm run verify` is the machinery for that.** It runs the whole loop against the real client and
 reports on it — whether Discord is reachable, what quests it has, what the script said, whether the
 progress moved, and whether Discord's own methods were put back. It is the loop, run without a
-person watching, so the two cases above can be settled in one command rather than by eye.
+person watching, so the two cases above can be settled in one command rather than by eye. It can
+restart Discord for you when you ask it to (`--restart`), because the mechanism cannot work at all
+until the client has a debugging port.
+
+**Two faults the workflow found, both in the way Discord is restarted.** The launcher was given an
+absolute path to the executable, and the Squirrel launcher resolves the path it is given against
+the directory it was started in — so the client never came up. And a launch while Discord was
+already running was absorbed by the running instance, which left the client running without a
+debugging port and the port file pointing at a port nothing was listening on: which looks exactly
+like a client that cannot be reached. The launcher now runs from its own directory with the
+executable named relatively, and a running Discord is stopped first — which the user has agreed to
+by pressing the button that says restarting Discord ends whatever they were doing in it.
 
 **One thing the application cannot yet tell the user.** The script prints what it is doing, and
 the transport can read it — but the driver does not read it, so the application knows whether a
