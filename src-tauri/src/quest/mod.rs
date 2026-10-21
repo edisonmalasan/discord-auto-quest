@@ -48,6 +48,7 @@ pub mod cdp;
 pub mod discord;
 pub mod launch;
 pub mod path;
+pub mod payload;
 pub mod process;
 pub mod records;
 pub mod service;
