@@ -118,7 +118,12 @@ describe('App', () => {
   it('shows the quests Discord has, in two columns', async () => {
     render(<App />);
 
-    const onOffer = (await screen.findByRole('heading', { name: /on offer/i })).closest('section');
+    // The wait is on the *quest*, not on the column heading: the heading is
+    // there from the first render, and the quest is not there until Discord
+    // has answered.
+    await screen.findByText('Clean Crew');
+
+    const onOffer = screen.getByRole('heading', { name: /on offer/i }).closest('section');
     const accepted = screen.getByRole('heading', { name: /accepted/i }).closest('section');
 
     expect(onOffer).not.toBeNull();
