@@ -19,41 +19,107 @@
 *Outcome: the user opens the application, sees the quests Discord is running, and works the ones
 they have accepted — without installing a single game.*
 
-| # | Outcome | Status |
-|---|---|---|
-| N1 | The application finds the Discord desktop client and can restart it with a debugging port, on the user's say-so only | Complete |
-| N2 | The application attaches to the client's renderer over the DevTools Protocol, and evaluates expressions in it | Complete |
-| N3 | The quest script is encrypted in the built artefact, decrypted in memory, and never written to disk | Complete |
-| N4 | The application's own reader finds the quest state in the client's store by shape rather than by a pinned export name, and reports the failure when Discord changes | Complete |
-| N5 | The application reads the quests on offer and not expired, and the quests the user has accepted, with their progress | Complete |
-| N6 | The application runs the quest script in the client and stops it, and the client's own heartbeat counts the quest | Complete |
-| N7 | The interface shows the quests as one register, and says what needs doing now | Complete |
-| N8 | A fresh accept-and-work cycle is verified end to end by a person, against the real client | **Unverified** — needs the user's hands |
-| N9 | The old catalogue, the stub mechanism, and the runner crates are retired, and this document describes only the new product | **Complete** |
+### The contract
 
-**N7 was distilled.** The interface began as two columns of cards, each repeating the quest's
-task, duration, reward, expiry and a progress bar. It is now one list, hairline-ruled: the quests
-the user has accepted first, the quests on offer below them, and five columns per row — the name,
-the task, the progress, the reward, and the day it ends. Every figure is mono and tabular,
-because every figure is a measurement. The band under the title bar carries one sentence and one
-control.
+The acceptance cases below replace A1–A15. They are the conditions for "done", and each one says
+how it is proved.
+
+| # | Case | Proved by | Status |
+|---|---|---|---|
+| N1 | An accepted quest reaches **completed**, and its reward becomes claimable | a real quest, driven by the application | **Complete** — proved on the real client: the progress climbed 0→900, Discord's own record ended with `completedAt` set and an unclaimed **700 Orbs**, and Discord's interface showed "Quest Completed!" with a Claim Reward button |
+| N2 | The script is not present in the shipped executable as readable text | a check against the built artefact | **Complete** — `npm run check:payload` asserts it, and continuous integration runs it on all three platforms |
+| N3 | A video quest completes with no game running | a real video quest, driven by the application | **Unverified** — the mechanism reaches the video quest types, but no video quest has been driven to completion |
+| N4 | A stream quest states what it still needs, rather than pretending | the interface, and a real stream quest | **Complete** — the band names the quest and says it counts only while the user is in a voice channel with somebody |
+| N5 | When the script stops attaching, the application says so | the failure path, deliberately provoked | **Complete** — a script that raises is reported as a failure, with the cause |
+| N6 | The application never claims a quest is complete unless Discord says it is | the interface's state, checked against Discord's own state | **Complete** — the state comes from Discord's own `completedAt`; tested |
+| N7 | The plaintext script never touches disk at runtime | the filesystem during a run | **Complete** — the script is decrypted into memory and evaluated in the renderer |
+| N8 | The available-quest list is accurate and excludes expired quests | a real read of Discord's state | **Complete** — proved against the real client: fifteen on offer, sixty-four expired and counted |
+| N9 | The application carries no borrowed identity and no upstream code | the lock file and the licence notice | **Complete** — `npm run check:acceptance` asserts both |
+
+### What the mechanism is
+
+Four things, and they are the whole of it:
+
+- **The transport** — `src-tauri/src/quest/cdp.rs`. The DevTools Protocol, spoken to Discord's own
+  renderer over a websocket: evaluate an expression in it, and read back what the page prints.
+- **The payload** — `src-tauri/src/quest/payload.rs`. The quest script, encrypted. It is decrypted
+  into memory when it is needed and never written to disk.
+- **The reader** — `src-tauri/src/quest/reader.rs`. Discord's own quest state, found by shape
+  rather than by a pinned export name, so a Discord update does not stop the application from
+  saying what it can see.
+- **The driver** — `src-tauri/src/quest/driver.rs`. Discord's own methods are taken before the
+  script runs and put back afterwards, so a spoofed game does not outlive the application.
+
+### What the interface is
+
+**One register.** The interface began as two columns of cards, each repeating the quest's task,
+duration, reward, expiry and a progress bar. It is now one list, hairline-ruled: the quests the
+user has accepted first, the quests on offer below them, and five columns per row — the name, the
+task, the progress, the reward, and the day it ends. Every figure is mono and tabular, because
+every figure is a measurement. The band under the title bar carries one sentence and one control,
+and the sentence says what needs doing now.
 
 **Two faults were found by running the application, and both are fixed.** The interface claimed to
 be working a quest it was not working, because a quest left counting by an earlier run still
 showed as running; and the band named a quest whose reward had expired rather than the one whose
 reward could still be claimed. The second is now a rule in `src/lib/quests.ts` and a test.
 
+**Two more were found by running the mechanism, and both were in the driver.** The expression
+that keeps Discord's own methods before the script runs was finding the wrong object: Discord
+ships an internationalisation proxy that answers *every* property name with a function, so a
+candidate that merely has something called `getRunningGames` can be that proxy. The originals were
+kept from the proxy, which meant "stop" put the proxy's methods back and left the real store
+spoofed — and the check that was supposed to notice reported "not spoofing" no matter what. The
+store is now found by what it does rather than what it is called, and the driver and the script
+are made to agree on which object to touch. Both faults were invisible to the tests, because
+every test asserted the same shape the expression had.
+
 **The application attaches on its own.** The quests cannot be read without a connection, so the
 backend makes one when it reads them. A connection that was lost — Discord restarted, the client
 reloaded — is made again rather than reported as a failure the user cannot act on.
 
-**N9 removed 4,180 lines and three crates.** The catalogue module, the stub mechanism, the
-runner, and the per-platform runner crates are gone from the tree, along with their tests. The
+**The old product is gone.** The catalogue module, the stub mechanism, the runner, and the
+per-platform runner crates were removed with their tests — 8,399 lines and three crates. The
 backend is now the transport, the payload, the reader, the driver, and the Tauri shell; the
 frontend is the register. The build script no longer builds a helper executable, the release
 archive no longer carries one, and the continuous integration no longer has three platforms'
 worth of runner to build and check. What the application writes to disk at run time is now
-nothing at all: the script is decrypted in memory and evaluated in the renderer.
+**nothing at all**: the script is decrypted in memory and evaluated in the renderer.
+
+### What running it found
+
+**The driver kept the wrong store.** The application takes Discord's own methods before the script
+runs, so it can put them back when the user presses stop. It found the store by shape — an object
+with a `getRunningGames` and a `getGameForPID` — and Discord ships an internationalisation proxy
+that answers *every* property name with a function. The proxy matched first, so the application
+kept the proxy's methods and restored the proxy's methods, and the fake game outlived the
+application's stop.
+
+The store is now found by the export the script itself names, and then checked by what it does:
+asking it for the running games has to return a list. The check was verified against the live
+client: the driver now keeps the same store the script replaces, and the restore puts the real
+methods back.
+
+**A raised script now says what it means.** The script finds Discord's internals by the names of
+minified exports and reads them without checking, so a rename makes it raise. "The script raised
+an error" is not something a user can act on; the application now says that the script did not
+attach, that Discord has probably moved its internals, and that the script needs updating.
+
+### What is left
+
+**A fresh accept-and-work cycle.** N1 was proved with a quest that had already been accepted.
+Accepting a quest in Discord's own Quests tab and then working it from here has not been driven
+end to end by a person. So has N3.
+
+Both need the user's hands: accept a quest, press "Work my quests", and watch the progress climb
+in Discord's own interface.
+
+**One thing the application cannot yet tell the user.** The script prints what it is doing, and
+the transport can read it — but the driver does not read it, so the application knows whether a
+game is being spoofed and not whether the script is working on a *video* quest, which is spoofed
+by a different route entirely. The application says "working" when the script ran, which is
+honest about what it did and not yet about what the script found. Reading the script's own
+output would close the gap.
 
 ---
 

@@ -67,7 +67,14 @@ async fn main() {
     println!();
     println!("running the quest script");
     match state.run_script().await {
-        Ok(spoofing) => println!("  the script ran; the game is spoofed: {spoofing}"),
+        Ok(spoofing) => {
+            if spoofing {
+                println!("  the script ran, and a game is being spoofed");
+            } else {
+                println!("  the script ran, and no game is being spoofed");
+                println!("  (either there was nothing to work on, or the script did not attach)");
+            }
+        }
         Err(error) => println!("  the script did not run: {error}"),
     }
 
