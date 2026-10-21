@@ -19,10 +19,11 @@
  *   node scripts/dev.mjs --help     what the Tauri command line can do
  */
 import { spawn } from 'node:child_process';
-import { createServer } from 'node:net';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { findPort } from './port.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -38,38 +39,6 @@ const OVERRIDE = join(root, 'src-tauri', 'tauri.dev.json');
 
 /** The Tauri command line, from the installed package. */
 const CLI = join(root, 'node_modules', '@tauri-apps', 'cli', 'tauri.js');
-
-/**
- * Whether a port can be taken.
- *
- * The port is opened and closed again, which is the only way to be sure
- * without holding it. There is a window between closing it and the dev server
- * opening it, and it is the same window every tool that picks a port has.
- */
-function isFree(port) {
-  return new Promise((resolve) => {
-    const server = createServer();
-
-    server.once('error', () => resolve(false));
-    server.once('listening', () => server.close(() => resolve(true)));
-
-    server.listen(port, '127.0.0.1');
-  });
-}
-
-/** The first free port at or after `first`. */
-async function findPort(first, attempts) {
-  for (let port = first; port < first + attempts; port += 1) {
-    if (await isFree(port)) {
-      return port;
-    }
-  }
-
-  throw new Error(
-    `no free port between ${first} and ${first + attempts - 1}; ` +
-      'something else is holding the whole range',
-  );
-}
 
 /**
  * Write the configuration override.

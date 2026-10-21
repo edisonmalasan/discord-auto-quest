@@ -33,7 +33,6 @@ export default defineConfig({
     // the window cannot find. So a chosen port is held, and a chosen-but-taken
     // port is a loud failure rather than a silent drift.
     strictPort: chosen,
-    host: '127.0.0.1',
   },
   build: {
     target: 'esnext',
