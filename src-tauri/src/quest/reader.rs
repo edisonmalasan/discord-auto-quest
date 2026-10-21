@@ -101,7 +101,7 @@ pub struct RunningGame {
 /// finding the quest store are tried in turn: the export names first, because
 /// they are quick, and the shape second, because they survive a rename.
 const READ_STATE: &str = r#"(function () {
-  const report = { available: [], claimed: [], expired: 0, desktop_app: false, running_games: [] };
+  const report = { available: [], claimed: [], expired: 0, desktopApp: false, runningGames: [] };
 
   try {
     const wpRequire = webpackChunkdiscord_app.push([[Symbol()], {}, function (r) { return r; }]);
@@ -222,13 +222,13 @@ const READ_STATE: &str = r#"(function () {
         id: quest.id,
         name: (config.messages && config.messages.questName) || quest.id,
         tasks: taskNames,
-        expires_at: config.expiresAt || null,
+        expiresAt: config.expiresAt || null,
         state: quest.userStatus && quest.userStatus.completedAt
           ? 'completed'
           : (quest.userStatus && quest.userStatus.enrolledAt ? 'claimed' : 'available'),
-        progress_seconds: progress,
-        target_seconds: target,
-        reward_orbs: rewards.length ? (rewards[0].orbQuantity || null) : null,
+        progressSeconds: progress,
+        targetSeconds: target,
+        rewardOrbs: rewards.length ? (rewards[0].orbQuantity || null) : null,
       };
     };
 
@@ -247,17 +247,17 @@ const READ_STATE: &str = r#"(function () {
       try {
         const games = gameStore.getRunningGames() || [];
         for (const game of games) {
-          report.running_games.push({
+          report.runningGames.push({
             id: String(game.id),
             name: game.name,
-            exe_name: game.exeName || null,
+            exeName: game.exeName || null,
             pid: typeof game.pid === 'number' ? game.pid : null,
           });
         }
       } catch (error) { /* the store is not readable right now */ }
     }
 
-    report.desktop_app = typeof DiscordNative !== 'undefined';
+    report.desktopApp = typeof DiscordNative !== 'undefined';
   } catch (error) {
     report.error = String(error);
   }
@@ -369,5 +369,45 @@ mod tests {
             !list.claimed[0].is_running(),
             "a finished quest is not running"
         );
+    }
+
+    /// The expression and the struct have to agree on the field names.
+    ///
+    /// The expression is JavaScript and the struct is Rust, and nothing else
+    /// connects them. If one says `progress_seconds` and the other says
+    /// `progressSeconds`, the application reads nothing at all — and says so
+    /// in the least helpful way. This is the check that would have caught it,
+    /// and it is here because the two sides are edited separately.
+    #[test]
+    fn the_expression_and_the_struct_agree_on_the_field_names() {
+        for field in [
+            "id",
+            "name",
+            "tasks",
+            "expiresAt",
+            "state",
+            "progressSeconds",
+            "targetSeconds",
+            "rewardOrbs",
+        ] {
+            assert!(
+                READ_STATE.contains(field),
+                "the expression does not produce `{field}`"
+            );
+        }
+
+        for field in [
+            "available",
+            "claimed",
+            "expired",
+            "desktopApp",
+            "runningGames",
+            "exeName",
+        ] {
+            assert!(
+                READ_STATE.contains(field),
+                "the expression does not produce `{field}`"
+            );
+        }
     }
 }

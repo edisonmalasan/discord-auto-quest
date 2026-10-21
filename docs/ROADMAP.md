@@ -1,5 +1,11 @@
 # discord-auto-quest — Roadmap
 
+> **This roadmap describes the previous product and is being replaced.** The project was replanned
+> in October 2026: the mechanism is now a script run inside the Discord desktop client, rather than
+> a stub executable at a mirrored path. The plan is in
+> `C:\Users\Edison\.opencode\plan\discord-auto-quest-replan.md`, and it carries the new acceptance
+> contract. This document is kept until the rewrite lands.
+
 > **Purpose:** A grouped, outcome-based guide to **what** should be built and in what order — not an
 > implementation plan. The acceptance cases in `re/docs/08-reconstruction-map.md` (A1–A15) are the
 > contract for "done".

@@ -88,6 +88,33 @@ describe('App', () => {
     attachDiscord.mockResolvedValue(undefined);
   });
 
+  it('never claims to be working a quest it is not working', async () => {
+    // The quest is counting — but the application did not start it, so it
+    // must not say it is working it.
+    listDiscordQuests.mockResolvedValue(
+      feed({
+        available: [],
+        claimed: [
+          {
+            id: '1',
+            name: 'RuneScape: Dragonwilds Mission',
+            tasks: ['ACHIEVEMENT_IN_ACTIVITY'],
+            expiresAt: '2026-09-22T00:00:00+00:00',
+            state: 'claimed',
+            progressSeconds: 0,
+            targetSeconds: 1,
+            rewardOrbs: 700,
+          },
+        ],
+      }),
+    );
+
+    render(<App />);
+
+    await screen.findByText('RuneScape: Dragonwilds Mission');
+    expect(screen.queryByText('Working…')).not.toBeInTheDocument();
+  });
+
   it('shows the quests Discord has, in two columns', async () => {
     render(<App />);
 

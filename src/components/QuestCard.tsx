@@ -3,7 +3,13 @@ import type { QuestSummary } from '../types/quests';
 
 interface QuestCardProps {
   quest: QuestSummary;
-  /** True while the application is working quests. */
+  /**
+   * True while the *application* is working quests.
+   *
+   * Not the same as a quest counting: a quest can be counting because the
+   * script is running, or because a run was left behind. The card says
+   * "Working…" only for the first, and never claims the second.
+   */
   working: boolean;
 }
 

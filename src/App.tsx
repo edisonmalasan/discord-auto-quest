@@ -5,7 +5,6 @@ import { Colophon } from './components/Colophon';
 import { DiscordGate } from './components/DiscordGate';
 import { QuestColumn } from './components/QuestColumn';
 import { useDiscord } from './hooks/useDiscord';
-import { isCounting } from './lib/quests';
 
 export default function App() {
   const discord = useDiscord();
@@ -21,7 +20,6 @@ export default function App() {
   const feed = discord.feed;
   const claimed = feed?.claimed ?? [];
   const available = feed?.available ?? [];
-  const counting = claimed.some(isCounting);
 
   const handleWork = () => {
     setFailure(null);
@@ -119,7 +117,7 @@ export default function App() {
             title="On offer"
             note="Quests Discord is running that you have not accepted. Accept one in Discord to work it."
             quests={available}
-            working={counting}
+            working={discord.working}
             empty={
               discord.phase === 'loading'
                 ? 'Reading Discord…'
@@ -131,7 +129,7 @@ export default function App() {
             title="Accepted"
             note="The quests you have accepted, and how far along each one is."
             quests={claimed}
-            working={counting}
+            working={discord.working}
             empty={
               discord.phase === 'loading'
                 ? 'Reading Discord…'
