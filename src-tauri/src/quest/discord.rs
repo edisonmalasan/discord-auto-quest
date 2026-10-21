@@ -81,11 +81,40 @@ impl Install {
     ///
     /// The port is left for Chromium to choose, so two installations cannot
     /// collide and nothing has to be guessed at.
+    ///
+    /// **The launcher runs from its own directory, and the executable is named
+    /// relatively.** That is how the Squirrel launcher works: it resolves the
+    /// path it is given against the directory it was started in, so an
+    /// absolute path makes it look for the executable in the wrong place and
+    /// the client never comes up.
+    ///
+    /// **Any Discord already running is stopped first.** The launcher starts a
+    /// new instance and hands over to the running one, so a launch while
+    /// Discord is up leaves the old client running without a debugging port —
+    /// and the port file points at a port nothing is listening on, which looks
+    /// exactly like a client that cannot be reached.
     pub fn launch_with_debugger(&self) -> AppResult<()> {
+        stop_running_discord();
+
+        let directory = self.launcher.parent().ok_or_else(|| {
+            AppError::io(format!(
+                "the Discord launcher at {} has no directory to run from",
+                self.launcher.display()
+            ))
+        })?;
+
+        let executable = self.executable.file_name().ok_or_else(|| {
+            AppError::io(format!(
+                "the Discord executable at {} has no name",
+                self.executable.display()
+            ))
+        })?;
+
         let mut command = std::process::Command::new(&self.launcher);
         command
+            .current_dir(directory)
             .arg("--processStart")
-            .arg(&self.executable)
+            .arg(executable)
             .arg("--process-start-args")
             .arg("--remote-debugging-port=0")
             .stdin(Stdio::null())
@@ -102,6 +131,30 @@ impl Install {
         Ok(())
     }
 }
+
+/// Stop the Discord that is running, if any.
+///
+/// Only the stable channel's executable is stopped, and only by its own name:
+/// the canary and the PTB builds have names of their own, and this application
+/// only ever drives the install it found.
+///
+/// The caller has already asked the user. Restarting Discord ends whatever
+/// they were doing in it — a voice call, most likely — which is why the
+/// application never does it on its own.
+#[cfg(windows)]
+fn stop_running_discord() {
+    let _ = std::process::Command::new("taskkill")
+        .args(["/F", "/T", "/IM", "Discord.exe"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+}
+
+/// There is no Discord to stop on this platform: the install is found on
+/// Windows only.
+#[cfg(not(windows))]
+fn stop_running_discord() {}
 
 /// The pages Discord's debugger exposes.
 pub async fn list_targets(port: u16) -> AppResult<Vec<Target>> {

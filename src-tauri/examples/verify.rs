@@ -1,6 +1,7 @@
 //! Verify the mechanism, end to end, and report on it.
 //!
 //!   cargo run --manifest-path src-tauri/Cargo.toml --example verify
+//!   cargo run --manifest-path src-tauri/Cargo.toml --example verify -- --restart
 //!
 //! This is the loop a person runs by hand, run automatically:
 //!
@@ -13,6 +14,10 @@
 //! It reports what it found at every step, and ends with a summary that says
 //! whether the mechanism worked. It changes nothing in Discord beyond the
 //! spoof the script itself makes, and it puts that back before it finishes.
+//!
+//! **`--restart` restarts Discord first.** It has to be asked for: restarting
+//! Discord ends whatever the user was doing in it, which is why the
+//! application asks before it does the same thing.
 
 use std::time::{Duration, Instant};
 
@@ -23,6 +28,9 @@ const WATCH: Duration = Duration::from_secs(20);
 
 /// How long to wait between reading the quest state again.
 const POLL: Duration = Duration::from_secs(2);
+
+/// How long to wait for Discord's debugger to come up after a restart.
+const WAIT_FOR_DEBUGGER: Duration = Duration::from_secs(30);
 
 #[tokio::main]
 async fn main() {
@@ -37,6 +45,32 @@ async fn main() {
         println!("\nsummary: FAILED — there is no Discord to work with.");
         std::process::exit(1);
     };
+
+    // The restart is asked for, never taken.
+    let restart = std::env::args().any(|argument| argument == "--restart");
+
+    if restart && !install.debugger_is_reachable().await {
+        println!("1. Discord");
+        println!("   installed:       yes");
+        println!("   answering:       no");
+        println!("\n   restarting Discord with a debugging port.");
+        println!("   (this ends whatever you were doing in it — which is why it is asked for)");
+
+        if let Err(error) = install.launch_with_debugger() {
+            println!("   could not: {error}");
+            println!("\nsummary: FAILED — Discord could not be restarted.");
+            std::process::exit(1);
+        }
+
+        // Give it a moment to come up and open its port.
+        let deadline = Instant::now() + WAIT_FOR_DEBUGGER;
+        while Instant::now() < deadline {
+            if install.debugger_is_reachable().await {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+    }
 
     let port = install.debug_port();
     let reachable = install.debugger_is_reachable().await;
@@ -53,6 +87,7 @@ async fn main() {
         println!("\n   Discord is not running with a debugging port.");
         println!("   The application offers to restart it, because that ends whatever");
         println!("   you were doing in it — so it asks first, and the answer is yours.");
+        println!("\n   This tool will do it if you ask it to: add --restart.");
         println!("\nsummary: FAILED — Discord is not reachable.");
         std::process::exit(1);
     }
