@@ -16,13 +16,24 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
-/** Strings that only the quest script would carry. */
+/**
+ * Strings that only the quest script would carry.
+ *
+ * They are chosen to be *absent from the application's own code*. The reader
+ * and the driver also reach into Discord's internals, and they ship in the
+ * clear — they are this project's code, and the reader has to be readable to
+ * work. So the marker `webpackChunkdiscord_app` is no use here: it is in the
+ * reader too, and a check that flags our own code is a check that would be
+ * silenced rather than fixed.
+ *
+ * These are the strings that only the secret script has: the Flux events it
+ * listens for, the endpoint it posts to, and the accessor it looks for.
+ */
 export const SCRIPT_MARKS = [
-  'webpackChunkdiscord_app',
-  'getStreamerActiveStreamMetadata',
   'RUNNING_GAMES_CHANGE',
   'QUESTS_SEND_HEARTBEAT_SUCCESS',
   'video-progress',
+  'getStreamerActiveStreamMetadata',
   'getSFWDefaultChannel',
 ];
 
