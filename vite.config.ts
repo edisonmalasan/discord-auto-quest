@@ -33,6 +33,25 @@ export default defineConfig({
     // the window cannot find. So a chosen port is held, and a chosen-but-taken
     // port is a loud failure rather than a silent drift.
     strictPort: chosen,
+    watch: {
+      /**
+       * What the dev server does not watch.
+       *
+       * The dev server watches the whole project, and the Rust build output
+       * lives inside it. While the application is running, Windows holds its
+       * own `.exe`, `.dll` and `.pdb` open — and a file that is locked cannot
+       * be opened, so the watcher complains about them on every rebuild.
+       *
+       * Vite's own defaults are listed too, because setting this replaces
+       * them rather than adding to them.
+       */
+      ignored: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/src-tauri/target/**',
+        '**/target/**',
+      ],
+    },
   },
   build: {
     target: 'esnext',
