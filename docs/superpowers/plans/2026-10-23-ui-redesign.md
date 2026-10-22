@@ -250,22 +250,22 @@ update workspace/index props as needed within the contract.
 `onDiscord`, `onExternal`, and `onCopy`; Task 5 supplies real callbacks. All action failures are
 displayed accessibly within the card, not swallowed.
 
-- [ ] **Step 1: Write failing semantic card tests.** Assert 0% has a progressbar, accepted count
+- [x] **Step 1: Write failing semantic card tests.** Assert 0% has a progressbar, accepted count
   progress has the correct unit, claimed cards show observed claim date/actual reward quantity,
   unknown claim evidence has Check in Discord, and unclaimed/claimable cards say Claim in Discord.
   Assert reward art differs from the game tile, non-Orbs rewards retain labels/art, verification
   is absent when unknown, and long text remains in the accessibility tree.
-- [ ] **Step 2: Run `npm test -- src/components/QuestCard.test.tsx`; confirm missing-variant failures.**
-- [ ] **Step 3: Implement the anatomy and footer variants from the spec.** Use hero/scrim/wordmark,
+- [x] **Step 2: Run `npm test -- src/components/QuestCard.test.tsx`; confirm missing-variant failures.**
+- [x] **Step 3: Implement the anatomy and footer variants from the spec.** Use hero/scrim/wordmark,
   publisher/date, 12/16 px title/reward hierarchy, progress art, boost pill only with evidence,
   and 40 px footer controls. Accepted game quests show accepted state and explicit platform
   handoff; video cards show Watch in Discord with known duration. Expired entries disable
   work-related actions. Do not render fake dropdown choices or a local video player.
-- [ ] **Step 4: Implement accessible media fallbacks.** Invalid/failed banner, logo or reward art
+- [x] **Step 4: Implement accessible media fallbacks.** Invalid/failed banner, logo or reward art
   gets a dimension-preserving neutral fallback; logo failure shows game/quest text. No game-tile
   substitution for missing reward art. Unknown selected task lists requirements without a fake
   percentage/platform. Unknown dates use a neutral unavailable label.
-- [ ] **Step 5: Run card tests and the full frontend suite.** Compare six reference states at
+- [x] **Step 5: Run card tests and the full frontend suite.** Compare six reference states at
   card width about 411 px using a test-only fixture render. Make `src/test/preview.html` a separate
   Vite development entry whose `preview.tsx` renders the real workspace/cards with synthetic
   fixtures and disabled mechanism controls. Open that path on the actual Vite dev port; do not
@@ -273,7 +273,7 @@ displayed accessibly within the card, not swallowed.
   neither that entry nor its fixtures. Save visual evidence outside the production public
   directory. Record explicit action-label/font differences, and fix unintended crop, spacing,
   typography or wrapping differences.
-- [ ] **Step 6: Commit.** Message: `feat(ui): reproduce quest card states and reward presentation`.
+- [x] **Step 6: Commit.** Message: `feat(ui): reproduce quest card states and reward presentation`.
 
 ## Task 5: Wire handoffs, clipboard, and anchored menus
 
@@ -416,6 +416,3 @@ implementation branch from a commit containing them, rather than from main witho
 Use a `feat/` task branch and upstream tracking, respecting the repository's clean-tree and
 pull requirements. Never discard other work. Commit at the task boundaries above and push
 checkpoints. The final PR must include the approved design and its implementation evidence.
-
-
-

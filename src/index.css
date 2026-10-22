@@ -72,3 +72,38 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .card-skeleton>span { display:block; height:14px; margin:22px 16px; width:65%; background:#303037; border-radius:3px; }
 @media(max-width:700px) { .sidebar { width:190px; flex-basis:190px; } .quest-content,.workspace-header { padding-left:16px; padding-right:16px; } .workspace-header { flex-wrap:wrap; } .global-controls { flex-wrap:wrap; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition-duration:.01ms!important; } }
+.quest-card { position:relative; border:1px solid #3b3b443b; background:#232327; border-radius:10px; min-width:0; }
+.quest-hero { height:145px; position:relative; overflow:hidden; border-radius:9px 9px 0 0; background:#292932; }
+.quest-banner { width:100%; height:100%; object-fit:cover; display:block; }
+.hero-scrim { position:absolute; inset:0; background:linear-gradient(180deg,transparent 15%,#23232799 52%,#232327 85%); }
+.quest-wordmark { position:absolute; bottom:36px; left:12px; right:54px; height:37px; display:flex; align-items:flex-end; }
+.quest-wordmark img { max-width:min(150px,72%); max-height:32px; object-fit:contain; object-position:left bottom; }
+.quest-wordmark>span { font-size:21px; font-weight:800; line-height:23px; color:white; }
+.publisher-row { position:absolute; left:12px; right:12px; bottom:9px; display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14px; line-height:18px; color:#a6a6af; }
+.publisher-row p { margin:0; min-width:0; overflow-wrap:anywhere; }
+.publisher-row p>span { color:#f2f3f5; font-weight:600; }
+.publisher-row svg { width:14px; height:14px; display:inline; vertical-align:-2px; margin-right:3px; }
+.quest-end { flex:none; font-variant-numeric:tabular-nums; }
+.quest-menu-trigger,.media-indicator { position:absolute; right:12px; top:12px; width:26px; height:26px; border-radius:50%; border:0; background:#17191d99; color:white; font-size:12px; letter-spacing:1px; display:grid; place-items:center; z-index:2; }
+.quest-menu-trigger:disabled { opacity:.7; }
+.media-indicator { right:48px; font-size:12px; letter-spacing:0; }
+.quest-details { display:flex; gap:12px; padding:12px 12px 16px; min-height:105px; align-items:center; }
+.quest-copy { min-width:0; flex:1; }
+.quest-copy h2 { margin:0 0 4px; color:#8793ff; font-size:12px; line-height:16px; font-weight:700; letter-spacing:.24px; text-transform:uppercase; overflow-wrap:anywhere; }
+.quest-reward-line { display:flex; gap:4px; flex-wrap:wrap; align-items:center; font-size:16px; line-height:20px; font-weight:600; }
+.quest-reward-line strong { font-weight:600; }
+.orb-icon { width:14px; height:14px; flex:none; }
+.boost-pill { display:inline-flex; align-items:center; gap:3px; background:#52226e; color:white; border-radius:20px; padding:0 7px; margin-left:4px; font-size:12px; font-weight:600; line-height:18px; white-space:nowrap; }
+.quest-description { margin:5px 0 0; font-size:12px; line-height:16px; color:#a7a7b3; overflow-wrap:anywhere; }
+.quest-reward-art { position:relative; width:80px; height:80px; flex:none; border-radius:10px; overflow:hidden; background:#19191f; }
+.quest-reward-art>img { display:block; width:100%; height:100%; object-fit:cover; }
+.quest-reward-art.circular { border-radius:50%; padding:7px; background:#14141a; overflow:visible; }
+.quest-reward-art.circular>img { border-radius:50%; width:66px; height:66px; }
+.progress-ring { position:absolute; inset:0; width:80px; height:80px; transform:rotate(-90deg); fill:none; stroke:#50515d; stroke-width:4; }
+.progress-ring .progress-value { stroke:#5865f2; }
+.finished .progress-ring .progress-value { stroke:#43b581; }
+.progress-percent { display:grid; place-items:center; position:absolute; inset:8px; border-radius:50%; background:#080a22a6; color:white; font-size:18px; line-height:24px; font-weight:700; }
+.reward-fallback { display:grid; place-items:center; height:100%; font-size:32px; color:#9b9baa; }
+.quest-footer { display:flex; flex-wrap:wrap; gap:8px; border-top:1px solid #36363d; padding:12px; border-radius:0 0 9px 9px; }
+.quest-footer .button { flex:1 1 140px; font-size:14px; font-weight:600; min-width:0; padding:8px 10px; }
+.quest-footer .button:disabled { opacity:.45; }
