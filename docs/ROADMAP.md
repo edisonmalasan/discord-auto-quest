@@ -133,6 +133,18 @@ like a client that cannot be reached. The launcher now runs from its own directo
 executable named relatively, and a running Discord is stopped first — which the user has agreed to
 by pressing the button that says restarting Discord ends whatever they were doing in it.
 
+**A restart now waits for the renderer.** Starting the launcher does not mean Discord is ready:
+the profile can still name the previous process's port, and the new debugger can open before its
+main page exists. The restart drops the previous session and waits up to thirty seconds for the
+new renderer to answer. The dashboard keeps checking while blocked, so a client that finishes
+starting later can still populate the quest list. Each status probe is bounded too, so a port that
+accepts a connection but never answers cannot strand the dashboard. Regression tests verify the
+stale-port and delayed-renderer sequence, stalled probes, and recovery from the blocked state.
+Live verification also restarted Discord once on the user's request, confirmed its new debugger
+port, and read eighteen available and six accepted quests after the client finished loading.
+The initial quest read can still encounter the loading client; the dashboard retries it without
+another restart, and a regression test covers that sequence too.
+
 **One thing the application cannot yet tell the user.** The script prints what it is doing, and
 the transport can read it — but the driver does not read it, so the application knows whether a
 game is being spoofed and not whether the script is working on a *video* quest, which is spoofed

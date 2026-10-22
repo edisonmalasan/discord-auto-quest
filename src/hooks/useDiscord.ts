@@ -112,8 +112,8 @@ export function useDiscord(): DiscordController {
     let cancelled = false;
 
     const start = async () => {
-      await look();
-      if (cancelled) {
+      const found = await look();
+      if (cancelled || !found?.ready) {
         return;
       }
       await read();
@@ -125,19 +125,29 @@ export function useDiscord(): DiscordController {
     };
   }, [look, read]);
 
-  // The quests are read again and again, because a quest counts in Discord's
-  // time and the interface has to keep up with it.
+  // Keep checking while blocked too: Discord can finish starting after the
+  // first check. Actions own the connection while they are in flight.
   useEffect(() => {
-    if (phase !== 'ready') {
+    if (phase === 'loading' || busy) {
       return;
     }
 
+    let polling = false;
     const timer = window.setInterval(() => {
-      void read();
+      if (polling) return;
+      polling = true;
+      void (async () => {
+        try {
+          const found = await look();
+          if (found?.ready) await read();
+        } finally {
+          polling = false;
+        }
+      })();
     }, POLL_MS);
 
     return () => window.clearInterval(timer);
-  }, [phase, read]);
+  }, [phase, busy, look, read]);
 
   const restart = useCallback(() => {
     setBusy(true);

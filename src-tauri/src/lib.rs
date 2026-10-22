@@ -10,7 +10,7 @@ pub mod quest;
 pub const VERSION: &str = env!("APP_VERSION");
 
 use discord::DiscordState;
-use error::{AppError, AppResult};
+use error::AppResult;
 use quest::reader::QuestList;
 use tauri::State;
 
@@ -43,11 +43,7 @@ async fn discord_status(state: State<'_, AppState>) -> AppResult<discord::Discor
 /// whatever the user was doing in it. The interface asks first.
 #[tauri::command]
 async fn relaunch_discord(state: State<'_, AppState>) -> AppResult<()> {
-    let install = quest::discord::Install::locate()
-        .ok_or_else(|| AppError::not_supported("Discord is not installed on this machine"))?;
-
-    install.launch_with_debugger()?;
-    state.discord.attach().await
+    state.discord.restart().await
 }
 
 /// The quests Discord has: the ones on offer, and the ones already accepted.
