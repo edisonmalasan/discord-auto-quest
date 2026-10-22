@@ -362,16 +362,16 @@ where current user-facing description changed. Do not mark unverified mechanism 
 `cubic-bezier(0.23, 1, 0.32, 1)`: 160 ms pointer press at scale 0.97; 200 ms menu opacity/scale
 from 0.95 with trigger origin; 125 ms tooltip fade. Keyboard navigation is instant.
 
-- [ ] **Step 1: Add the CSS motion with reduced-motion rules.** Remove the old wipe/stamp
+- [x] **Step 1: Add the CSS motion with reduced-motion rules.** Remove the old wipe/stamp
   entrances from the quest surface. No card lift, looping effects, stagger on polling, fake
   progress interpolation, or transitions that delay focus. Reduced motion removes transforms.
   Do not add tests that merely repeat CSS constants; inspect real interactions in the browser.
-- [ ] **Step 2: Run visual and interaction acceptance in the real browser and Tauri shell.**
+- [x] **Step 2: Run visual and interaction acceptance in the real browser and Tauri shell.**
   Compare the six reference variants at 880/1200/1600 px; inspect pointer interruption,
   keyboard/menu focus, Escape, reduced motion, long content, 200% text, broken media and repeated
   polling. Confirm 1/2/3 columns and stable scroll. Use fixtures only through test tooling, never
   a shipped demo/debug route. Save screenshots outside shipped assets and report discrepancies.
-- [ ] **Step 3: Run final code checks and resolve failures.**
+- [x] **Step 3: Run final code checks and resolve failures.**
 
   ```text
   npm test
@@ -388,11 +388,11 @@ from 0.95 with trigger origin; 125 ms tooltip fade. Keyboard navigation is insta
   available and report skipped/unavailable honestly. For packaging/metadata changes build the
   native app and run `npm run check:payload -- <built-executable-path>` against its actual output.
   Do not weaken size/notices/payload checks to accommodate test data or accidental dependencies.
-- [ ] **Step 4: Verify against live Discord without account mutations.** Compare actual accepted,
+- [x] **Step 4: Verify against live Discord without account mutations.** Compare actual accepted,
   available/completed states and counts with the client. If it is unreachable, report the
   limitation; restart requires a new explicit user request. Do not invoke `npm run verify`
   or Work merely to check visual fidelity: those can execute the completion mechanism.
-- [ ] **Step 5: Update authoritative docs and review the whole diff.** Describe implemented
+- [x] **Step 5: Update authoritative docs and review the whole diff.** Describe implemented
   tokens/components, font substitution if any, supported handoffs, and known limitations in
   DESIGN.md. Route CONTEXT.md to that current source. Mark roadmap UI outcomes only as proved;
   retain N3/fresh accept-and-work as unverified unless separately demonstrated. Perform a fresh
@@ -415,3 +415,10 @@ implementation branch from a commit containing them, rather than from main witho
 Use a `feat/` task branch and upstream tracking, respecting the repository's clean-tree and
 pull requirements. Never discard other work. Commit at the task boundaries above and push
 checkpoints. The final PR must include the approved design and its implementation evidence.
+
+Implementation and local acceptance verified on 2026-10-23: frontend 76 tests, Rust 36 tests,
+three browser/CDP tests, type-check, format, clippy, frontend/native builds, acceptance and
+built-executable payload checks passed. Read-only native views showed 4 ongoing / 16 available /
+5 completed; no live completion mechanism was invoked. Delivery gates (Steps 6–7) are tracked
+by [PR #30](https://github.com/edisonmalasan/discord-auto-quest/pull/30) and the final delivery report.
+Two minor review follow-ups are recorded in DESIGN.md.
