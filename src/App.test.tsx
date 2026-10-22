@@ -156,6 +156,8 @@ describe('App', () => {
           quest({
             name: 'Deadzone Rogue 2',
             state: 'completed',
+            rewardClaimState: 'unclaimed',
+            rewardClaimable: true,
             progressSeconds: 900,
           }),
         ],

@@ -171,7 +171,7 @@ above, using serde defaults so old minimal summaries still deserialize.
 and `searchQuests` using the contracts above. Existing `taskLabel`, `duration`, and date helpers
 can remain; remove the old false awaiting-claim inference when its consumers migrate.
 
-- [ ] **Step 1: Write failing model tests with a fixed `now`.** Assert:
+- [x] **Step 1: Write failing model tests with a fixed `now`.** Assert:
 
   ```ts
   expect(views.ongoing.map(c => c.quest.id)).toEqual(['active', 'expired-accepted']);
@@ -188,15 +188,15 @@ can remain; remove the old false awaiting-claim inference when its consumers mig
   count-unit tasks, 100% without completion, negative/non-finite values, stable ID tie-breaks,
   and case-insensitive matching across all three search fields. Deduplicate by ID, preferring
   the accepted/completed record if both feed arrays contain it.
-- [ ] **Step 2: Run `npm test -- src/lib/quest-view.test.ts`; confirm the expected failure.**
-- [ ] **Step 3: Implement the two exported functions.** Apply spec ordering; classify completion
+- [x] **Step 2: Run `npm test -- src/lib/quest-view.test.ts`; confirm the expected failure.**
+- [x] **Step 3: Implement the two exported functions.** Apply spec ordering; classify completion
   before expiry. A claimed timestamp/state wins over claimability, then confirmed claimability,
   then confirmed closed reward window, otherwise unknown. Search does not change source counts.
   Filter `awaitingUser` to unfinished, unexpired accepted quests; make `awaitingClaim` select
   only confirmed claimable cards or remove it after Task 3 switches to this model.
-- [ ] **Step 4: Run both quest helper suites; require passing assertions.**
+- [x] **Step 4: Run both quest helper suites; require passing assertions.**
   `npm test -- src/lib/quest-view.test.ts src/lib/quests.test.ts`.
-- [ ] **Step 5: Commit.** Message: `feat(quests): derive honest quest views and reward states`.
+- [x] **Step 5: Commit.** Message: `feat(quests): derive honest quest views and reward states`.
 
 ## Task 3: Build the branded sidebar workspace
 
@@ -416,4 +416,5 @@ implementation branch from a commit containing them, rather than from main witho
 Use a `feat/` task branch and upstream tracking, respecting the repository's clean-tree and
 pull requirements. Never discard other work. Commit at the task boundaries above and push
 checkpoints. The final PR must include the approved design and its implementation evidence.
+
 
