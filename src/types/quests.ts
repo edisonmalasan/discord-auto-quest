@@ -109,6 +109,8 @@ export interface QuestFeed {
 
 /** Where Discord stands, and what the user has to do about it. */
 export interface DiscordStatus {
+  /** Observed process state; optional for older command responses. */
+  running?: boolean | null;
   /** Whether Discord is installed on this machine. */
   installed: boolean;
   /** Whether the application can talk to Discord right now. */

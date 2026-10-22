@@ -255,8 +255,8 @@ const READ_STATE: &str = r#"(function () {
 
     const now = Date.now();
     const expired = function (quest) {
-      return !!(quest.config && quest.config.expiresAt &&
-        new Date(quest.config.expiresAt).getTime() < now);
+      const end = quest.config && quest.config.expiresAt;
+      return typeof end === 'string' && Number.isFinite(Date.parse(end)) && Date.parse(end) <= now;
     };
 
     const summarise = function (quest) {
@@ -277,6 +277,7 @@ const READ_STATE: &str = r#"(function () {
       const number = function (value) {
         return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
       };
+      const integer = function (value) { return Number.isInteger(value) && value >= 0 ? value : null; };
       const text = function (value) {
         return typeof value === 'string' && value && value !== 'PLACEHOLDER' ? value : null;
       };
@@ -309,28 +310,28 @@ const READ_STATE: &str = r#"(function () {
       };
 
       return {
-        id: quest.id,
-        name: messages.questName || quest.id,
-        gameTitle: messages.gameTitle || null,
-        publisher: messages.gamePublisher || null,
+        id: String(quest.id),
+        name: text(messages.questName) || String(quest.id),
+        gameTitle: text(messages.gameTitle),
+        publisher: text(messages.gamePublisher),
         tasks: taskNames,
-        expiresAt: config.expiresAt || null,
-        state: quest.userStatus && quest.userStatus.completedAt
+        expiresAt: timestamp(config.expiresAt),
+        state: completedAt
           ? 'completed'
-          : (quest.userStatus && quest.userStatus.enrolledAt ? 'claimed' : 'available'),
+          : (timestamp(user.enrolledAt) ? 'claimed' : 'available'),
         progressSeconds: progress,
         targetSeconds: target,
-        rewardOrbs: rewards.length ? (reward.orbQuantity || null) : null,
+        rewardOrbs: rewards.length ? integer(reward.orbQuantity) : null,
         rewardName: rewards.length
-          ? ((reward.messages && reward.messages.name) || reward.name || null)
+          ? (text(reward.messages && reward.messages.name) || text(reward.name))
           : null,
-        premiumOrbs: rewards.length ? (reward.premiumOrbQuantity || null) : null,
+        premiumOrbs: rewards.length ? integer(reward.premiumOrbQuantity) : null,
         banner: asset('questBarHero') || asset('hero'),
         logotype: asset('logotypeDark') || asset('logotypeLight'),
         tile: asset('gameTileDark') || asset('gameTileLight'),
-        ctaLabel: cta.buttonLabel || null,
-        ctaLink: cta.link || null,
-        accent: config.colors && config.colors.primary ? config.colors.primary : null,
+        ctaLabel: text(cta.buttonLabel),
+        ctaLink: text(cta.link),
+        accent: text(config.colors && config.colors.primary),
         enrolledAt: timestamp(user.enrolledAt),
         completedAt: completedAt,
         rewardClaimedAt: claimedAt,
@@ -338,7 +339,7 @@ const READ_STATE: &str = r#"(function () {
         rewardClaimable: completedAt && claimKnown && !claimedAt && rewardExpiresAt
           ? Date.parse(rewardExpiresAt) > now : (claimedAt ? false : null),
         rewardExpiresAt: rewardExpiresAt,
-        claimedRewardOrbs: number(user.orbQuantityClaimed),
+        claimedRewardOrbs: integer(user.orbQuantityClaimed),
         rewardImage: text(reward.asset),
         rewardType: typeof reward.type === 'number' || typeof reward.type === 'string' ? String(reward.type) : null,
         publisherVerified: null,

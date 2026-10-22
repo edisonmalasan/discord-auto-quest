@@ -15,8 +15,7 @@ Testing Library. Use CSS motion; no animation dependency. Use the existing opene
 **Spec:** [Approved UI design](../specs/2026-10-23-ui-redesign-design.md). Read it together with
 [PRODUCT.md](../../../PRODUCT.md) before executing.
 
-**Status:** Awaiting implementation-plan review and execution-method selection. This document
-does not authorize starting the implementation before that review.
+**Status:** Approved for native execution on 2026-10-23. Progress is tracked below.
 
 ## Global Constraints
 
@@ -331,27 +330,27 @@ existing installed/ready/action/profile fields.
 Keep existing controller methods. A connected debugger plus a failed quest read is not a fresh
 usable feed. If needed, add observed backend `running: boolean` to distinguish closed Discord.
 
-- [ ] **Step 1: Write failing controller tests with deferred promises/fake timers.** Assert a
+- [x] **Step 1: Write failing controller tests with deferred promises/fake timers.** Assert a
   later failed read retains the previous feed and marks it stale, recovery clears stale/read
   errors, a late pre-restart read cannot overwrite the new generation, and two same-tick Work
   calls cause one IPC operation. Distinguish action failure from read failure so a successful
   poll cannot erase a failed Stop notification. Retain existing blocked-startup recovery tests.
-- [ ] **Step 2: Run `npm test -- src/hooks/useDiscord.test.ts`; confirm the missing behavior fails.**
-- [ ] **Step 3: Implement generation/request guards and separate errors.** Serialize reads and
+- [x] **Step 2: Run `npm test -- src/hooks/useDiscord.test.ts`; confirm the missing behavior fails.**
+- [x] **Step 3: Implement generation/request guards and separate errors.** Serialize reads and
   operations where they share connection state; use an immediate ref guard for action reentry.
   Keep the 4000 ms poll interval, pause while operations are pending, and ignore obsolete replies.
   Set working only after successful Work, unset after successful Stop; do not silently report
   stopped when disconnected and unconfirmed. Preserve a usable Stop/retry path for uncertain
   operation state. Do not turn progress into an inferred active quest.
-- [ ] **Step 4: Write UI recovery tests, then integrate ConnectionStatus.** No automatic restart,
+- [x] **Step 4: Write UI recovery tests, then integrate ConnectionStatus.** No automatic restart,
   restart interruption text beside its deliberate button, unknown initial counts, stale visible
   data with live-dependent actions disabled, and resolved errors disappearing after confirmed
   recovery. Verify menu/focus/scroll/search survive same-ID polling and removed cards restore
   focus safely. Operation errors stay beside the global control.
-- [ ] **Step 5: Run the controller, connection and App suites to green.** If backend status changed,
+- [x] **Step 5: Run the controller, connection and App suites to green.** If backend status changed,
   add tests proving closed versus running-without-debugger and run Rust tests too. Verify there
   is exactly one global Work/Stop control across all views and repeated clicks are guarded.
-- [ ] **Step 6: Commit.** Message: `fix(ui): preserve honest state through polling and recovery`.
+- [x] **Step 6: Commit.** Message: `fix(ui): preserve honest state through polling and recovery`.
 
 ## Task 7: Motion, visual acceptance, and delivery
 

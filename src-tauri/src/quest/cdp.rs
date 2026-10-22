@@ -55,6 +55,7 @@ impl Target {
 
 /// A live connection to one target's renderer.
 pub struct Session {
+    reader_task: tokio::task::JoinHandle<()>,
     /// The half we send on.
     outgoing: futures_util::stream::SplitSink<
         WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
@@ -93,7 +94,7 @@ impl Session {
         let (outgoing, mut source) = stream.split();
         let (sender, incoming) = mpsc::unbounded_channel();
 
-        tokio::spawn(async move {
+        let reader_task = tokio::spawn(async move {
             say!("reader started");
             while let Some(Ok(message)) = source.next().await {
                 let text = match message {
@@ -112,6 +113,7 @@ impl Session {
         });
 
         let mut session = Session {
+            reader_task,
             outgoing,
             incoming,
             buffered: VecDeque::new(),
@@ -240,6 +242,12 @@ impl Session {
         }
 
         self.incoming.recv().await
+    }
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        self.reader_task.abort();
     }
 }
 

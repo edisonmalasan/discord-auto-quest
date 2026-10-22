@@ -10,6 +10,14 @@ function show(overrides: Partial<QuestSummary>) {
  return render(<QuestCard card={card} stale={false} menuOpen={false} onMenuChange={()=>{}}/>);
 }
 describe('native quest card variants',()=>{
+ it('resolves root-relative Discord artwork against the CDN rather than the app',()=>{
+  show({rewardImage:'/quests/reward.png'});
+  expect(screen.getByAltText('700 Orbs')).toHaveAttribute('src','https://cdn.discordapp.com/quests/reward.png');
+ });
+ it('preserves the streaming voice-channel requirement',()=>{
+  show({state:'claimed',tasks:['STREAM_ON_DESKTOP'],taskDetails:[{kind:'STREAM_ON_DESKTOP',value:0,target:900,unit:'seconds',platform:'Desktop'}]});
+  expect(screen.getByText(/voice channel with somebody/)).toBeInTheDocument();
+ });
  it('shows zero progress and reward art without using the game tile',()=>{
   show({state:'claimed',rewardImage:'quests/reward.png',tile:'quests/game.png'});
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','0');

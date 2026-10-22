@@ -7,6 +7,6 @@ export function questAsset(path: string | null): string | null {
 }
 export function QuestImage({ src, alt, className, fallback }: { src: string | null; alt: string; className?: string; fallback?: ReactNode }) {
   const [failed, setFailed] = useState<string | null>(null);
-  const url = src?.startsWith('/') ? src : questAsset(src);
+  const url = src === '/orb-reward.svg' ? src : questAsset(src);
   return url && url !== failed ? <img className={className} src={url} alt={alt} loading="lazy" onError={() => setFailed(url)} /> : <>{fallback}</>;
 }

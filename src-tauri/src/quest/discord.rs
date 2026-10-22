@@ -70,6 +70,25 @@ impl Install {
         contents.lines().next()?.trim().parse().ok()
     }
 
+    /// Observe only the stable client's process name; never start or stop it.
+    pub fn is_running(&self) -> Option<bool> {
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            std::process::Command::new("tasklist")
+                .args(["/FI", "IMAGENAME eq Discord.exe", "/FO", "CSV", "/NH"])
+                .creation_flags(0x08000000)
+                .output()
+                .ok()
+                .filter(|output| output.status.success())
+                .map(|output| process_list_has_discord(&String::from_utf8_lossy(&output.stdout)))
+        }
+        #[cfg(not(windows))]
+        {
+            None
+        }
+    }
+
     /// Whether the debugger is answering right now.
     pub async fn debugger_is_reachable(&self) -> bool {
         match self.debug_port() {
@@ -131,6 +150,15 @@ impl Install {
 
         Ok(())
     }
+}
+
+#[cfg(any(windows, test))]
+fn process_list_has_discord(output: &str) -> bool {
+    output.lines().any(|line| {
+        line.split(',')
+            .next()
+            .is_some_and(|name| name.trim_matches('"').eq_ignore_ascii_case("Discord.exe"))
+    })
 }
 
 /// Stop the Discord that is running, if any.
@@ -268,6 +296,17 @@ pub fn profile_directory(install: &Install) -> &Path {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_process_probe_recognizes_only_the_stable_discord_executable() {
+        assert!(process_list_has_discord(
+            "\"Discord.exe\",\"123\",\"Console\""
+        ));
+        assert!(!process_list_has_discord(
+            "\"DiscordCanary.exe\",\"123\",\"Console\""
+        ));
+        assert!(!process_list_has_discord("INFO: No tasks are running"));
+    }
 
     #[tokio::test]
     async fn attaching_waits_for_the_new_port_and_a_renderer_after_restart() {

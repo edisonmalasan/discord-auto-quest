@@ -1,6 +1,6 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQuest, makeFeed } from './test/fixtures/quests';
 import type { DiscordStatus, QuestFeed } from './types/quests';
 const status = vi.fn<() => Promise<DiscordStatus>>();
@@ -20,6 +20,7 @@ const feed = makeFeed({
  available: [makeQuest({ id: '2', name: 'Offered Quest' })],
 });
 describe('the quest workspace', () => {
+ afterEach(()=>vi.useRealTimers());
  beforeEach(() => {
   vi.clearAllMocks(); status.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
   list.mockResolvedValue(feed); work.mockResolvedValue(true); stop.mockResolvedValue(undefined); restart.mockResolvedValue(undefined);
@@ -77,5 +78,23 @@ describe('the quest workspace', () => {
   await userEvent.click(screen.getByRole('button', { name: 'Work my quests' }));
   expect(await screen.findByText('The quest script did not attach.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
+ });
+ it('keeps last data visible but disables live actions until a failed poll recovers',async()=>{
+  vi.useFakeTimers();render(<App/>);await act(async()=>{});
+  list.mockRejectedValueOnce({code:'IO_ERROR',message:'Temporary reader failure',retryable:true});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(4000)});
+  expect(screen.getByText('Active Quest')).toBeInTheDocument();
+  expect(screen.getByText(/last successful read/)).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeDisabled();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(4000)});
+  expect(screen.queryByText('Temporary reader failure')).not.toBeInTheDocument();
+  expect(screen.queryByText(/last successful read/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeEnabled();
+ });
+ it('explains why a non-desktop feed cannot be worked',async()=>{
+  list.mockResolvedValue({...feed,desktopApp:false});render(<App/>);
+  await screen.findByText('Active Quest');
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeDisabled();
+  expect(screen.getByText('Working quests requires the Discord desktop client.')).toBeInTheDocument();
  });
 });

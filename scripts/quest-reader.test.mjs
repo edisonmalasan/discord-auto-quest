@@ -21,6 +21,17 @@ const quest = (overrides = {}) => ({ id: '1', config: {
 }, ...overrides });
 
 describe('the real read-only client expression', () => {
+  it('does not invent completion or reject the feed for malformed optional metadata', () => {
+    const q = quest({ userStatus: { enrolledAt: '2026-10-01', completedAt: 'not-a-date' } });
+    q.config.messages.gamePublisher = { changedShape: true };
+    q.config.ctaConfig = { buttonLabel: 123, link: { invalid: true } };
+    q.config.expiresAt = 123;
+    const summary = read([q]).claimed[0];
+    expect(summary.state).toBe('claimed');
+    expect(summary.publisher).toBeNull();
+    expect(summary.ctaLink).toBeNull();
+    expect(summary.expiresAt).toBeNull();
+  });
   it('separates a claimed reward from completed and unknown claim evidence', () => {
     const feed = read([
       quest({ id: '1', userStatus: { enrolledAt: '2026-10-01', completedAt: '2026-10-02', claimedAt: '2026-10-22T12:00:00Z', orbQuantityClaimed: 240 } }),

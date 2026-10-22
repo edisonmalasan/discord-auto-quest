@@ -1,5 +1,5 @@
 import type { QuestCardModel } from '../lib/quest-view';
-import { duration, taskLabel } from '../lib/quests';
+import { duration, taskLabel, requirement } from '../lib/quests';
 import { QuestImage } from './QuestImage';
 import { QuestProgress } from './QuestProgress';
 import { QuestActions } from './QuestActions';
@@ -38,7 +38,9 @@ function description(card: QuestCardModel) {
   if (card.expired) return 'This quest has ended.';
   if (q.tasks.some(t => t.startsWith('WATCH_VIDEO'))) return `Watch the video to win ${q.rewardName ?? 'your reward'}!`;
   if (card.progress?.unit === 'count') return `Reach ${card.progress.target} achievements in ${q.gameTitle ?? 'the activity'} to earn your reward.`;
-  if (card.progress?.unit === 'seconds') return `${taskLabel(card.progress.taskKind)}${q.gameTitle ? `: ${q.gameTitle}` : ''} for ${duration(card.progress.target)} to earn ${q.rewardName ?? 'your reward'}.`;
-  return `Complete a supported task in Discord: ${q.tasks.map(taskLabel).join(' / ')}.`;
+  const needs = requirement(q);
+  const extra = needs ? ` This quest ${needs}.` : '';
+  if (card.progress?.unit === 'seconds') return `${taskLabel(card.progress.taskKind)}${q.gameTitle ? `: ${q.gameTitle}` : ''} for ${duration(card.progress.target)} to earn ${q.rewardName ?? 'your reward'}.${extra}`;
+  return `Complete a supported task in Discord: ${q.tasks.map(taskLabel).join(' / ')}.${extra}`;
 }
 export function OrbIcon() { return <svg className="orb-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 1 7 7-7 7-7-7z" fill="none" stroke="currentColor" strokeWidth="2"/><path d="m8 4 4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5"/></svg>; }

@@ -18,7 +18,7 @@
 use serde::Serialize;
 use tokio::sync::Mutex;
 
-use crate::error::{AppError, AppResult};
+use crate::error::{AppError, AppResult, ErrorCode};
 use crate::quest::cdp::Session;
 use crate::quest::discord;
 use crate::quest::driver;
@@ -28,6 +28,7 @@ use crate::quest::reader::{self, QuestList, RunningGame};
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DiscordStatus {
+    pub running: Option<bool>,
     /// Whether Discord is installed on this machine.
     pub installed: bool,
     /// Whether the application can talk to Discord right now.
@@ -37,6 +38,120 @@ pub struct DiscordStatus {
     pub action: Option<String>,
     /// Where Discord keeps its profile.
     pub profile: Option<String>,
+}
+
+#[cfg(test)]
+mod recovery_tests {
+    use super::*;
+    use futures_util::{SinkExt, StreamExt};
+
+    #[tokio::test]
+    async fn dropping_a_session_closes_its_websocket_reader() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            let request = socket.next().await.unwrap().unwrap();
+            let message: serde_json::Value =
+                serde_json::from_str(request.to_text().unwrap()).unwrap();
+            socket
+                .send(tokio_tungstenite::tungstenite::Message::Text(
+                    serde_json::json!({"id":message["id"],"result":{}})
+                        .to_string()
+                        .into(),
+                ))
+                .await
+                .unwrap();
+            let next = tokio::time::timeout(std::time::Duration::from_secs(2), socket.next()).await;
+            assert!(matches!(
+                next,
+                Ok(None)
+                    | Ok(Some(Err(_)))
+                    | Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Close(_))))
+            ));
+        });
+        let session = Session::connect(&format!("ws://127.0.0.1:{port}"))
+            .await
+            .unwrap();
+        drop(session);
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn stop_without_a_connection_does_not_report_a_false_success() {
+        assert!(DiscordState::default().stop_script().await.is_err());
+    }
+
+    #[tokio::test]
+    async fn an_unresponsive_quest_read_releases_the_connection_for_recovery() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            let request = socket.next().await.unwrap().unwrap();
+            let message: serde_json::Value =
+                serde_json::from_str(request.to_text().unwrap()).unwrap();
+            socket
+                .send(tokio_tungstenite::tungstenite::Message::Text(
+                    serde_json::json!({"id":message["id"],"result":{}})
+                        .to_string()
+                        .into(),
+                ))
+                .await
+                .unwrap();
+            let _ = socket.next().await;
+            tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+        });
+        let session = Session::connect(&format!("ws://127.0.0.1:{port}"))
+            .await
+            .unwrap();
+        let state = DiscordState {
+            session: Mutex::new(Some(session)),
+        };
+        let result = tokio::time::timeout(std::time::Duration::from_secs(12), state.quests()).await;
+        server.abort();
+        assert!(result
+            .expect("the quest read must time out itself so recovery controls are not held forever")
+            .is_err());
+        assert!(state.session.lock().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn a_closed_debugger_is_discarded_so_the_next_read_can_reattach() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            let request = socket.next().await.unwrap().unwrap();
+            let message: serde_json::Value =
+                serde_json::from_str(request.to_text().unwrap()).unwrap();
+            socket
+                .send(tokio_tungstenite::tungstenite::Message::Text(
+                    serde_json::json!({"id":message["id"],"result":{}})
+                        .to_string()
+                        .into(),
+                ))
+                .await
+                .unwrap();
+            let _ = socket.next().await;
+            socket.close(None).await.unwrap();
+        });
+        let session = Session::connect(&format!("ws://127.0.0.1:{port}"))
+            .await
+            .unwrap();
+        let state = DiscordState {
+            session: Mutex::new(Some(session)),
+        };
+        assert!(state.quests().await.is_err());
+        assert!(
+            state.session.lock().await.is_none(),
+            "a closed session must not poison every subsequent read"
+        );
+        server.await.unwrap();
+    }
 }
 
 /// The application's connection to Discord.
@@ -62,6 +177,7 @@ impl DiscordState {
     pub async fn status(&self) -> DiscordStatus {
         let Some(install) = discord::Install::locate() else {
             return DiscordStatus {
+                running: Some(false),
                 installed: false,
                 ready: false,
                 action: Some(
@@ -74,9 +190,16 @@ impl DiscordState {
 
         let profile = Some(discord::profile_directory(&install).display().to_string());
         let ready = install.debugger_is_reachable().await;
+        let running = if ready {
+            Some(true)
+        } else {
+            install.is_running()
+        };
 
         let action = if ready {
             None
+        } else if running == Some(false) {
+            Some("Discord is closed. Restart Discord to open it so the application can read your quests.".to_string())
         } else {
             Some(
                 "Discord has to be restarted so the application can drive it. \
@@ -86,6 +209,7 @@ impl DiscordState {
         };
 
         DiscordStatus {
+            running,
             installed: true,
             ready,
             action,
@@ -126,7 +250,9 @@ impl DiscordState {
     pub async fn stop_script(&self) -> AppResult<()> {
         let mut guard = self.session.lock().await;
         let Some(session) = guard.as_mut() else {
-            return Ok(());
+            return Err(AppError::network(
+                "Discord is disconnected. Reconnect, then try Stop again.",
+            ));
         };
 
         driver::stop(session).await
@@ -148,7 +274,26 @@ impl DiscordState {
             AppError::not_supported("Discord has to be attached to before its quests can be read")
         })?;
 
-        reader::read_state(session).await
+        let result = match tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            reader::read_state(session),
+        )
+        .await
+        {
+            Ok(result) => result,
+            Err(_) => Err(AppError::network(
+                "Discord stopped answering the quest read. Try again to reconnect.",
+            )),
+        };
+        if result.as_ref().is_err_and(|error| {
+            matches!(
+                error.code,
+                ErrorCode::IoError | ErrorCode::NetworkUnavailable
+            )
+        }) {
+            *guard = None;
+        }
+        result
     }
 
     /// The games Discord believes are running.

@@ -9,6 +9,12 @@ const q1=makeQuest({id:'111',state:'claimed',name:'First Quest'});
 const q2=makeQuest({id:'222',state:'claimed',name:'Second Quest'});
 function tree(quests=[q1,q2]) { return <QuestWorkspace views={buildQuestViews(makeFeed({claimed:quests}),Date.now())} loading={false} stale={false} controls={null} connection={null}/>; }
 describe('quest menus',()=>{
+ it('announces newly confirmed completion without announcing initial history',async()=>{
+  const {rerender}=render(tree());
+  expect(screen.queryByText('First Quest completed. Check Completed for your reward.')).not.toBeInTheDocument();
+  rerender(tree([{...q1,state:'completed',completedAt:'2026-10-23T00:00:00Z'},q2]));
+  expect(await screen.findByText('First Quest completed. Check Completed for your reward.')).toBeInTheDocument();
+ });
  it('opens one menu, supports arrows and Escape, and preserves same-ID refresh',async()=>{
   const user=userEvent.setup(); const {rerender}=render(tree());
   const first=screen.getByRole('button',{name:'Quest actions for First Quest'});
