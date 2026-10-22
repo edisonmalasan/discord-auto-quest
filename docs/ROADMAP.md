@@ -110,6 +110,14 @@ attach, that Discord has probably moved its internals, and that the script needs
 
 ### What is left
 
+**UI redesign — proposed, awaiting written-spec review.** The user selected a sidebar workspace
+with Ongoing, Available, and Completed views, Discord-style controls throughout, the display name
+Discord Auto Quest, an original quest-badge logo, and explicit actions such as "Accept in Discord"
+and "Claim in Discord". The [design spec](superpowers/specs/2026-10-23-ui-redesign-design.md)
+records the intended card variants, live-data requirements, recovery behavior, and motion.
+Production UI implementation has not started; the existing interface described above remains
+the shipped behavior.
+
 **A fresh accept-and-work cycle.** N1 was proved with a quest that had already been accepted.
 Accepting a quest in Discord's own Quests tab and then working it from here has not been driven
 end to end by a person. So has N3.
