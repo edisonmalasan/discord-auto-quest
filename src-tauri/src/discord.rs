@@ -45,6 +45,79 @@ mod recovery_tests {
     use super::*;
     use futures_util::{SinkExt, StreamExt};
 
+    async fn operation_session(acknowledge_work: bool) -> (Session, tokio::task::JoinHandle<()>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let server = tokio::spawn(async move {
+            let (stream, _) = listener.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            // Only imitate protocol replies. Never execute the supplied expressions.
+            let replies = if acknowledge_work { 3 } else { 1 };
+            for _ in 0..replies {
+                let request = socket.next().await.unwrap().unwrap();
+                let message: serde_json::Value =
+                    serde_json::from_str(request.to_text().unwrap()).unwrap();
+                socket.send(tokio_tungstenite::tungstenite::Message::Text(
+                    serde_json::json!({"id":message["id"],"result":{"result":{"type":"boolean","value":true}}}).to_string().into()
+                )).await.unwrap();
+            }
+            let _ = socket.next().await;
+            if acknowledge_work {
+                socket.close(None).await.unwrap();
+            } else {
+                tokio::time::sleep(std::time::Duration::from_secs(20)).await;
+            }
+        });
+        (
+            Session::connect(&format!("ws://127.0.0.1:{port}"))
+                .await
+                .unwrap(),
+            server,
+        )
+    }
+
+    #[tokio::test]
+    async fn stalled_operations_release_the_session_and_report_uncertainty() {
+        for work in [true, false] {
+            let (session, server) = operation_session(false).await;
+            let state = DiscordState {
+                session: Mutex::new(Some(session)),
+            };
+            let result = tokio::time::timeout(std::time::Duration::from_secs(12), async {
+                if work {
+                    state.run_script().await.map(|_| ())
+                } else {
+                    state.stop_script().await
+                }
+            })
+            .await;
+            server.abort();
+            let error = result
+                .expect("operations must release recovery controls")
+                .unwrap_err();
+            assert_eq!(
+                serde_json::to_value(error.code).unwrap(),
+                "OPERATION_UNCERTAIN"
+            );
+            assert!(state.session.lock().await.is_none());
+        }
+    }
+
+    #[tokio::test]
+    async fn a_work_acknowledgment_failure_is_not_a_known_pre_dispatch_failure() {
+        let (session, server) = operation_session(true).await;
+        let state = DiscordState {
+            session: Mutex::new(Some(session)),
+        };
+        let error = state.run_script().await.unwrap_err();
+        assert_eq!(
+            serde_json::to_value(error.code).unwrap(),
+            "OPERATION_UNCERTAIN"
+        );
+        assert!(state.session.lock().await.is_none());
+        server.await.unwrap();
+    }
+
     #[tokio::test]
     async fn dropping_a_session_closes_its_websocket_reader() {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -241,9 +314,26 @@ impl DiscordState {
             AppError::not_supported("Discord has to be attached to before a quest can be worked")
         })?;
 
-        driver::run(session).await?;
-
-        driver::is_spoofing(session).await
+        // The wrapper returns immediately after dispatch, rather than awaiting
+        // quest completion. A missing reply is uncertainty, never permission
+        // to run another payload. Cancel the transport wait, not renderer work.
+        let result = tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            driver::run(session).await?;
+            driver::is_spoofing(session).await
+        })
+        .await;
+        match result {
+            Ok(Ok(value)) => Ok(value),
+            failure => {
+                *guard = None;
+                let cause = match failure {
+                    Ok(Err(error)) => error.to_string(),
+                    _ => "Discord stopped answering".to_string(),
+                };
+                Err(AppError::new(ErrorCode::OperationUncertain,
+                    format!("Work outcome is unknown. Reconnect and try Stop before working again. ({cause})"), false))
+            }
+        }
     }
 
     /// Put Discord's own methods back.
@@ -255,7 +345,22 @@ impl DiscordState {
             ));
         };
 
-        driver::stop(session).await
+        match tokio::time::timeout(std::time::Duration::from_secs(10), driver::stop(session)).await
+        {
+            Ok(Ok(())) => Ok(()),
+            failure => {
+                *guard = None;
+                let cause = match failure {
+                    Ok(Err(error)) => error.to_string(),
+                    _ => "Discord stopped answering".to_string(),
+                };
+                Err(AppError::new(
+                    ErrorCode::OperationUncertain,
+                    format!("Stop could not be confirmed. Reconnect and try Stop again. ({cause})"),
+                    true,
+                ))
+            }
+        }
     }
 
     /// Read Discord's quest state.

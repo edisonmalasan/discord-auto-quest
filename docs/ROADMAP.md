@@ -66,7 +66,8 @@ See [DESIGN.md](../DESIGN.md) for the implemented system and documented fidelity
 confirmed claimability and a separate reward deadline. Expired accepted quests remain visible.
 Failed reads retain a marked stale feed, failed operations survive unrelated polls, and restart
 remains deliberate. Closed/stalled transports are discarded so later polls can reconnect;
-Stop cannot report success without a connection. Frontend regressions and synthetic CDP tests
+Stop cannot report success without a connection. Work/Stop requests are bounded, and an uncertain
+Work outcome retains Stop while blocking another Work. Frontend regressions and synthetic CDP tests
 verify these failure paths. A read-only native-window check verified live views and clipboard
 sharing without exercising the quest-completion mechanism.
 

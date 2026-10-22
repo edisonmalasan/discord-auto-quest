@@ -36,6 +36,7 @@ export function useDiscord(): DiscordController {
   const generation = useRef(0);
   const reading = useRef<number | null>(null);
   const acting = useRef(false);
+  const needsStop = useRef(false);
 
   const poll = useCallback(async (epoch: number) => {
     if (reading.current === epoch) return;
@@ -66,7 +67,7 @@ export function useDiscord(): DiscordController {
   }, [poll]);
 
   const act = useCallback((action: Action) => {
-    if (acting.current) return;
+    if (acting.current || (action === 'work' && needsStop.current)) return;
     acting.current = true;
     const epoch = ++generation.current;
     setPendingAction(action); setOperationError(null);
@@ -77,10 +78,18 @@ export function useDiscord(): DiscordController {
         else if (action === 'work') await runQuestScript();
         else await stopQuestScript();
         if (!mounted.current || generation.current !== epoch) return;
-        setWorking(action === 'work');
+        needsStop.current = action === 'work';
+        setWorking(needsStop.current);
         await poll(epoch);
       } catch (failure) {
-        if (mounted.current && generation.current === epoch) setOperationError(toAppError(failure));
+        if (mounted.current && generation.current === epoch) {
+          const problem = toAppError(failure);
+          if (action === 'work' && problem.code === 'OPERATION_UNCERTAIN') {
+            needsStop.current = true;
+            setWorking(true);
+          }
+          setOperationError(problem);
+        }
       } finally {
         acting.current = false;
         if (mounted.current && generation.current === epoch) setPendingAction(null);

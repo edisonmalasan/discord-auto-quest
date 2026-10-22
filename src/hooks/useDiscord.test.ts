@@ -73,6 +73,20 @@ describe('useDiscord', () => {
     await act(async () => acknowledge(true));
   });
 
+  it('keeps Stop available and prevents another Work after an uncertain dispatch', async () => {
+    runQuestScript.mockRejectedValue({ code: 'OPERATION_UNCERTAIN', message: 'Work outcome is unknown. Try Stop before working again.', retryable: false });
+    const { result } = renderHook(() => useDiscord());
+    await waitFor(() => expect(result.current.feed).not.toBeNull());
+    act(() => result.current.work());
+    await waitFor(() => expect(result.current.busy).toBe(false));
+    expect(result.current.working).toBe(true);
+    act(() => result.current.work());
+    expect(runQuestScript).toHaveBeenCalledTimes(1);
+    act(() => result.current.stop());
+    await waitFor(() => expect(stopQuestScript).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.working).toBe(false));
+  });
+
   it('does not erase a failed Stop when a later read succeeds', async () => {
     stopQuestScript.mockRejectedValue(Error('Stop failed'));
     const { result } = renderHook(() => useDiscord());

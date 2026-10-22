@@ -6,6 +6,8 @@ use serde::Serialize;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ErrorCode {
+    /// A renderer operation was dispatched but its outcome could not be confirmed.
+    OperationUncertain,
     /// The Discord debugger could not be reached, or answered with a failure status.
     NetworkUnavailable,
     /// Discord answered, but the payload was not a usable quest state.

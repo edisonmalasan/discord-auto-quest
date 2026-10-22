@@ -337,12 +337,26 @@ mod tests {
                     std::thread::sleep(Duration::from_millis(10));
                     continue;
                 };
+                stream.set_nonblocking(false).unwrap();
                 stream
                     .set_read_timeout(Some(Duration::from_secs(1)))
                     .unwrap();
                 let mut request = [0; 2048];
-                let received = stream.read(&mut request).unwrap();
-                assert!(received > 0, "the probe sends an HTTP request");
+                match stream.read(&mut request) {
+                    Ok(0) => continue,
+                    Ok(_) => {}
+                    Err(error)
+                        if matches!(
+                            error.kind(),
+                            std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                        ) =>
+                    {
+                        continue
+                    }
+                    Err(error) => {
+                        panic!("the test HTTP server could not read its request: {error}")
+                    }
+                }
                 // The port opens before the main renderer exists.
                 let body = if requests == 0 {
                     "[]".to_string()

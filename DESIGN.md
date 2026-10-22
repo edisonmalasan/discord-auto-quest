@@ -78,7 +78,7 @@ handoffs. The verified desktop route opens Quests and a visible instruction name
 select; a direct desktop quest route was not supported in the inspected client. External CTA
 buttons open supported HTTPS destinations and report failures. They never accept or claim here.
 Copy quest link only copies the public quest URL. One anchored menu opens at a time, with arrow
-navigation, Escape/outside dismissal, and focus restoration. Unsupported account/ad-setting
+navigation, Escape/outside dismissal, and keyboard focus restoration. Unsupported account/ad-setting
 controls are not simulated.
 
 ## Recovery and motion
@@ -87,7 +87,10 @@ Initial reads show skeletons and unknown counts. Failed later reads retain the l
 feed with a stale notice and disabled live-dependent actions. Connection errors clear on confirmed
 recovery; failed operation messages survive unrelated polls. Restart remains a deliberate action.
 Read generations ignore obsolete responses, duplicate operations are guarded, and stalled reads
-release the connection after ten seconds so later polls can reconnect.
+release the connection after ten seconds so later polls can reconnect. Work and Stop replies
+have the same bound. Once Work may have reached the renderer, an unconfirmed outcome keeps
+Stop available and blocks another Work until Stop or a deliberate restart succeeds. A transport
+timeout does not cancel renderer activity; the interface never reports that it did.
 
 Pointer presses scale to 0.97 over 160 ms. Pointer-opened menus enter with opacity and scale from
 0.95 over 200 ms, anchored at the trigger, using `cubic-bezier(0.23, 1, 0.32, 1)`. Keyboard-opened
@@ -96,3 +99,7 @@ no card hover lifts, looping decorations, interpolated progress, or poll-driven 
 
 The [approved design](docs/superpowers/specs/2026-10-23-ui-redesign-design.md) retains the visual
 references and intended behavior; the [roadmap](docs/ROADMAP.md) records verified progress.
+
+Two minor review follow-ups remain: native CSP currently falls back for artwork served only
+by media.discordapp.net, and outside menu dismissal onto non-focusable background can lose
+keyboard focus. Escape and menu actions restore trigger focus.
