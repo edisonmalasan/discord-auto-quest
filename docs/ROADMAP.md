@@ -110,11 +110,12 @@ attach, that Discord has probably moved its internals, and that the script needs
 
 ### What is left
 
-**UI redesign — proposed, awaiting written-spec review.** The user selected a sidebar workspace
+**UI redesign — design approved, implementation plan awaiting review.** The user selected a sidebar workspace
 with Ongoing, Available, and Completed views, Discord-style controls throughout, the display name
 Discord Auto Quest, an original quest-badge logo, and explicit actions such as "Accept in Discord"
 and "Claim in Discord". The [design spec](superpowers/specs/2026-10-23-ui-redesign-design.md)
-records the intended card variants, live-data requirements, recovery behavior, and motion.
+records the intended card variants, live-data requirements, recovery behavior, and motion. The
+[implementation plan](superpowers/plans/2026-10-23-ui-redesign.md) sequences the work and its checks.
 Production UI implementation has not started; the existing interface described above remains
 the shipped behavior.
 

@@ -2,7 +2,8 @@
 
 Date: 2026-10-23
 
-Status: Proposed design; awaiting written-spec review. No production UI changes yet.
+Status: Approved by the user on 2026-10-23; implementation planning in progress.
+No production UI changes yet.
 
 ## Intent and approved direction
 
