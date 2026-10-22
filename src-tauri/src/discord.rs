@@ -46,6 +46,18 @@ pub struct DiscordState {
 }
 
 impl DiscordState {
+    /// Restart only on the user's request, and hold reads until the new
+    /// renderer answers. A session from the old process is no longer usable.
+    pub async fn restart(&self) -> AppResult<()> {
+        let install = discord::Install::locate()
+            .ok_or_else(|| AppError::not_supported("Discord is not installed on this machine"))?;
+        let mut guard = self.session.lock().await;
+        *guard = None;
+        install.launch_with_debugger()?;
+        *guard = Some(discord::attach_to_discord(&install).await?);
+        Ok(())
+    }
+
     /// Where Discord stands.
     pub async fn status(&self) -> DiscordStatus {
         let Some(install) = discord::Install::locate() else {

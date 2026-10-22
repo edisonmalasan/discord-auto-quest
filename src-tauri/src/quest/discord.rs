@@ -10,6 +10,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::time::Duration;
 
 use crate::error::{AppError, AppResult};
 use crate::quest::cdp::{Session, Target};
@@ -160,11 +161,21 @@ fn stop_running_discord() {}
 pub async fn list_targets(port: u16) -> AppResult<Vec<Target>> {
     let url = format!("http://127.0.0.1:{port}/json/list");
 
-    let response = reqwest::get(&url).await.map_err(|error| {
-        AppError::network(format!(
-            "the Discord debugger did not answer on port {port}: {error}"
-        ))
-    })?;
+    let response = reqwest::Client::builder()
+        .timeout(Duration::from_secs(2))
+        .no_proxy()
+        .build()
+        .map_err(|error| {
+            AppError::network(format!("could not create the debugger probe: {error}"))
+        })?
+        .get(&url)
+        .send()
+        .await
+        .map_err(|error| {
+            AppError::network(format!(
+                "the Discord debugger did not answer on port {port}: {error}"
+            ))
+        })?;
 
     let targets: Vec<Target> = response.json().await.map_err(|error| {
         AppError::invalid_payload(format!("the debugger's answer was not readable: {error}"))
@@ -205,6 +216,36 @@ pub fn pick_renderer(targets: &[Target]) -> Option<&Target> {
 /// The session is kept, because reading the quest state means asking Discord
 /// again and again, and running the script means driving the same page.
 pub async fn attach_to_discord(install: &Install) -> AppResult<Session> {
+    wait_for_renderer(install, Duration::from_secs(30)).await
+}
+
+/// Launching Discord returns before its port file and renderer are ready.
+/// Re-read the port on every attempt; the previous process's file can linger.
+async fn wait_for_renderer(install: &Install, timeout: Duration) -> AppResult<Session> {
+    let mut last_error = None;
+    let result = tokio::time::timeout(timeout, async {
+        loop {
+            match attach_once(install).await {
+                Ok(session) => return session,
+                Err(error) => last_error = Some(error),
+            }
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+    })
+    .await;
+
+    result.map_err(|_| {
+        AppError::network(format!(
+            "Discord did not make its debugger and renderer ready within {} seconds. {}",
+            timeout.as_secs(),
+            last_error
+                .map(|error| error.message)
+                .unwrap_or_else(|| "The debugger did not respond.".to_string())
+        ))
+    })
+}
+
+async fn attach_once(install: &Install) -> AppResult<Session> {
     let port = install.debug_port().ok_or_else(|| {
         AppError::not_supported(
             "Discord is not running with a debugging port, so the quest script cannot be run in it",
@@ -227,6 +268,162 @@ pub fn profile_directory(install: &Install) -> &Path {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn attaching_waits_for_the_new_port_and_a_renderer_after_restart() {
+        use futures_util::{SinkExt, StreamExt};
+        use std::io::{Read, Write};
+        use std::time::Duration;
+
+        let profile = std::env::temp_dir().join(format!("daq-restart-test-{}", std::process::id()));
+        std::fs::create_dir_all(&profile).unwrap();
+        let port_file = profile.join(DEVTOOLS_PORT_FILE);
+        // Restart leaves a file pointing at the now-closed previous listener.
+        let closed = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        std::fs::write(&port_file, closed.local_addr().unwrap().port().to_string()).unwrap();
+        drop(closed);
+
+        let websocket = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let websocket_port = websocket.local_addr().unwrap().port();
+        let http = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        http.set_nonblocking(true).unwrap();
+        let http_port = http.local_addr().unwrap().port();
+        let server = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(150));
+            std::fs::write(port_file, http_port.to_string()).unwrap();
+            let deadline = std::time::Instant::now() + Duration::from_secs(10);
+            let mut requests = 0;
+            while std::time::Instant::now() < deadline {
+                let Ok((mut stream, _)) = http.accept() else {
+                    std::thread::sleep(Duration::from_millis(10));
+                    continue;
+                };
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(1)))
+                    .unwrap();
+                let mut request = [0; 2048];
+                let received = stream.read(&mut request).unwrap();
+                assert!(received > 0, "the probe sends an HTTP request");
+                // The port opens before the main renderer exists.
+                let body = if requests == 0 {
+                    "[]".to_string()
+                } else {
+                    serde_json::json!([{
+                        "id": "main", "type": "page", "url": "https://discord.com/app",
+                        "webSocketDebuggerUrl": format!("ws://127.0.0.1:{websocket_port}")
+                    }])
+                    .to_string()
+                };
+                write!(
+                    stream,
+                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                    body.len(),
+                    body
+                )
+                .unwrap();
+                requests += 1;
+                if requests == 2 {
+                    break;
+                }
+            }
+        });
+        let renderer = tokio::spawn(async move {
+            let (stream, _) = websocket.accept().await.unwrap();
+            let mut socket = tokio_tungstenite::accept_async(stream).await.unwrap();
+            let request = socket.next().await.unwrap().unwrap();
+            let command: serde_json::Value =
+                serde_json::from_str(request.to_text().unwrap()).unwrap();
+            assert_eq!(command["method"], "Runtime.enable");
+            socket
+                .send(tokio_tungstenite::tungstenite::Message::Text(
+                    serde_json::json!({"id": command["id"], "result": {}})
+                        .to_string()
+                        .into(),
+                ))
+                .await
+                .unwrap();
+        });
+        let install = Install {
+            launcher: PathBuf::new(),
+            executable: PathBuf::new(),
+            user_data: profile.clone(),
+        };
+        let result =
+            tokio::time::timeout(Duration::from_secs(8), attach_to_discord(&install)).await;
+        renderer.abort();
+        server.join().unwrap();
+        std::fs::remove_dir_all(profile).unwrap();
+        assert!(
+            matches!(result, Ok(Ok(_))),
+            "attaching must survive the old port and wait for the renderer"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_unresponsive_debugger_does_not_hold_restart_forever() {
+        let profile =
+            std::env::temp_dir().join(format!("daq-restart-timeout-{}", std::process::id()));
+        std::fs::create_dir_all(&profile).unwrap();
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        std::fs::write(
+            profile.join(DEVTOOLS_PORT_FILE),
+            listener.local_addr().unwrap().port().to_string(),
+        )
+        .unwrap();
+        let stalled = tokio::spawn(async move {
+            let (_stream, _) = listener.accept().await.unwrap();
+            std::future::pending::<()>().await;
+        });
+        let install = Install {
+            launcher: PathBuf::new(),
+            executable: PathBuf::new(),
+            user_data: profile.clone(),
+        };
+        let result = tokio::time::timeout(
+            Duration::from_secs(2),
+            wait_for_renderer(&install, Duration::from_millis(100)),
+        )
+        .await;
+        stalled.abort();
+        std::fs::remove_dir_all(profile).unwrap();
+        let error = match result {
+            Ok(Err(error)) => error,
+            _ => panic!("a stalled debugger must return a bounded, retryable failure"),
+        };
+        assert_eq!(error.code, crate::error::ErrorCode::NetworkUnavailable);
+        assert!(error.retryable);
+    }
+
+    #[tokio::test]
+    async fn a_stalled_status_probe_returns_instead_of_blocking_later_polls() {
+        let profile =
+            std::env::temp_dir().join(format!("daq-status-timeout-{}", std::process::id()));
+        std::fs::create_dir_all(&profile).unwrap();
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port_file = profile.join(DEVTOOLS_PORT_FILE);
+        std::fs::write(
+            &port_file,
+            listener.local_addr().unwrap().port().to_string(),
+        )
+        .unwrap();
+        let stalled = tokio::spawn(async move {
+            let (_stream, _) = listener.accept().await.unwrap();
+            std::future::pending::<()>().await;
+        });
+        let install = Install {
+            launcher: PathBuf::new(),
+            executable: PathBuf::new(),
+            user_data: profile.clone(),
+        };
+        let result =
+            tokio::time::timeout(Duration::from_secs(3), install.debugger_is_reachable()).await;
+        stalled.abort();
+        std::fs::remove_dir_all(profile).unwrap();
+        assert!(
+            matches!(result, Ok(false)),
+            "status must finish even if the debugger never responds"
+        );
+    }
 
     fn target(id: &str, kind: &str, url: &str) -> Target {
         Target {
