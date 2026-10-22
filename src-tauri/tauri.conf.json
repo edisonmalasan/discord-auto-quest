@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "discord-auto-quest",
+  "productName": "Discord Auto Quest",
   "version": "../package.json",
   "identifier": "com.edisonmalasan.discord-auto-quest",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "discord-auto-quest",
+        "title": "Discord Auto Quest",
         "width": 1200,
         "height": 820,
         "minWidth": 880,
@@ -46,3 +46,4 @@
     }
   }
 }
+

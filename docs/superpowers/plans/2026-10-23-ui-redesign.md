@@ -211,31 +211,31 @@ create `public/quest-badge.svg` from the approved asset.
 selected `QuestView`, per-view search/scroll, and `openMenuQuestId: string | null` for later cards.
 `QuestIndex({ cards, stale, openMenuQuestId, onMenuChange }: Props)` renders stable ID keys.
 
-- [ ] **Step 1: Write failing workspace interaction tests.** Using `App.test.tsx` and mocked IPC,
+- [x] **Step 1: Write failing workspace interaction tests.** Using `App.test.tsx` and mocked IPC,
   assert the default Ongoing view, three navigation labels/counts, per-view search retention,
   counts unaffected by search, no-result Clear search, empty-state copy, and a single global
   Work/Stop control. About exposes the backend version and existing MIT/unaffiliation text.
   Assert initial unknown counts/skeletons rather than zero quests.
-- [ ] **Step 2: Run `npm test -- src/App.test.tsx src/components/Colophon.test.tsx`; confirm failure.**
-- [ ] **Step 3: Resolve the font source.** Use the inspected font stack. Bundle gg sans only with
+- [x] **Step 2: Run `npm test -- src/App.test.tsx src/components/Colophon.test.tsx`; confirm failure.**
+- [x] **Step 3: Resolve the font source.** Use the inspected font stack. Bundle gg sans only with
   a validated distributable source; otherwise use the approved fallback and record that choice
   in DESIGN.md. Do not add a dependency on a hashed Discord font URL or load a proprietary font
   from the user's Discord installation at runtime.
-- [ ] **Step 4: Implement shell and tokens.** Use 224 px sidebar, 24 px content inset, 16 px grid
+- [x] **Step 4: Implement shell and tokens.** Use 224 px sidebar, 24 px content inset, 16 px grid
   gap, 360–440 px cards, native-style neutrals sampled from the read-only reference, and blurple
   `#5865F2`. Put the selection/search/scroll state in the workspace; use a stable scroll container
   and layout restoration per view, without remounting it on polls. Implement About as an
   accessible disclosure/popover with Escape and focus return. Reuse existing notice content.
-- [ ] **Step 5: Apply the approved identity to desktop assets.** Copy the original SVG to public,
+- [x] **Step 5: Apply the approved identity to desktop assets.** Copy the original SVG to public,
   reference it from AppMark and favicon, and generate native icons with the installed Tauri CLI
   icon command from that SVG. Set window title and product display name to Discord Auto Quest;
   preserve crate/package names, executable names, identifier, and version wiring. Verify release
   scripts still locate the executable and generated icons exist. Do not paint custom OS window
   controls inside the webview.
-- [ ] **Step 6: Run the targeted tests, `npm run typecheck`, and `npm run build`; require success.**
+- [x] **Step 6: Run the targeted tests, `npm run typecheck`, and `npm run build`; require success.**
   Inspect 880/1200/1600 px layouts in the browser: 1/2/3 columns, no horizontal clipping, readable
   labels at 200% text scaling. Leave reference fixtures out of production entry imports.
-- [ ] **Step 7: Commit.** Message: `feat(ui): add branded sidebar quest workspace`.
+- [x] **Step 7: Commit.** Message: `feat(ui): add branded sidebar quest workspace`.
 
 ## Task 4: Rebuild native-style card variants
 
@@ -416,5 +416,6 @@ implementation branch from a commit containing them, rather than from main witho
 Use a `feat/` task branch and upstream tracking, respecting the repository's clean-tree and
 pull requirements. Never discard other work. Commit at the task boundaries above and push
 checkpoints. The final PR must include the approved design and its implementation evidence.
+
 
 
