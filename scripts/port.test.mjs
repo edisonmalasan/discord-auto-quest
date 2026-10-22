@@ -59,7 +59,7 @@ describe('finding a free port', () => {
     }
   });
 
-  it('takes the port after the one that is taken', async () => {
+  it('takes a free port after the one that is taken', async () => {
     const server = createServer();
     const port = await new Promise((resolve) => {
       server.listen(0, '127.0.0.1', () => resolve(server.address().port));
@@ -67,7 +67,10 @@ describe('finding a free port', () => {
 
     try {
       const chosen = await findPort(port, 5);
-      expect(chosen).toBe(port + 1);
+      // The adjacent port may also belong to another process on this machine.
+      expect(chosen).toBeGreaterThan(port);
+      expect(chosen).toBeLessThan(port + 5);
+      expect(await isFree(chosen)).toBe(true);
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }

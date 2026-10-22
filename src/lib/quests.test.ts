@@ -12,9 +12,11 @@ import {
   taskLabel,
 } from './quests';
 import type { QuestSummary } from '../types/quests';
+import { makeQuest } from '../test/fixtures/quests';
 
 function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
   return {
+    ...makeQuest(),
     id: '1',
     name: 'Deadzone Rogue 2',
     gameTitle: 'Deadzone Rogue 2',
@@ -89,7 +91,7 @@ describe('the quest vocabulary', () => {
   it('finds the one that is waiting, in each sense', () => {
     const quests = [
       quest({ id: '1', state: 'claimed' }),
-      quest({ id: '2', state: 'completed', name: 'Done one' }),
+      quest({ id: '2', state: 'completed', name: 'Done one', rewardClaimState: 'unclaimed', rewardClaimable: true }),
       quest({ id: '3', state: 'claimed', tasks: ['STREAM_ON_DESKTOP'], name: 'Stream one' }),
     ];
 
@@ -111,6 +113,8 @@ describe('the quest vocabulary', () => {
         id: '2',
         name: 'Claimable one',
         state: 'completed',
+        rewardClaimState: 'unclaimed',
+        rewardClaimable: true,
         expiresAt: '2099-01-01T00:00:00+00:00',
       }),
     ];
@@ -118,7 +122,7 @@ describe('the quest vocabulary', () => {
     expect(awaitingClaim(quests)?.name).toBe('Claimable one');
   });
 
-  it('falls back to the finished quest when every reward has expired', () => {
+  it('does not prompt for a reward without confirmed claimability', () => {
     const quests = [
       quest({
         id: '1',
@@ -128,6 +132,6 @@ describe('the quest vocabulary', () => {
       }),
     ];
 
-    expect(awaitingClaim(quests)?.name).toBe('Gone one');
+    expect(awaitingClaim(quests)).toBeNull();
   });
 });

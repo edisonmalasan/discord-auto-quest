@@ -9,6 +9,14 @@
 /** How a quest stands. */
 export type QuestState = 'available' | 'claimed' | 'completed';
 
+export interface QuestTaskSummary {
+  kind: string;
+  value: number | null;
+  target: number | null;
+  unit: 'seconds' | 'count' | 'unknown';
+  platform: string | null;
+}
+
 /**
  * One quest.
  *
@@ -57,6 +65,19 @@ export interface QuestSummary {
   ctaLink: string | null;
   /** The quest's own colour, as Discord writes it: "#4752C4". */
   accent: string | null;
+  enrolledAt: string | null;
+  completedAt: string | null;
+  rewardClaimedAt: string | null;
+  rewardClaimState: 'unknown' | 'unclaimed' | 'claimed';
+  rewardClaimable: boolean | null;
+  rewardExpiresAt: string | null;
+  claimedRewardOrbs: number | null;
+  rewardImage: string | null;
+  rewardType: string | null;
+  publisherVerified: boolean | null;
+  heroVideo: string | null;
+  selectedTaskKind: string | null;
+  taskDetails: QuestTaskSummary[];
 }
 
 /** A game Discord believes is running. */
@@ -88,6 +109,8 @@ export interface QuestFeed {
 
 /** Where Discord stands, and what the user has to do about it. */
 export interface DiscordStatus {
+  /** Observed process state; optional for older command responses. */
+  running?: boolean | null;
   /** Whether Discord is installed on this machine. */
   installed: boolean;
   /** Whether the application can talk to Discord right now. */

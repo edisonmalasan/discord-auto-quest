@@ -37,6 +37,20 @@ pub enum QuestState {
     Completed,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuestTaskSummary {
+    pub kind: String,
+    pub value: Option<f64>,
+    pub target: Option<f64>,
+    pub unit: String,
+    pub platform: Option<String>,
+}
+
+fn unknown_claim_state() -> String {
+    "unknown".to_string()
+}
+
 /// One quest, as Discord describes it.
 ///
 /// The fields are the ones Discord's own quest card is drawn from, so the
@@ -81,6 +95,21 @@ pub struct QuestSummary {
     pub cta_link: Option<String>,
     /// The quest's own colour, as Discord writes it: "#4752C4".
     pub accent: Option<String>,
+    pub enrolled_at: Option<String>,
+    pub completed_at: Option<String>,
+    pub reward_claimed_at: Option<String>,
+    #[serde(default = "unknown_claim_state")]
+    pub reward_claim_state: String,
+    pub reward_claimable: Option<bool>,
+    pub reward_expires_at: Option<String>,
+    pub claimed_reward_orbs: Option<u64>,
+    pub reward_image: Option<String>,
+    pub reward_type: Option<String>,
+    pub publisher_verified: Option<bool>,
+    pub hero_video: Option<String>,
+    pub selected_task_kind: Option<String>,
+    #[serde(default)]
+    pub task_details: Vec<QuestTaskSummary>,
 }
 
 impl QuestSummary {
@@ -226,8 +255,8 @@ const READ_STATE: &str = r#"(function () {
 
     const now = Date.now();
     const expired = function (quest) {
-      return !!(quest.config && quest.config.expiresAt &&
-        new Date(quest.config.expiresAt).getTime() < now);
+      const end = quest.config && quest.config.expiresAt;
+      return typeof end === 'string' && Number.isFinite(Date.parse(end)) && Date.parse(end) <= now;
     };
 
     const summarise = function (quest) {
@@ -244,46 +273,79 @@ const READ_STATE: &str = r#"(function () {
 
       const taskNames = Object.keys(tasks);
 
-      let progress = 0;
-      let target = 0;
-      for (const name of taskNames) {
-        const task = tasks[name] || {};
-        if (typeof task.target === 'number') target = Math.max(target, task.target);
-        const value = quest.userStatus && quest.userStatus.progress && quest.userStatus.progress[name];
-        const seconds = value && typeof value.value === 'number' ? value.value : 0;
-        progress = Math.max(progress, seconds);
-      }
+      const user = quest.userStatus || {};
+      const number = function (value) {
+        return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+      };
+      const integer = function (value) { return Number.isInteger(value) && value >= 0 ? value : null; };
+      const text = function (value) {
+        return typeof value === 'string' && value && value !== 'PLACEHOLDER' ? value : null;
+      };
+      const timestamp = function (value) {
+        return text(value) && Number.isFinite(Date.parse(value)) ? value : null;
+      };
+      const secondsTasks = ['PLAY_ON_DESKTOP', 'PLAY_ON_XBOX', 'PLAY_ON_PLAYSTATION', 'PLAY_ACTIVITY',
+        'WATCH_VIDEO', 'WATCH_VIDEO_ON_MOBILE', 'STREAM_ON_DESKTOP', 'STREAM_ON_MOBILE'];
+      const taskDetails = taskNames.map(function (kind) {
+        const task = tasks[kind] || {};
+        const value = user.progress && user.progress[kind];
+        return { kind: kind, value: value ? number(value.value) : 0, target: number(task.target),
+          unit: secondsTasks.includes(kind) ? 'seconds' : (kind === 'ACHIEVEMENT_IN_ACTIVITY' ? 'count' : 'unknown'),
+          platform: kind.includes('XBOX') ? 'Xbox' : (kind.includes('PLAYSTATION') ? 'PlayStation'
+            : (kind.includes('MOBILE') ? 'Mobile' : (kind.includes('DESKTOP') ? 'Desktop' : null))) };
+      });
+      const legacyTask = taskDetails.find(function (task) { return task.unit === 'seconds'; });
+      const progress = legacyTask ? Math.floor(legacyTask.value || 0) : 0;
+      const target = legacyTask ? Math.floor(legacyTask.target || 0) : 0;
+      const completedAt = timestamp(user.completedAt);
+      const claimedAt = timestamp(user.claimedAt);
+      const claimKnown = Object.prototype.hasOwnProperty.call(user, 'claimedAt') &&
+        (user.claimedAt === null || claimedAt !== null);
+      const rewardExpiresAt = timestamp(config.rewardsConfig && config.rewardsConfig.rewardsExpireAt);
 
       // The artwork the card is drawn from. Discord writes "PLACEHOLDER" for an
       // asset a quest does not have, and a placeholder is not an image.
       const asset = function (name) {
-        const value = assets[name];
-        return value && value !== 'PLACEHOLDER' ? value : null;
+        return text(assets[name]);
       };
 
       return {
-        id: quest.id,
-        name: messages.questName || quest.id,
-        gameTitle: messages.gameTitle || null,
-        publisher: messages.gamePublisher || null,
+        id: String(quest.id),
+        name: text(messages.questName) || String(quest.id),
+        gameTitle: text(messages.gameTitle),
+        publisher: text(messages.gamePublisher),
         tasks: taskNames,
-        expiresAt: config.expiresAt || null,
-        state: quest.userStatus && quest.userStatus.completedAt
+        expiresAt: timestamp(config.expiresAt),
+        state: completedAt
           ? 'completed'
-          : (quest.userStatus && quest.userStatus.enrolledAt ? 'claimed' : 'available'),
+          : (timestamp(user.enrolledAt) ? 'claimed' : 'available'),
         progressSeconds: progress,
         targetSeconds: target,
-        rewardOrbs: rewards.length ? (reward.orbQuantity || null) : null,
+        rewardOrbs: rewards.length ? integer(reward.orbQuantity) : null,
         rewardName: rewards.length
-          ? ((reward.messages && reward.messages.name) || reward.name || null)
+          ? (text(reward.messages && reward.messages.name) || text(reward.name))
           : null,
-        premiumOrbs: rewards.length ? (reward.premiumOrbQuantity || null) : null,
+        premiumOrbs: rewards.length ? integer(reward.premiumOrbQuantity) : null,
         banner: asset('questBarHero') || asset('hero'),
         logotype: asset('logotypeDark') || asset('logotypeLight'),
         tile: asset('gameTileDark') || asset('gameTileLight'),
-        ctaLabel: cta.buttonLabel || null,
-        ctaLink: cta.link || null,
-        accent: config.colors && config.colors.primary ? config.colors.primary : null,
+        ctaLabel: text(cta.buttonLabel),
+        ctaLink: text(cta.link),
+        accent: text(config.colors && config.colors.primary),
+        enrolledAt: timestamp(user.enrolledAt),
+        completedAt: completedAt,
+        rewardClaimedAt: claimedAt,
+        rewardClaimState: claimedAt ? 'claimed' : (claimKnown ? 'unclaimed' : 'unknown'),
+        rewardClaimable: completedAt && claimKnown && !claimedAt && rewardExpiresAt
+          ? Date.parse(rewardExpiresAt) > now : (claimedAt ? false : null),
+        rewardExpiresAt: rewardExpiresAt,
+        claimedRewardOrbs: integer(user.orbQuantityClaimed),
+        rewardImage: text(reward.asset),
+        rewardType: typeof reward.type === 'number' || typeof reward.type === 'string' ? String(reward.type) : null,
+        publisherVerified: null,
+        heroVideo: asset('questBarHeroVideo') || asset('heroVideo'),
+        selectedTaskKind: null,
+        taskDetails: taskDetails,
       };
     };
 
@@ -372,6 +434,8 @@ mod tests {
         assert_eq!(quest.state, QuestState::Available);
         assert_eq!(quest.target_seconds, 900);
         assert_eq!(quest.reward_orbs, Some(700));
+        assert_eq!(quest.reward_claim_state, "unknown");
+        assert!(quest.reward_claimed_at.is_none());
         assert!(!quest.is_running(), "an available quest is not running");
     }
 

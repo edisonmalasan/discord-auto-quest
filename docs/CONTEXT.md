@@ -22,15 +22,17 @@
 |---|---|
 | Durable product truth, principles, non-goals | `PRODUCT.md` |
 | Goals, features, and progress | `docs/ROADMAP.md` |
-| The design direction of the quest surface | `DESIGN.md`, `.impeccable/surfaces/src-app-tsx.md` |
+| The current workspace and card design | `DESIGN.md` |
 | The application: status, attach, run, stop, read | `src-tauri/src/discord.rs` |
 | The transport: evaluate in a renderer, read what it prints | `src-tauri/src/quest/cdp.rs` |
 | Finding Discord and its debugger | `src-tauri/src/quest/discord.rs` |
 | The encrypted script, and its decryption | `src-tauri/src/quest/payload.rs` |
 | Preparing and restoring Discord's own methods | `src-tauri/src/quest/driver.rs` |
 | Reading the quest state out of Discord | `src-tauri/src/quest/reader.rs` |
-| The interface: the register, the band, the gate | `src/App.tsx`, `src/components/` |
+| The interface: workspace, cards, connection and actions | `src/App.tsx`, `src/components/` |
+| Quest view membership, sorting and reward states | `src/lib/quest-view.ts` |
 | The quest vocabulary the interface speaks | `src/lib/quests.ts` |
+| Discord handoffs, external destinations and public share links | `src/lib/quest-actions.ts` |
 | The version, the payload check, the release archive | `scripts/` |
 | Build and test commands | Root `AGENTS.md` and the project manifests |
 

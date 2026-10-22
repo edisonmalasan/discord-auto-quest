@@ -1,4 +1,4 @@
-# discord-auto-quest
+# Discord Auto Quest
 
 A desktop app that completes Discord's quests — by making Discord's own client believe the game is
 running.
@@ -21,6 +21,11 @@ Discord's own machinery then does the rest — and it reaches the quest types a 
 never reach: video, streaming and activity quests.
 
 ## How it works
+
+The interface separates Ongoing, Available, and Completed quests in a sidebar workspace.
+Cards show live progress and distinguish completed quests from claimed rewards. Accept and
+claim controls continue in Discord; Work/Stop is one global control for accepted quests.
+Search, accessible action menus, and connection recovery keep the list usable while it updates.
 
 ```text
 FIND      locate the Discord desktop client and its debugging port

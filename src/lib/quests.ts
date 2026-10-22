@@ -1,4 +1,5 @@
 import type { QuestSummary } from '../types/quests';
+import { buildQuestViews } from './quest-view';
 
 /**
  * What each kind of task is called, in words a person can act on.
@@ -107,7 +108,7 @@ export function requirement(quest: QuestSummary): string | null {
  * There is normally at most one, and the first is as good as any.
  */
 export function awaitingUser(quests: QuestSummary[]): QuestSummary | null {
-  return quests.find(needsUser) ?? null;
+  return quests.find(q => q.state === 'claimed' && !hasExpired(q) && needsUser(q)) ?? null;
 }
 
 /**
@@ -117,10 +118,8 @@ export function awaitingUser(quests: QuestSummary[]): QuestSummary | null {
  * passed over: naming it would send the user after a reward that is gone.
  */
 export function awaitingClaim(quests: QuestSummary[]): QuestSummary | null {
-  const finished = quests.filter(isFinished);
-  const claimable = finished.find((quest) => !hasExpired(quest));
-
-  return claimable ?? finished[0] ?? null;
+  return buildQuestViews({ available: [], claimed: quests, expired: 0, desktopApp: true, runningGames: [] }, Date.now())
+    .completed.find(card => card.rewardState === 'claimable')?.quest ?? null;
 }
 
 /** Whether a quest's reward can no longer be claimed. */
@@ -130,5 +129,5 @@ export function hasExpired(quest: QuestSummary): boolean {
   }
 
   const when = new Date(quest.expiresAt).getTime();
-  return !Number.isNaN(when) && when < Date.now();
+  return !Number.isNaN(when) && when <= Date.now();
 }

@@ -52,20 +52,24 @@ Four things, and they are the whole of it:
 
 ### What the interface is
 
-**Discord's own card, in this project's ink.** The quests are drawn the way Discord draws them,
-because every quest already has a face: the game's own artwork across the top, the wordmark over
-it, the publisher's name, the day it ends, the reward, the multiplier, and the progress ring with
-its percentage. Every word and every picture on the card came out of Discord's quest object at
-run time; the ground, the type and the spot colour are this project's.
+**A Discord-style sidebar workspace.** Ongoing, Available, and Completed views share one live
+model for counts, sorting, coherent task progress, and reward claim state. Cards reproduce the
+native composition using the quest's media and reward data, with an original app identity.
+The title bar and sidebar display Discord Auto Quest and the approved quest-badge logo.
 
-Two registers, and the order is the product: **the quests the user has accepted come first**,
-because those are the ones that can be worked; the ones on offer follow, because those are the
-ones they might accept. The band under the title bar carries one sentence and one control.
+One global Work/Stop control works accepted quests. Explicit handoffs such as Accept in Discord
+and Claim in Discord open Discord's Quests view and name the quest to select. Search and scroll
+survive refreshes, keyboard menus restore focus, and pointer motion respects reduced motion.
+See [DESIGN.md](../DESIGN.md) for the implemented system and documented fidelity adaptations.
 
-**Two faults were found by running the application, and both are fixed.** The interface claimed to
-be working a quest it was not working, because a quest left counting by an earlier run still
-showed as running; and the band named a quest whose reward had expired rather than the one whose
-reward could still be claimed. The second is now a rule in `src/lib/quests.ts` and a test.
+**State and recovery are explicit.** Completed does not mean reward claimed; claim prompts need
+confirmed claimability and a separate reward deadline. Expired accepted quests remain visible.
+Failed reads retain a marked stale feed, failed operations survive unrelated polls, and restart
+remains deliberate. Closed/stalled transports are discarded so later polls can reconnect;
+Stop cannot report success without a connection. Work/Stop requests are bounded, and an uncertain
+Work outcome retains Stop while blocking another Work. Frontend regressions and synthetic CDP tests
+verify these failure paths. A read-only native-window check verified live views and clipboard
+sharing without exercising the quest-completion mechanism.
 
 **Two more were found by running the mechanism, and both were in the driver.** The expression
 that keeps Discord's own methods before the script runs was finding the wrong object: Discord
@@ -640,5 +644,3 @@ complete.*
 - Keep implementation details in code, code review, or a task-specific plan — not here.
 - Preserve reasons for significant technical decisions in an existing authoritative project
   document, adding a dedicated one only if needed.
-
-

@@ -1,291 +1,100 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { DiscordStatus, QuestFeed, QuestSummary } from './types/quests';
-
-const discordStatus = vi.fn<() => Promise<DiscordStatus>>();
-const listDiscordQuests = vi.fn<() => Promise<QuestFeed>>();
-const runQuestScript = vi.fn<() => Promise<boolean>>();
-const stopQuestScript = vi.fn<() => Promise<void>>();
-const relaunchDiscord = vi.fn<() => Promise<void>>();
-
-vi.mock('@tauri-apps/plugin-opener', () => ({
-  openUrl: (url: string) => Promise.resolve(url),
-}));
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { makeQuest, makeFeed } from './test/fixtures/quests';
+import type { DiscordStatus, QuestFeed } from './types/quests';
+const status = vi.fn<() => Promise<DiscordStatus>>();
+const list = vi.fn<() => Promise<QuestFeed>>();
+const work = vi.fn(); const stop = vi.fn(); const restart = vi.fn();
+vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('./lib/ipc', () => ({
-  discordStatus: () => discordStatus(),
-  listDiscordQuests: () => listDiscordQuests(),
-  runQuestScript: () => runQuestScript(),
-  stopQuestScript: () => stopQuestScript(),
-  relaunchDiscord: () => relaunchDiscord(),
-  appVersion: () => Promise.resolve('0.1.0'),
-  isAppError: (value: unknown) => typeof value === 'object' && value !== null && 'code' in value,
-  toAppError: (value: unknown) =>
-    typeof value === 'object' && value !== null && 'code' in value
-      ? value
-      : { code: 'UNKNOWN', message: String(value), retryable: true },
+ discordStatus: () => status(), listDiscordQuests: () => list(),
+ runQuestScript: () => work(), stopQuestScript: () => stop(), relaunchDiscord: () => restart(),
+ appVersion: () => Promise.resolve('0.1.0'),
+ toAppError: (v: unknown) => typeof v === 'object' && v && 'message' in v ? v : { code: 'UNKNOWN', message: String(v), retryable: true },
 }));
-
 const { default: App } = await import('./App');
-
-function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
-  return {
-    id: '1558176501663272961',
-    name: 'Clean Crew',
-    gameTitle: 'Clean Crew',
-    publisher: 'Some Studio',
-    tasks: ['PLAY_ON_DESKTOP'],
-    expiresAt: '2026-10-25T00:00:00+00:00',
-    state: 'available',
-    progressSeconds: 0,
-    targetSeconds: 900,
-    rewardOrbs: 700,
-    rewardName: '700 Orbs',
-    premiumOrbs: 840,
-    banner: 'quests/1558176501663272961/1550549569828298842.jpg',
-    logotype: 'quests/1558176501663272961/1550549568544964759.png',
-    tile: 'quests/1558176501663272961/1550549569249480745.png',
-    ctaLabel: 'Play Now',
-    ctaLink: 'https://store.steampowered.com/app/2715900/Team_Red_Collection/',
-    accent: '#4752C4',
-    ...overrides,
-  };
-}
-
-function feed(overrides: Partial<QuestFeed> = {}): QuestFeed {
-  return {
-    available: [quest()],
-    claimed: [
-      quest({
-        id: '1556778857481113610',
-        name: 'Deadzone Rogue 2',
-        state: 'claimed',
-        progressSeconds: 612,
-      }),
-    ],
-    expired: 64,
-    desktopApp: true,
-    runningGames: [],
-    ...overrides,
-  };
-}
-
-function ready(overrides: Partial<DiscordStatus> = {}): DiscordStatus {
-  return {
-    installed: true,
-    ready: true,
-    action: null,
-    profile: 'C:\\Users\\ed\\AppData\\Roaming\\discord',
-    ...overrides,
-  };
-}
-
-describe('App', () => {
-  beforeEach(() => {
-    discordStatus.mockReset();
-    listDiscordQuests.mockReset();
-    runQuestScript.mockReset();
-    stopQuestScript.mockReset();
-    relaunchDiscord.mockReset();
-
-    discordStatus.mockResolvedValue(ready());
-    listDiscordQuests.mockResolvedValue(feed());
-    runQuestScript.mockResolvedValue(true);
-    stopQuestScript.mockResolvedValue(undefined);
-    relaunchDiscord.mockResolvedValue(undefined);
-  });
-
-  it('shows the quests you have accepted before the ones on offer', async () => {
-    render(<App />);
-
-    await screen.findByText('Clean Crew');
-
-    const accepted = screen.getByRole('heading', { name: /accepted quests/i }).closest('section');
-    const offered = screen.getByRole('heading', { name: /available quests/i }).closest('section');
-
-    expect(accepted).not.toBeNull();
-    expect(offered).not.toBeNull();
-    expect(within(accepted as HTMLElement).getByText('Deadzone Rogue 2')).toBeInTheDocument();
-    expect(within(offered as HTMLElement).getByText('Clean Crew')).toBeInTheDocument();
-  });
-
-  it('draws each quest as a card, with what Discord puts on it', async () => {
-    render(<App />);
-
-    await screen.findByText('Clean Crew');
-
-    // The quest's own name, in the place Discord puts it.
-    expect(screen.getByText('Deadzone Rogue 2')).toBeInTheDocument();
-    // The reward, as Discord words it.
-    expect(screen.getAllByText('700 Orbs')).toHaveLength(2);
-    // The publisher, and the day it ends.
-    expect(screen.getAllByText('Some Studio')).toHaveLength(2);
-    expect(screen.getAllByText('Ends 10/25')).toHaveLength(2);
-    // Discord's own buttons.
-    expect(screen.getAllByText('Play Now')).toHaveLength(2);
-    expect(screen.getAllByText('Accept Quest')).toHaveLength(1);
-  });
-
-  it('shows the progress of an accepted quest as a percentage', async () => {
-    render(<App />);
-
-    await screen.findByText('Clean Crew');
-
-    // 612 of 900 seconds is 68%.
-    expect(screen.getByText('68%')).toBeInTheDocument();
-  });
-
-  it('says what needs doing now', async () => {
-    render(<App />);
-
-    await screen.findByText('Clean Crew');
-    expect(
-      screen.getByText('Accept a quest in Discord, then work it from here.'),
-    ).toBeInTheDocument();
-  });
-
-  it('says so when a quest is finished and waiting to be claimed', async () => {
-    listDiscordQuests.mockResolvedValue(
-      feed({
-        available: [],
-        claimed: [
-          quest({
-            name: 'Deadzone Rogue 2',
-            state: 'completed',
-            progressSeconds: 900,
-          }),
-        ],
-      }),
-    );
-
-    render(<App />);
-
-    expect(
-      await screen.findByText('Deadzone Rogue 2 is finished — claim the reward in Discord.'),
-    ).toBeInTheDocument();
-  });
-
-  it('says what a quest that needs the user is waiting for', async () => {
-    listDiscordQuests.mockResolvedValue(
-      feed({
-        available: [],
-        claimed: [
-          quest({
-            name: 'A streaming quest',
-            tasks: ['STREAM_ON_DESKTOP'],
-            state: 'claimed',
-            progressSeconds: 30,
-          }),
-        ],
-      }),
-    );
-
-    render(<App />);
-
-    expect(
-      await screen.findByText(
-        'A streaming quest counts only while you are in a voice channel with somebody.',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('never claims to be working a quest it is not working', async () => {
-    render(<App />);
-
-    await screen.findByText('Deadzone Rogue 2');
-    expect(
-      screen.queryByText('Working your quests. Discord counts them; this window only shows it.'),
-    ).not.toBeInTheDocument();
-  });
-
-  it('asks before restarting Discord, because restarting ends what the user was doing', async () => {
-    discordStatus.mockResolvedValue(
-      ready({
-        ready: false,
-        action: 'Discord has to be restarted so the application can drive it.',
-      }),
-    );
-
-    render(<App />);
-
-    expect(await screen.findByRole('button', { name: /restart discord/i })).toBeInTheDocument();
-    expect(relaunchDiscord).not.toHaveBeenCalled();
-  });
-
-  it('restarts Discord when the user asks for it', async () => {
-    discordStatus.mockResolvedValue(ready({ ready: false, action: 'It has to be restarted.' }));
-
-    render(<App />);
-
-    await userEvent.click(await screen.findByRole('button', { name: /restart discord/i }));
-
-    await waitFor(() => expect(relaunchDiscord).toHaveBeenCalled());
-  });
-
-  it('runs the quest script when the user asks for it', async () => {
-    render(<App />);
-
-    const work = await screen.findByRole('button', { name: /work my quests/i });
-    await waitFor(() => expect(work).toBeEnabled());
-
-    await userEvent.click(work);
-
-    await waitFor(() => expect(runQuestScript).toHaveBeenCalled());
-  });
-
-  it('offers to stop, rather than to start, once the script is running', async () => {
-    render(<App />);
-
-    const work = await screen.findByRole('button', { name: /work my quests/i });
-    await waitFor(() => expect(work).toBeEnabled());
-    await userEvent.click(work);
-
-    expect(
-      await screen.findByRole('button', { name: /^stop$/i }, { timeout: 5000 }),
-    ).toBeInTheDocument();
-  });
-
-  it('says so when the quest script cannot attach, rather than claiming to work', async () => {
-    // A script that raises did not attach: Discord has probably moved its
-    // internals. The backend says so in words, and the interface shows it.
-    runQuestScript.mockRejectedValue({
-      code: 'NOT_SUPPORTED',
-      message:
-        'The quest script did not attach to Discord. Discord has probably moved its ' +
-        'internals, and the script needs updating.',
-      retryable: false,
-    });
-
-    render(<App />);
-
-    const work = await screen.findByRole('button', { name: /work my quests/i });
-    await waitFor(() => expect(work).toBeEnabled());
-    await userEvent.click(work);
-
-    expect(
-      await screen.findByText(
-        'The quest script did not attach to Discord. Discord has probably moved its ' +
-          'internals, and the script needs updating.',
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText('Working your quests. Discord counts them; this window only shows it.'),
-    ).not.toBeInTheDocument();
-  });
-
-  it('shows a failure as the backend worded it', async () => {
-    listDiscordQuests.mockRejectedValue({
-      code: 'NOT_SUPPORTED',
-      message: 'Discord has to be attached to before its quests can be read',
-      retryable: false,
-    });
-
-    render(<App />);
-
-    expect(
-      await screen.findByText('Discord has to be attached to before its quests can be read'),
-    ).toBeInTheDocument();
-  });
+const feed = makeFeed({
+ claimed: [makeQuest({ id: '1', name: 'Active Quest', state: 'claimed' }),
+   makeQuest({ id: '3', name: 'Finished Quest', state: 'completed', rewardClaimState: 'claimed' })],
+ available: [makeQuest({ id: '2', name: 'Offered Quest' })],
+});
+describe('the quest workspace', () => {
+ afterEach(()=>vi.useRealTimers());
+ beforeEach(() => {
+  vi.clearAllMocks(); status.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
+  list.mockResolvedValue(feed); work.mockResolvedValue(true); stop.mockResolvedValue(undefined); restart.mockResolvedValue(undefined);
+ });
+ it('starts in Ongoing and navigates to distinct live views', async () => {
+  render(<App />); await screen.findByText('Active Quest');
+  const nav = screen.getByRole('navigation', { name: 'Your quests' });
+  expect(within(nav).getByRole('button', { name: /Ongoing.*1/ })).toHaveAttribute('aria-current', 'page');
+  expect(screen.queryByText('Offered Quest')).not.toBeInTheDocument();
+  await userEvent.click(within(nav).getByRole('button', { name: /Available/ }));
+  expect(await screen.findByText('Offered Quest')).toBeInTheDocument();
+  await userEvent.click(within(nav).getByRole('button', { name: /Completed/ }));
+  expect(await screen.findByText('Finished Quest')).toBeInTheDocument();
+ });
+ it('retains a separate search per view and keeps counts independent of results', async () => {
+  render(<App />); await screen.findByText('Active Quest');
+  await userEvent.type(screen.getByRole('searchbox'), 'missing');
+  expect(screen.getByText('No matching quests')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Ongoing.*1/ })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /Available.*1/ }));
+  expect(screen.getByRole('searchbox')).toHaveValue('');
+  await userEvent.click(screen.getByRole('button', { name: /Ongoing.*1/ }));
+  expect(screen.getByRole('searchbox')).toHaveValue('missing');
+  await userEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+  expect(screen.getByText('Active Quest')).toBeInTheDocument();
+ });
+ it('shows loading instead of zero counts before the first feed', async () => {
+  list.mockReturnValue(new Promise(() => {})); render(<App />);
+  expect(screen.getByRole('status', { name: 'Loading quests' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Ongoing.*0/ })).not.toBeInTheDocument();
+ });
+ it('shows the brand and backend version with independent-project notices in About', async () => {
+  render(<App />); await screen.findByText('Active Quest');
+  expect(screen.getAllByText('Discord Auto Quest').length).toBeGreaterThan(0);
+  await userEvent.click(screen.getByRole('button', { name: 'About Discord Auto Quest' }));
+  expect(await screen.findByText('0.1.0')).toBeInTheDocument();
+  expect(screen.getByText(/not affiliated with, endorsed by/i)).toBeInTheDocument();
+ });
+ it('keeps one global work control and changes it to Stop after a successful run', async () => {
+  render(<App />); await screen.findByText('Active Quest');
+  expect(screen.getAllByRole('button', { name: 'Work my quests' })).toHaveLength(1);
+  await userEvent.click(screen.getByRole('button', { name: 'Work my quests' }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Stop' }));
+  await waitFor(() => expect(stop).toHaveBeenCalledTimes(1));
+ });
+ it('never restarts Discord unless the user clicks the deliberate action', async () => {
+  status.mockResolvedValue({ installed: true, ready: false, action: 'Restarting Discord interrupts your activity.', profile: null });
+  render(<App />); const button = await screen.findByRole('button', { name: 'Restart Discord' });
+  expect(restart).not.toHaveBeenCalled(); await userEvent.click(button);
+  await waitFor(() => expect(restart).toHaveBeenCalledTimes(1));
+ });
+ it('reports a script failure without pretending it started', async () => {
+  work.mockRejectedValue({ code: 'NOT_SUPPORTED', message: 'The quest script did not attach.', retryable: false });
+  render(<App />); await screen.findByText('Active Quest');
+  await userEvent.click(screen.getByRole('button', { name: 'Work my quests' }));
+  expect(await screen.findByText('The quest script did not attach.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
+ });
+ it('keeps last data visible but disables live actions until a failed poll recovers',async()=>{
+  vi.useFakeTimers();render(<App/>);await act(async()=>{});
+  list.mockRejectedValueOnce({code:'IO_ERROR',message:'Temporary reader failure',retryable:true});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(4000)});
+  expect(screen.getByText('Active Quest')).toBeInTheDocument();
+  expect(screen.getByText(/last successful read/)).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeDisabled();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(4000)});
+  expect(screen.queryByText('Temporary reader failure')).not.toBeInTheDocument();
+  expect(screen.queryByText(/last successful read/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeEnabled();
+ });
+ it('explains why a non-desktop feed cannot be worked',async()=>{
+  list.mockResolvedValue({...feed,desktopApp:false});render(<App/>);
+  await screen.findByText('Active Quest');
+  expect(screen.getByRole('button',{name:'Work my quests'})).toBeDisabled();
+  expect(screen.getByText('Working quests requires the Discord desktop client.')).toBeInTheDocument();
+ });
 });
