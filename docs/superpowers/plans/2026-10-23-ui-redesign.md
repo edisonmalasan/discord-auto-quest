@@ -288,33 +288,33 @@ required destination and keep the existing URL permission scope no wider than ne
 Only accept numeric quest IDs for constructed links. Use the existing opener for navigation
 and `navigator.clipboard.writeText` for copying, with propagated errors and no false confirmation.
 
-- [ ] **Step 1: Verify routing read-only.** Inspect the installed desktop client's route handling,
+- [x] **Step 1: Verify routing read-only.** Inspect the installed desktop client's route handling,
   then test the supported OS protocol to a known quest without accepting/watching/claiming it.
   If direct routing fails, verify routing to the Quests view and return an instruction naming
   the quest from the card. Do not hard-code an untested scheme from the public share URL.
   If neither desktop route can be verified, report that limitation and continue independent UI
   tasks; do not mark this task complete or silently fall back to a web completion client.
-- [ ] **Step 2: Write failing action tests.** Mock opener/clipboard; assert the exact public link
+- [x] **Step 2: Write failing action tests.** Mock opener/clipboard; assert the exact public link
   `https://discord.com/quests/123`, reject invalid IDs and unsupported external URL schemes,
   propagate protocol/clipboard failures, and announce Copied only after fulfillment. HTTP(S)
   external destinations require parseable URLs; no executable or JavaScript destinations.
   Handoff tests assert only opener calls and never run/accept/claim requests.
-- [ ] **Step 3: Run `npm test -- src/lib/quest-actions.test.ts`; confirm failures.**
-- [ ] **Step 4: Implement the helpers and connect state-specific actions.** Use the observed
+- [x] **Step 3: Run `npm test -- src/lib/quest-actions.test.ts`; confirm failures.**
+- [x] **Step 4: Implement the helpers and connect state-specific actions.** Use the observed
   desktop route, exact explicit labels, real external CTA, and per-card pending/error handling.
   Any fallback instruction must name the quest and the next user step. Preview/boost/platform
   actions continue in Discord; unsupported actions are omitted rather than simulated.
-- [ ] **Step 5: Write and run menu interaction tests, then implement the menu.** One 220 px
+- [x] **Step 5: Write and run menu interaction tests, then implement the menu.** One 220 px
   anchored menu at a time; external CTA when present, Copy quest link, Open in Discord. Use native
   buttons with menu/menuitem semantics, roving focus, Arrow/Home/End, Escape, outside-click
   dismissal and trigger focus restoration. Own the active ID in the workspace. Test opening a
   second menu closes the first; removing/moving its quest closes it and focuses the surviving
   view heading; same-ID refresh preserves it. Run
   `npm test -- src/components/QuestActions.test.tsx src/lib/quest-actions.test.ts` to green.
-- [ ] **Step 6: Verify desktop opener and clipboard behavior in the Tauri window.** Confirm
+- [x] **Step 6: Verify desktop opener and clipboard behavior in the Tauri window.** Confirm
   Copy quest link changes only the clipboard; no message/share dialog is sent. Verify failures
   remain actionable. No Discord restart is needed for these checks.
-- [ ] **Step 7: Commit.** Message: `feat(ui): add explicit Discord handoffs and quest menus`.
+- [x] **Step 7: Commit.** Message: `feat(ui): add explicit Discord handoffs and quest menus`.
 
 ## Task 6: Stabilize connection, operation, and polling behavior
 

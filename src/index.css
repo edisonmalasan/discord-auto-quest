@@ -107,3 +107,10 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .quest-footer { display:flex; flex-wrap:wrap; gap:8px; border-top:1px solid #36363d; padding:12px; border-radius:0 0 9px 9px; }
 .quest-footer .button { flex:1 1 140px; font-size:14px; font-weight:600; min-width:0; padding:8px 10px; }
 .quest-footer .button:disabled { opacity:.45; }
+.quest-action-region { display:contents; }
+.quest-menu { position:absolute; right:12px; top:43px; width:220px; max-width:calc(100% - 24px); z-index:10; padding:6px; border:1px solid #393940; border-radius:8px; background:#232328; box-shadow:0 12px 24px #0006; transform-origin:top right; }
+.quest-menu button { display:block; border:0; width:100%; background:transparent; color:#dadbe0; border-radius:4px; padding:8px; min-height:36px; font-size:14px; font-weight:500; line-height:20px; text-align:left; }
+.quest-menu button:hover:not(:disabled),.quest-menu button:focus-visible { background:#5865f2; color:white; outline:none; }
+.quest-menu-trigger:hover { background:#14151b; }
+.card-feedback { font-size:12px; line-height:18px; margin:0; padding:0 12px 12px; color:#bdc4ff; overflow-wrap:anywhere; }
+.card-feedback.error { color:#fa777c; }
