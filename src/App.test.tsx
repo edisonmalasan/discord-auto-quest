@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DiscordStatus, QuestFeed, QuestSummary } from './types/quests';
+import { makeQuest } from './test/fixtures/quests';
 
 const discordStatus = vi.fn<() => Promise<DiscordStatus>>();
 const listDiscordQuests = vi.fn<() => Promise<QuestFeed>>();
@@ -32,6 +33,7 @@ const { default: App } = await import('./App');
 
 function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
   return {
+    ...makeQuest(),
     id: '1558176501663272961',
     name: 'Clean Crew',
     gameTitle: 'Clean Crew',

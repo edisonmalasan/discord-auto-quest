@@ -127,12 +127,12 @@ displayed percentages at 100. `expiresAt <= now` is expired; missing/invalid dat
 **Interfaces:** Consumes the current `QuestList`/`QuestFeed`; produces the added wire fields
 above, using serde defaults so old minimal summaries still deserialize.
 
-- [ ] **Step 1: Audit missing observations, without changing account state.** Inspect reward
+- [x] **Step 1: Audit missing observations, without changing account state.** Inspect reward
   artwork, verification, claim window/status, selected platform/task and task units in the live
   desktop client. Read the approved spec's references. Record sanitized field availability and
   mappings under ignored `re/`; do not run the completion script, restart, accept, watch or claim.
   A missing supported observation resolves to the explicit unknown field above.
-- [ ] **Step 2: Write failing extraction tests.** In the `.mjs` test, read `reader.rs`, extract its
+- [x] **Step 2: Write failing extraction tests.** In the `.mjs` test, read `reader.rs`, extract its
   actual `READ_STATE` raw string, and evaluate it using Node's VM with synthetic webpack module
   exports, quest stores, and DiscordNative. Exercise renamed exports through shape discovery.
   Pin these independent inputs/assertions:
@@ -150,16 +150,16 @@ above, using serde defaults so old minimal summaries still deserialize.
   Include known-unclaimed versus unavailable claim data, expired participation with an open
   reward window, zero progress, unknown task types, non-Orbs rewards, PLACEHOLDER artwork,
   and malformed optional values. Add Rust deserialization assertions for old and new summaries.
-- [ ] **Step 3: Run the new tests and confirm failures reflect missing behavior.**
+- [x] **Step 3: Run the new tests and confirm failures reflect missing behavior.**
   `npm test -- scripts/quest-reader.test.mjs` and
   `cargo test --manifest-path src-tauri/Cargo.toml quest::reader::tests -j 1`.
-- [ ] **Step 4: Implement the new fields and synthetic fixture factory.** Define
+- [x] **Step 4: Implement the new fields and synthetic fixture factory.** Define
   `makeQuest(overrides: Partial<QuestSummary> = {}): QuestSummary` and
   `makeFeed(overrides: Partial<QuestFeed> = {}): QuestFeed` in the test fixture module.
   Preserve legacy fields until their consumers migrate; if supplying legacy seconds, derive
   them from one coherent seconds task, not independent maxima. Do not edit driver/payload.
-- [ ] **Step 5: Run the targeted tests and `npm run typecheck`; require all to pass.**
-- [ ] **Step 6: Commit the reader contract and tests.** Message:
+- [x] **Step 5: Run the targeted tests and `npm run typecheck`; require all to pass.**
+- [x] **Step 6: Commit the reader contract and tests.** Message:
   `feat(quests): expose reward claim and task observations`.
 
 ## Task 2: Normalize cards, counts, and sorting
@@ -416,3 +416,4 @@ implementation branch from a commit containing them, rather than from main witho
 Use a `feat/` task branch and upstream tracking, respecting the repository's clean-tree and
 pull requirements. Never discard other work. Commit at the task boundaries above and push
 checkpoints. The final PR must include the approved design and its implementation evidence.
+

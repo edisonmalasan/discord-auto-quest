@@ -12,9 +12,11 @@ import {
   taskLabel,
 } from './quests';
 import type { QuestSummary } from '../types/quests';
+import { makeQuest } from '../test/fixtures/quests';
 
 function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
   return {
+    ...makeQuest(),
     id: '1',
     name: 'Deadzone Rogue 2',
     gameTitle: 'Deadzone Rogue 2',
