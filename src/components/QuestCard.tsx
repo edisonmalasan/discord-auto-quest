@@ -14,7 +14,7 @@ export function QuestCard({ card, stale, menuOpen, onMenuChange }: Props) {
       <div className="quest-wordmark"><QuestImage src={quest.logotype} alt="" fallback={<span>{quest.gameTitle ?? quest.name}</span>}/></div>
       <div className="publisher-row"><p>Promoted by <span>{quest.publisherVerified === true && <svg aria-label="Verified publisher" viewBox="0 0 16 16"><path fill="#3ba55d" d="m8 0 2 2 3-.1.5 3 2.5 2-2 2 .1 3-3 .5L8 16l-2-2-3 .1-.5-3L0 8l2-2-.1-3 3-.5z"/><path fill="none" stroke="white" strokeWidth="1.6" d="m4 8 2.5 2.5L12 5"/></svg>}{quest.publisher ?? 'Publisher unavailable'}</span></p><span className="quest-end">{endDate(quest.expiresAt)}</span></div>
     </div>
-    <div className="quest-details"><QuestProgress card={card}/><div className="quest-copy"><h2>{quest.name}</h2>
+    <div className="quest-details"><QuestProgress card={card}/><div className="quest-copy"><h2>{quest.name}{/\bquest$/i.test(quest.name) ? '' : ' Quest'}</h2>
       <div className="quest-reward-line">{card.rewardState !== 'claimed' && card.view !== 'completed' && <span>Claim</span>}{quantity !== null && <OrbIcon/>}<strong>{reward}</strong>
         {boost && <span className="boost-pill">◉ Unlock {boost}x</span>}</div>
       <p className="quest-description">{description(card)}</p>
@@ -37,7 +37,7 @@ function description(card: QuestCardModel) {
   if (card.view === 'completed') return 'Quest completed. Check your reward status in Discord.';
   if (card.expired) return 'This quest has ended.';
   if (q.tasks.some(t => t.startsWith('WATCH_VIDEO'))) return `Watch the video to win ${q.rewardName ?? 'your reward'}!`;
-  if (card.progress?.unit === 'count') return `Reach ${card.progress.target} achievements in ${q.gameTitle ?? 'the activity'} to earn your reward.`;
+  if (card.progress?.unit === 'count') return `Reach ${card.progress.target} ${card.progress.target === 1 ? 'achievement' : 'achievements'} in ${q.gameTitle ?? 'the activity'} to earn your reward.`;
   const needs = requirement(q);
   const extra = needs ? ` This quest ${needs}.` : '';
   if (card.progress?.unit === 'seconds') return `${taskLabel(card.progress.taskKind)}${q.gameTitle ? `: ${q.gameTitle}` : ''} for ${duration(card.progress.target)} to earn ${q.rewardName ?? 'your reward'}.${extra}`;

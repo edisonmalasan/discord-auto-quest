@@ -2,8 +2,8 @@
 
 Date: 2026-10-23
 
-Status: Approved by the user on 2026-10-23; implementation planning in progress.
-No production UI changes yet.
+Status: Approved by the user on 2026-10-23. Implementation progress is recorded in the
+[roadmap](../../ROADMAP.md).
 
 ## Intent and approved direction
 

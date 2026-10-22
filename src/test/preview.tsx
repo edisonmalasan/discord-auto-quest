@@ -1,10 +1,15 @@
 // Development-only visual fixtures. Not imported by the production entry.
+// ?scale=2 exercises 200% text/layout zoom without changing system settings.
 import { createRoot } from 'react-dom/client';
 import '../index.css';
 import { QuestWorkspace } from '../components/QuestWorkspace';
 import { buildQuestViews } from '../lib/quest-view';
 import { makeQuest, makeFeed } from './fixtures/quests';
 import type { QuestSummary } from '../types/quests';
+if (new URLSearchParams(location.search).get('scale') === '2') {
+  document.documentElement.style.setProperty('zoom', '2');
+  document.documentElement.style.height = '50vh';
+}
 const samples = ([
   {
     "id": "1558176501663272961",

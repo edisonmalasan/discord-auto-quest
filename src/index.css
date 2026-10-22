@@ -33,7 +33,7 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .connection>p:first-child { display:flex; gap:8px; align-items:center; margin:0 0 8px; font-size:12px; font-weight:600; }
 .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#f0b232; flex:none; }
 .status-dot.connected { background:#43b581; }
-.connection-detail { margin:8px 0; font-size:12px; line-height:1.5; color:var(--color-ink-2); }
+.connection-detail { margin:8px 0; font-size:12px; line-height:1.5; overflow-wrap:anywhere; color:var(--color-ink-2); }
 .connection .button { font-size:12px; min-height:34px; width:100%; margin:6px 0; }
 .about { position:relative; margin-top:12px; }
 .about-trigger { background:none; border:0; color:var(--color-ink-3); padding:0; text-align:left; font-size:11px; }
@@ -74,13 +74,13 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 @media(max-width:700px) { .sidebar { width:190px; flex-basis:190px; } .quest-content,.workspace-header { padding-left:16px; padding-right:16px; } .workspace-header { flex-wrap:wrap; } .global-controls { flex-wrap:wrap; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition-duration:.01ms!important; } }
 .quest-card { position:relative; border:1px solid #3b3b443b; background:#232327; border-radius:10px; min-width:0; }
-.quest-hero { height:145px; position:relative; overflow:hidden; border-radius:9px 9px 0 0; background:#292932; }
-.quest-banner { width:100%; height:100%; object-fit:cover; display:block; }
+.quest-hero { min-height:145px; padding-top:78px; position:relative; overflow:hidden; border-radius:9px 9px 0 0; background:#292932; }
+.quest-banner { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
 .hero-scrim { position:absolute; inset:0; background:linear-gradient(180deg,transparent 15%,#23232799 52%,#232327 85%); }
-.quest-wordmark { position:absolute; bottom:36px; left:12px; right:54px; height:37px; display:flex; align-items:flex-end; }
+.quest-wordmark { position:relative; margin:0 12px 7px; min-height:32px; display:flex; align-items:flex-end; }
 .quest-wordmark img { max-width:min(150px,72%); max-height:32px; object-fit:contain; object-position:left bottom; }
 .quest-wordmark>span { font-size:21px; font-weight:800; line-height:23px; color:white; }
-.publisher-row { position:absolute; left:12px; right:12px; bottom:9px; display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14px; line-height:18px; color:#a6a6af; }
+.publisher-row { position:relative; padding:0 12px 9px; display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14px; line-height:18px; color:#a6a6af; }
 .publisher-row p { margin:0; min-width:0; overflow-wrap:anywhere; }
 .publisher-row p>span { color:#f2f3f5; font-weight:600; }
 .publisher-row svg { width:14px; height:14px; display:inline; vertical-align:-2px; margin-right:3px; }
@@ -94,7 +94,7 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .quest-reward-line { display:flex; gap:4px; flex-wrap:wrap; align-items:center; font-size:16px; line-height:20px; font-weight:600; }
 .quest-reward-line strong { font-weight:600; }
 .orb-icon { width:14px; height:14px; flex:none; }
-.boost-pill { display:inline-flex; align-items:center; gap:3px; background:#52226e; color:white; border-radius:20px; padding:0 7px; margin-left:4px; font-size:12px; font-weight:600; line-height:18px; white-space:nowrap; }
+.boost-pill { display:inline-flex; align-items:center; gap:3px; background:#52226e; color:white; border-radius:20px; padding:0 7px; margin-left:4px; max-width:100%; overflow-wrap:anywhere; font-size:12px; font-weight:600; line-height:18px; }
 .quest-description { margin:5px 0 0; font-size:12px; line-height:16px; color:#a7a7b3; overflow-wrap:anywhere; }
 .quest-reward-art { position:relative; width:80px; height:80px; flex:none; border-radius:10px; overflow:hidden; background:#19191f; }
 .quest-reward-art>img { display:block; width:100%; height:100%; object-fit:cover; }
@@ -106,7 +106,7 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .progress-percent { display:grid; place-items:center; position:absolute; inset:8px; border-radius:50%; background:#080a22a6; color:white; font-size:18px; line-height:24px; font-weight:700; }
 .reward-fallback { display:grid; place-items:center; height:100%; font-size:32px; color:#9b9baa; }
 .quest-footer { display:flex; flex-wrap:wrap; gap:8px; border-top:1px solid #36363d; padding:12px; border-radius:0 0 9px 9px; }
-.quest-footer .button { flex:1 1 140px; font-size:14px; font-weight:600; min-width:0; padding:8px 10px; }
+.quest-footer .button { flex:1 1 140px; font-size:16px; font-weight:500; min-width:0; padding:8px 10px; }
 .quest-footer .button:disabled { opacity:.45; }
 .quest-action-region { display:contents; }
 .quest-menu { position:absolute; right:12px; top:43px; width:220px; max-width:calc(100% - 24px); z-index:10; padding:6px; border:1px solid #393940; border-radius:8px; background:#232328; box-shadow:0 12px 24px #0006; transform-origin:top right; }
@@ -116,3 +116,12 @@ button,a,input { -webkit-tap-highlight-color:transparent; }
 .card-feedback { font-size:12px; line-height:18px; margin:0; padding:0 12px 12px; color:#bdc4ff; overflow-wrap:anywhere; }
 .card-feedback.error { color:#fa777c; }
 .connection-retry { background:none; border:0; padding:3px 0; color:#b5bcff; font-size:12px; text-decoration:underline; text-underline-offset:3px; }
+/* Feedback follows pointer actions; keyboard navigation and data polling stay still. */
+.button,.nav-item,.quest-menu-trigger,.media-indicator { transition:transform 160ms var(--ease-out); }
+.button:active:not(:focus-visible):not(:disabled),.nav-item:active:not(:focus-visible),.quest-menu-trigger:active:not(:focus-visible),.media-indicator:active:not(:focus-visible):not(:disabled) { transform:scale(.97); }
+.quest-action-region[data-keyboard=false] .quest-menu { opacity:1; transform:scale(1); transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out); }
+@starting-style { .quest-action-region[data-keyboard=false] .quest-menu { opacity:0; transform:scale(.95); } }
+@media (prefers-reduced-motion:reduce) {
+ .button,.nav-item,.quest-menu-trigger,.media-indicator,.quest-menu { transform:none!important; transition:none!important; }
+ .quest-menu { opacity:1!important; }
+}

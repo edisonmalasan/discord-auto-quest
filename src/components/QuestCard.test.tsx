@@ -10,6 +10,14 @@ function show(overrides: Partial<QuestSummary>) {
  return render(<QuestCard card={card} stale={false} menuOpen={false} onMenuChange={()=>{}}/>);
 }
 describe('native quest card variants',()=>{
+ it('keeps the external game action on an available multi-platform quest',()=>{
+  show({state:'available',ctaLabel:'Get Game',taskDetails:[
+   {kind:'PLAY_ON_DESKTOP',value:0,target:900,unit:'seconds',platform:'Desktop'},
+   {kind:'PLAY_ON_XBOX',value:0,target:900,unit:'seconds',platform:'Xbox'},
+  ]});
+  expect(screen.getByRole('button',{name:'Get Game'})).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Accept in Discord'})).toBeInTheDocument();
+ });
  it('resolves root-relative Discord artwork against the CDN rather than the app',()=>{
   show({rewardImage:'/quests/reward.png'});
   expect(screen.getByAltText('700 Orbs')).toHaveAttribute('src','https://cdn.discordapp.com/quests/reward.png');
@@ -46,7 +54,7 @@ describe('native quest card variants',()=>{
   const title='A very long quest name that must remain available to everyone';
   show({name:title,banner:'quests/banner.jpg',logotype:'quests/logo.png'});
   fireEvent.error(document.querySelector('.quest-hero img')!);
-  expect(screen.getByText(title)).toBeInTheDocument();
+  expect(screen.getByRole('heading',{name:/A very long quest name/})).toBeInTheDocument();
   expect(screen.getByRole('button',{name:'Accept in Discord'})).toBeInTheDocument();
  });
  it('keeps the offer CTA for a video with desktop and mobile alternatives',()=>{
@@ -55,5 +63,6 @@ describe('native quest card variants',()=>{
    {kind:'WATCH_VIDEO_ON_MOBILE',value:0,target:9,unit:'seconds',platform:'Mobile'},
   ]});
   expect(screen.getByRole('button',{name:'Get Offer'})).toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Watch 9s in Discord'})).toBeInTheDocument();
  });
 });

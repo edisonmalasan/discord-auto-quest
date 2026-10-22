@@ -46,9 +46,10 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
   }
   const video = quest.tasks.some(t => t.startsWith('WATCH_VIDEO'));
   const alternatives = !video && quest.taskDetails.length > 1;
+  const seconds = videoRemaining(card);
   const label = card.view === 'available' ? 'Accept in Discord' : card.rewardState === 'claimable' ? 'Claim in Discord'
     : card.rewardState === 'claimed' ? 'View reward in Discord' : card.view === 'completed' ? 'Check in Discord'
-      : video ? `Watch${card.progress?.unit === 'seconds' ? ` ${Math.max(0, Math.ceil(card.progress.target-card.progress.value))}s` : ''} in Discord`
+      : video ? `Watch${seconds !== null ? ` ${seconds}s` : ''} in Discord`
         : alternatives ? 'Platforms in Discord' : 'Open in Discord';
   const gameCtaOnly = card.view === 'ongoing' && !video && !alternatives && quest.ctaLink;
   return <div className="quest-action-region" ref={root} data-keyboard={keyboard}>
@@ -62,11 +63,23 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
       <button role="menuitem" tabIndex={-1} disabled={pending || stale} onClick={() => { close(); void perform('discord'); }}>Open in Discord</button>
     </div>}
     {card.expired && card.view === 'ongoing' ? <footer className="quest-footer"><button className="button secondary" disabled>Quest expired</button></footer> : <footer className="quest-footer">
-    {quest.ctaLink && !alternatives && <button className="button secondary" disabled={stale || pending} onClick={() => void perform('external')}>{quest.ctaLabel ?? 'Get Game'}</button>}
+    {quest.ctaLink && !(alternatives && card.view === 'ongoing') && <button className="button secondary" disabled={stale || pending} onClick={() => void perform('external')}>{quest.ctaLabel ?? 'Get Game'}</button>}
     {alternatives && card.view === 'ongoing' && <button className="button secondary" disabled>Quest accepted</button>}
     {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired'} onClick={() => void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
     </footer>}
     {error && <p className="card-feedback error" role="alert">{error}</p>}
     {notice && <p className="card-feedback" role="status">{notice}</p>}
   </div>;
+}
+
+function videoRemaining(card: QuestCardModel): number | null {
+  if (card.progress?.unit === 'seconds' && card.progress.taskKind.startsWith('WATCH_VIDEO')) {
+    return Math.max(0, Math.ceil(card.progress.target - card.progress.value));
+  }
+  const values = card.quest.taskDetails.filter(task => task.kind.startsWith('WATCH_VIDEO')).map(task =>
+    task.unit === 'seconds' && task.target !== null && task.value !== null &&
+    Number.isFinite(task.target) && Number.isFinite(task.value) && task.target > 0 && task.value >= 0
+      ? Math.max(0, Math.ceil(task.target - task.value)) : null);
+  const shared = values[0];
+  return shared !== undefined && shared !== null && values.every(value => value === shared) ? shared : null;
 }
