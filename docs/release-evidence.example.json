@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "commit": "",
+  "windows": "",
+  "discord": "",
+  "hashes": {
+    "Discord-Auto-Quest-1.0.0-windows-x64-setup.exe": "",
+    "Discord-Auto-Quest-1.0.0-windows-x64-portable.zip": ""
+  },
+  "checks": {
+    "installation": "unavailable",
+    "launch": "unavailable",
+    "upgrade": "unavailable",
+    "uninstall": "unavailable",
+    "portable": "unavailable",
+    "webviewProvisioning": "unavailable",
+    "liveViews": "unavailable",
+    "recoveryAndHandoffs": "unavailable",
+    "acceptedQuestWorkflow": "unavailable"
+  }
+}

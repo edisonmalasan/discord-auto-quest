@@ -1,4 +1,4 @@
-# Verify each candidate before creating a draft prerelease.
+# Verify each candidate before creating a draft release.
 name: release
 on:
   pull_request:
@@ -97,7 +97,7 @@ jobs:
           path: target/release/${{ steps.version.outputs.version }}/*
           if-no-files-found: error
   draft:
-    name: draft prerelease
+    name: draft release
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04

@@ -2,6 +2,13 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 1.0.0 — Unreleased
+
+- Prepare the first stable Windows x64 release and its GitHub draft workflow.
+- Include the quest workspace, connection recovery, and deliberate in-app acceptance for supported offers.
+- Start the documented major/minor/patch compatibility commitment.
+- Keep unsigned distribution, Windows-only support, and all packaged acceptance gates. Earlier beta checks do not establish acceptance of the 1.0.0 downloads.
+
 ## 0.2.0-beta.2 — Unreleased
 
 - Review and confirm supported quest offers inside the app, with a Discord fallback.

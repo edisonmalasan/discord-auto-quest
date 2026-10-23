@@ -1,6 +1,6 @@
 [package]
 name = "discord-auto-quest"
-version = "0.2.0-beta.2"
+version = "1.0.0"
 edition = "2021"
 rust-version = "1.82"
 description = "A desktop app that completes Discord quests for games you do not own."

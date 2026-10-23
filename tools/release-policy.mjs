@@ -11,8 +11,20 @@ export function verifyCandidateFiles(files,version) {
 export function publicationOptions(tag,version,exists) {
   verifyTag(tag,version);
   if(exists) throw new Error('This version already exists; choose a new version');
-  if(!version.includes('-beta.')) throw new Error('This release flow supports beta candidates only');
-  return {draft:true,prerelease:true,latest:false};
+  return {draft:true,prerelease:isPrerelease(version),latest:false};
+}
+function isPrerelease(version) {
+  if(!validVersion(version)) throw new Error('Invalid release version');
+  return version.split('+')[0].includes('-');
+}
+export function promotionOptions(tag,version,release) {
+  verifyTag(tag,version);
+  const prerelease=isPrerelease(version);
+  if(release?.isDraft!==true || release.isPrerelease!==prerelease) throw new Error('Expected a draft with the correct release channel');
+  return {draft:false,prerelease,latest:!prerelease};
+}
+export function releaseFlags(options) {
+  return ['draft','prerelease','latest'].map(name=>`--${name}=${options[name]}`);
 }
 export const requiredChecks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'];
 export function validateEvidence(evidence) {

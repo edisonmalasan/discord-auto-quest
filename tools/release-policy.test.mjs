@@ -1,8 +1,28 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { candidateNames, verifyCandidateFiles, publicationOptions, validateEvidence } from './release-policy.mjs';
+import { candidateNames, verifyCandidateFiles, publicationOptions, promotionOptions, releaseFlags, validateEvidence } from './release-policy.mjs';
 import { readFileSync } from 'node:fs';
 describe('release gates', () => {
+  it('prepares stable drafts without marking drafts latest',()=>{
+    expect(publicationOptions('v1.0.0','1.0.0',false)).toEqual({draft:true,prerelease:false,latest:false});
+    expect(releaseFlags(publicationOptions('v1.0.0','1.0.0',false))).toEqual(['--draft=true','--prerelease=false','--latest=false']);
+    expect(candidateNames('1.0.0').setup).toBe('Discord-Auto-Quest-1.0.0-windows-x64-setup.exe');
+    expect(()=>publicationOptions('v1.0.0','1.0.0',true)).toThrow();
+  });
+  it('promotes stable to latest while keeping preview releases off latest',()=>{
+    expect(releaseFlags(promotionOptions('v1.0.0','1.0.0',{isDraft:true,isPrerelease:false}))).toEqual(['--draft=false','--prerelease=false','--latest=true']);
+    expect(promotionOptions('v1.1.0-rc.1','1.1.0-rc.1',{isDraft:true,isPrerelease:true})).toEqual({draft:false,prerelease:true,latest:false});
+  });
+  it('rejects published or incorrectly labelled drafts and tag mismatches',()=>{
+    expect(()=>promotionOptions('v1.0.0','1.0.0',{isDraft:false,isPrerelease:false})).toThrow();
+    expect(()=>promotionOptions('v1.0.0','1.0.0',{isDraft:true,isPrerelease:true})).toThrow();
+    expect(()=>promotionOptions('v1.0.0','1.0.0-beta.1',{isDraft:true,isPrerelease:true})).toThrow();
+    expect(()=>promotionOptions('v1.0.0-beta.1','1.0.0-beta.1',{isDraft:true,isPrerelease:false})).toThrow();
+  });
+  it('does not mistake build metadata for a prerelease',()=>{
+    expect(publicationOptions('v1.0.0+build-beta.1','1.0.0+build-beta.1',false).prerelease).toBe(false);
+    expect(publicationOptions('v1.0.0-rc.1+build-beta.1','1.0.0-rc.1+build-beta.1',false).prerelease).toBe(true);
+  });
   it('requires exact unambiguous candidate assets', () => {
     const names=candidateNames('0.2.0-beta.1');
     expect(names.setup).toBe('Discord-Auto-Quest-0.2.0-beta.1-windows-x64-setup.exe');
@@ -25,6 +45,22 @@ describe('release gates', () => {
       checks:Object.fromEntries(['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'].map(name=>[name,'pass']))};
     expect(validateEvidence(evidence)).toBe(true);
     expect(()=>validateEvidence({...evidence,checks:{...evidence.checks,upgrade:'unavailable'}})).toThrow('upgrade');
+  });
+  it('keeps every acceptance gate for stable releases and rejects the example record',()=>{
+    const example=JSON.parse(readFileSync(new URL('../docs/release-evidence.example.json',import.meta.url),'utf8'));
+    expect(()=>validateEvidence(example)).toThrow();
+    const names=candidateNames('1.0.0');
+    const checks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'];
+    const evidence={version:'1.0.0',commit:'a'.repeat(40),windows:'Windows 11 x64',discord:'stable',
+      hashes:{[names.setup]:'b'.repeat(64),[names.portable]:'c'.repeat(64)},
+      checks:Object.fromEntries(checks.map(name=>[name,'pass']))};
+    expect(validateEvidence(evidence)).toBe(true);
+    for(const name of checks) expect(()=>validateEvidence({...evidence,checks:{...evidence.checks,[name]:'unavailable'}})).toThrow(name);
+  });
+  it('distinguishes historical beta observations from pending stable acceptance in curated notes',()=>{
+    const notes=readFileSync(new URL('./release-notes.md',import.meta.url),'utf8');
+    expect(notes).toContain('0.2.0-beta.2');
+    expect(notes).toMatch(/1\.0\.0.*acceptance.*pending/i);
   });
   it('permits both supported Discord media hosts in native policies',()=>{
     const config=JSON.parse(readFileSync(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8'));

@@ -1,6 +1,6 @@
 # Project context
 
-Discord Auto Quest is a React/TS frontend with a Rust/Tauri desktop backend. The public beta targets Windows x64 and stable Discord.
+Discord Auto Quest is a React/TS frontend with a Rust/Tauri desktop backend. The 1.0 release line targets Windows x64 and stable Discord.
 
 | Need | Source |
 |---|---|

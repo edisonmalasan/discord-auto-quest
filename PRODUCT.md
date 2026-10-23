@@ -4,7 +4,7 @@ Discord Auto Quest is a desktop utility for viewing and working quests the user 
 
 ## Supported release target
 
-The first public beta targets Windows 10/11 x64 and stable Discord. Linux and macOS compilation does not establish working client integration. A current-user installer and portable archive are supported distribution formats.
+The 1.0 release line targets Windows 10/11 x64 and stable Discord. Linux and macOS compilation does not establish working client integration. A current-user installer and portable archive are supported distribution formats.
 
 ## Principles and boundaries
 

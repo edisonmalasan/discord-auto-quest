@@ -22,11 +22,11 @@ The merged workspace provides Ongoing, Available, and Completed views; per-view 
 
 ## In-app acceptance candidate
 
-Development version 0.2.0-beta.2 adds deliberate review and confirmation for supported standard Orbs offers. Acceptance is separate from Work and playback; special features and unfamiliar configurations retain a Discord handoff. Fresh offers are checked again at confirmation and unknown outcomes are never retried automatically.
+First implemented in 0.2.0-beta.2, deliberate acceptance adds deliberate review and confirmation for supported standard Orbs offers. Acceptance is separate from Work and playback; special features and unfamiliar configurations retain a Discord handoff. Fresh offers are checked again at confirmation and unknown outcomes are never retried automatically.
 
 Verified: 116 frontend/tooling tests and 39 backend tests, including schema/identity guards, synthetic acceptance, timeout recovery, controller serialization, and dialog focus. Read-only offer preparation recognized eight of 16 offers. The packaged Windows app passed live review/cancel, then accepted Play Nekome Demo once with explicit authorization: Discord confirmed enrollment, the card moved to Ongoing at 0%, and Available decreased from 16 to 15. Work, game download, and reward claiming were not invoked. Broader acceptance coverage and the full beta.2 installation/release gates remain unverified. The beta.1 tag and draft assets are preserved.
 
-## Windows beta release gates
+## Windows release gates
 
 Implementation and initial checks completed for 0.2.0-beta.1: current-user installer, portable archive, notices, strict version validation, terminology audit, and prerelease publication controls. Release gates must record actual pass/fail/unavailable evidence before publication.
 
@@ -36,6 +36,9 @@ Required packaged-app checks: standard-user installation, launch, portable launc
 
 - Linux/macOS client discovery, launch, recovery, packaging, and real-client acceptance.
 - Signed Windows distribution and automatic updates.
-- Stable 1.0 compatibility commitment after beta acceptance.
 
 Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, uninstall, and portable launch passed. Installed version and license resources matched; deliberate Discord restart recovered live data; existing accepted video completion and Work/Stop UI passed; navigation and Discord handoff passed. Clean-environment WebView2 provisioning remains unavailable and blocks publication. These results apply to the recorded local candidate, not automatically to later CI artifacts. See [release checks](RELEASE_CHECKS.md) for provenance and remaining gates.
+
+## Stable release preparation
+
+Version 1.0.0 starts the documented compatibility commitment. The release workflow supports stable drafts and preserves preview channels, exact tag/version matching, and acceptance/hash/commit gates. Windows remains the only supported target. The first stable download must remain a draft until its exact assets pass every required check, including clean-environment WebView2 provisioning. Historical beta observations above are retained as historical evidence only.

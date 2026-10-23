@@ -21,7 +21,7 @@ if(installers.length!==1) throw new Error('Expected exactly one installer for th
 const stage=join(root,'target/release',`stage-${version}-${Date.now()}`); mkdirSync(stage,{recursive:true});
 cpSync(app,join(stage,'discord-auto-quest.exe'));
 for(const file of ['LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','README.md']) cpSync(join(root,file),join(stage,file));
-writeFileSync(join(stage,'RELEASE.txt'),`Discord Auto Quest ${version}\nWindows 10/11 x64, stable Discord desktop\nUnsigned beta. Portable use requires Microsoft Edge WebView2 Runtime.\nExtract this entire folder before opening the application.\nNo automatic updater; download a newer release manually.\n`);
+writeFileSync(join(stage,'RELEASE.txt'),`Discord Auto Quest ${version}\nWindows 10/11 x64, stable Discord desktop\nUnsigned build. Portable use requires Microsoft Edge WebView2 Runtime.\nExtract this entire folder before opening the application.\nNo automatic updater; download a newer release manually.\n`);
 mkdirSync(directory,{recursive:true});
 cpSync(join(build,'bundle/nsis',installers[0]),join(directory,names.setup));
 execFileSync('tar',['-a','-cf',join(directory,names.portable),'-C',stage,...distributionFiles],{stdio:'inherit'});

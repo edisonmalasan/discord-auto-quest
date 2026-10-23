@@ -2,16 +2,16 @@
 
 A desktop utility for viewing and working Discord quests you have already accepted.
 
-**Development candidate: 0.2.0-beta.2.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
+**Release version: 1.0.0.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/edisonmalasan/discord-auto-quest/releases). Select the Windows x64 beta; prereleases may contain defects.
+Download from [GitHub Releases](https://github.com/edisonmalasan/discord-auto-quest/releases). Select the Windows x64 release. Publication status is shown on the release page; drafts are not public downloads.
 
 - **Setup EXE:** installs for the current user and provisions Microsoft WebView2 if needed. Internet access is required for that provisioning.
 - **Portable ZIP:** extract the entire folder and open Discord Auto Quest. Microsoft Edge WebView2 Runtime must already be installed.
 
-The beta is unsigned. Windows may display an unknown-publisher warning. Verify the source of your download and follow your organization's security policies; do not disable security protections. SHA-256 checksums detect changed downloads but do not authenticate the publisher.
+Windows builds are unsigned. Windows may display an unknown-publisher warning. Verify the source of your download and follow your organization's security policies; do not disable security protections. SHA-256 checksums detect changed downloads but do not authenticate the publisher.
 
 ## Use
 
@@ -62,6 +62,6 @@ See CONTRIBUTING.md for checks and RELEASE.md for release preparation. No automa
 
 ## Versioning and license
 
-We follow [Semantic Versioning](https://semver.org/): breaking compatibility changes increment Major; compatible features increment Minor; compatible fixes increment Patch. Minor and Patch reset when a higher component increments. Before 1.0, compatibility is provisional and breaking changes are called out explicitly. Beta revisions increment the beta number. Published versions and tags are never replaced.
+We follow [Semantic Versioning](https://semver.org/): breaking compatibility changes increment Major; compatible features increment Minor; compatible fixes increment Patch. Minor and Patch reset when a higher component increments. Starting with 1.0.0, documented user workflows and supported requirements form the compatibility contract. Backward-compatible Discord compatibility fixes can be patch releases. Preview revisions increment their beta or RC number. Published versions and tags are never replaced.
 
 MIT licensed; see LICENSE, NOTICE, and THIRD_PARTY_NOTICES.txt. Security reports: edisonmacaraegmalasan@gmail.com.
