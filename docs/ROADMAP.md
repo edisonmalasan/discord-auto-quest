@@ -34,7 +34,7 @@ Required packaged-app checks: standard-user installation, launch, portable launc
 
 ## Deferred
 
-- macOS client discovery, launch, recovery, packaging, and real-client acceptance, deferred until a Mac tester or hardware is available. Linux releases are excluded while Discord cannot award quest rewards there; compilation checks do not establish support.
+- macOS client discovery, launch, recovery, packaging, and real-client acceptance, deferred until a Mac tester or hardware is available. macOS CI compilation is paused by default; Linux build jobs and releases are excluded. See [release configuration](../RELEASE.md) for the optional macOS setting.
 - Signed Windows distribution and automatic updates.
 
 Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, uninstall, and portable launch passed. Installed version and license resources matched; deliberate Discord restart recovered live data; existing accepted video completion and Work/Stop UI passed; navigation and Discord handoff passed. Clean-environment WebView2 provisioning remains unavailable and blocks publication. These results apply to the recorded local candidate, not automatically to later CI artifacts. See [release checks](RELEASE_CHECKS.md) for provenance and remaining gates.

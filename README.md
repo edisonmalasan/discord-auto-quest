@@ -2,7 +2,7 @@
 
 A desktop utility for viewing and working Discord quests you have already accepted.
 
-**Release version: 1.0.1.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
+**Release version: 1.0.1.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. CI runs Windows checks and builds; Linux builds are excluded and macOS builds are paused. Neither platform is supported.
 
 ## Download and install
 
