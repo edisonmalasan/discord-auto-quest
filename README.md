@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="public/quest-badge.svg" alt="Discord Auto Quest logo" width="80" height="80">
+  <img src="https://raw.githubusercontent.com/edisonmalasan/discord-auto-quest/main/public/quest-badge.svg" alt="Discord Auto Quest logo" width="80" height="80">
 </p>
 
 # Discord Auto Quest
 
 A Windows desktop app for browsing, accepting, and working Discord quests from one workspace.
 
-[Download latest release](https://github.com/edisonmalasan/discord-auto-quest/releases/latest) · [Release history](https://github.com/edisonmalasan/discord-auto-quest/releases) · [Report a problem](https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+[Download latest release](https://github.com/edisonmalasan/discord-auto-quest/releases/latest) · [Release history](https://github.com/edisonmalasan/discord-auto-quest/releases) · [Report a problem](https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose) · [Contribute](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md)
 
 Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord.
 
@@ -96,7 +96,7 @@ The app never accepts quests automatically, claims rewards, or restarts Discord 
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.
 - Stop and connection timeouts do not guarantee cancellation of every activity already started in Discord.
 
-For the verification record and outstanding release checks, see [release checks](docs/RELEASE_CHECKS.md). A stable version number does not establish that every installation path or quest type has been tested.
+For the verification record and outstanding release checks, see [release checks](https://github.com/edisonmalasan/discord-auto-quest/blob/main/docs/RELEASE_CHECKS.md). A stable version number does not establish that every installation path or quest type has been tested.
 
 ## Troubleshooting
 
@@ -129,26 +129,26 @@ npm run build
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-See [Contributing](CONTRIBUTING.md) for the complete checks and contribution workflow.
+See [Contributing](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md) for the complete checks and contribution workflow.
 
 ## Documentation
 
 | Guide | Contents |
 | --- | --- |
-| [Changelog](CHANGELOG.md) | Changes recorded for each version. |
-| [Release guide](RELEASE.md) | Versioning, packaging, GitHub drafts, verification, and publication. |
-| [Release checks](docs/RELEASE_CHECKS.md) | Verification evidence, limitations, and remaining checks. |
-| [Roadmap](docs/ROADMAP.md) | Verified progress and deferred work. |
-| [Product requirements](PRODUCT.md) | Product behavior, constraints, and non-goals. |
-| [Design](DESIGN.md) | The app's visual and interaction decisions. |
+| [Changelog](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CHANGELOG.md) | Changes recorded for each version. |
+| [Release guide](https://github.com/edisonmalasan/discord-auto-quest/blob/main/RELEASE.md) | Versioning, packaging, GitHub drafts, verification, and publication. |
+| [Release checks](https://github.com/edisonmalasan/discord-auto-quest/blob/main/docs/RELEASE_CHECKS.md) | Verification evidence, limitations, and remaining checks. |
+| [Roadmap](https://github.com/edisonmalasan/discord-auto-quest/blob/main/docs/ROADMAP.md) | Verified progress and deferred work. |
+| [Product requirements](https://github.com/edisonmalasan/discord-auto-quest/blob/main/PRODUCT.md) | Product behavior, constraints, and non-goals. |
+| [Design](https://github.com/edisonmalasan/discord-auto-quest/blob/main/DESIGN.md) | The app's visual and interaction decisions. |
 
 We follow [Semantic Versioning](https://semver.org/): breaking compatibility changes increment Major; compatible features increment Minor; compatible fixes increment Patch. Minor and Patch reset when a higher component increments. Starting with 1.0.0, documented user workflows and supported requirements form the compatibility contract. Backward-compatible Discord compatibility fixes can be patch releases. Preview revisions increment their beta or RC number. Published versions and tags are never replaced.
 
 ## Contributing and community
 
-Bug reports and focused contributions are welcome. Read [Contributing](CONTRIBUTING.md) before opening a pull request and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+Bug reports and focused contributions are welcome. Read [Contributing](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md) before opening a pull request and follow the [Code of Conduct](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CODE_OF_CONDUCT.md).
 
-Report security concerns privately using [Security](SECURITY.md). The private contact for security and conduct reports is **edisonmacaraegmalasan@gmail.com**.
+Report security concerns privately using [Security](https://github.com/edisonmalasan/discord-auto-quest/blob/main/SECURITY.md). The private contact for security and conduct reports is **edisonmacaraegmalasan@gmail.com**.
 
 ## Disclaimer
 
