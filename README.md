@@ -2,7 +2,7 @@
 
 A desktop utility for viewing and working Discord quests you have already accepted.
 
-**Release version: 1.0.0.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
+**Release version: 1.0.1.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
 
 ## Download and install
 
@@ -18,7 +18,7 @@ Windows builds are unsigned. Windows may display an unknown-publisher warning. V
 1. Open the stable Discord desktop client and sign in there.
 2. Open Discord Auto Quest. If it requests a Discord restart, review the interruption warning and choose whether to restart.
 3. Browse Available quests and choose **Accept quest**. Review the current requirements, then confirm acceptance. Unsupported offers use **Open in Discord** instead. Acceptance does not start Work or video playback.
-4. Return to Ongoing and choose **Work my quests**. Progress and completion reflect Discord's records.
+4. Return to Ongoing and choose **Work my quests**. Percentages refresh from Discord about every four seconds, including during Work. Progress moves when Discord provides an update; completion requires Discord's confirmation.
 5. Use **Stop** to request cleanup. An unconfirmed operation remains visible and may require reconnecting and retrying Stop.
 6. Claim rewards yourself in Discord. Completed and reward-claimed are distinct states.
 

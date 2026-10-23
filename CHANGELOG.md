@@ -2,6 +2,11 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 1.0.1 — Unreleased
+
+- Include Discord's live video playback progress in the quest percentage refresh, while keeping completion dependent on Discord's confirmation.
+- Refresh video and activity Work progress from Discord's acknowledgments without extra requests or estimated progress.
+
 ## 1.0.0 — Unreleased
 
 - Prepare the first stable Windows x64 release and its GitHub draft workflow.

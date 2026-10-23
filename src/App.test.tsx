@@ -66,6 +66,26 @@ describe('the quest workspace', () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Stop' }));
   await waitFor(() => expect(stop).toHaveBeenCalledTimes(1));
  });
+ it('refreshes the percentage ring during Work and keeps completion tied to Discord', async () => {
+  vi.useFakeTimers();
+  const video = makeQuest({ id: 'video', name: 'Video Quest', state: 'claimed',
+   taskDetails: [{ kind: 'WATCH_VIDEO', value: 0, target: 100, unit: 'seconds', platform: null }] });
+  list.mockResolvedValue(makeFeed({ claimed: [video] }));
+  render(<App />); await act(async()=>{});
+  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','0');
+  await act(async()=>{screen.getByRole('button',{name:'Work my quests'}).click();});
+  for (const value of [5, 25, 99]) {
+   list.mockResolvedValue(makeFeed({ claimed: [{ ...video, taskDetails: [{ ...video.taskDetails![0], value }] }] }));
+   await act(async()=>{await vi.advanceTimersByTimeAsync(4000);});
+   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow',String(value));
+   expect(screen.getByRole('button',{name:'Stop'})).toBeEnabled();
+   expect(screen.getByRole('button',{name:/Completed.*0/})).toBeInTheDocument();
+  }
+  list.mockResolvedValue(makeFeed({ claimed: [{ ...video, state:'completed', completedAt:'2026-10-24' }] }));
+  await act(async()=>{await vi.advanceTimersByTimeAsync(4000);});
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:/Completed.*1/})).toBeInTheDocument();
+ });
  it('never restarts Discord unless the user clicks the deliberate action', async () => {
   status.mockResolvedValue({ installed: true, ready: false, action: 'Restarting Discord interrupts your activity.', profile: null });
   render(<App />); const button = await screen.findByRole('button', { name: 'Restart Discord' });

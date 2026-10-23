@@ -289,7 +289,21 @@ const READ_STATE: &str = r#"(function () {
       const taskDetails = taskNames.map(function (kind) {
         const task = tasks[kind] || {};
         const value = user.progress && user.progress[kind];
-        return { kind: kind, value: value ? number(value.value) : 0, target: number(task.target),
+        let observed = value ? number(value.value) : 0;
+        // Discord exposes live video playback separately from saved progress.
+        // Read it afresh; completion still requires the client's timestamp.
+        if ((kind === 'WATCH_VIDEO' || kind === 'WATCH_VIDEO_ON_MOBILE') &&
+            typeof questStore.getOptimisticProgress === 'function') {
+          try {
+            const live = number(questStore.getOptimisticProgress(quest.id, kind));
+            const target = number(task.target);
+            if (live !== null && target !== null && target > 0) {
+              const limit = timestamp(user.completedAt) ? target : target * 0.99;
+              observed = Math.max(observed === null ? 0 : observed, Math.min(live, limit));
+            }
+          } catch (error) { /* saved progress remains available */ }
+        }
+        return { kind: kind, value: observed, target: number(task.target),
           unit: secondsTasks.includes(kind) ? 'seconds' : (kind === 'ACHIEVEMENT_IN_ACTIVITY' ? 'count' : 'unknown'),
           platform: kind.includes('XBOX') ? 'Xbox' : (kind.includes('PLAYSTATION') ? 'PlayStation'
             : (kind.includes('MOBILE') ? 'Mobile' : (kind.includes('DESKTOP') ? 'Desktop' : null))) };

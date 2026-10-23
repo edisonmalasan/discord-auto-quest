@@ -42,3 +42,7 @@ Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, 
 ## Stable release preparation
 
 Version 1.0.0 starts the documented compatibility commitment. The release workflow supports stable drafts and preserves preview channels, exact tag/version matching, and acceptance/hash/commit gates. Windows remains the only supported target. The first stable download must remain a draft until its exact assets pass every required check, including clean-environment WebView2 provisioning. Historical beta observations above are retained as historical evidence only.
+
+## Progress synchronization
+
+The 1.0.1 fix includes Discord's live video playback values and acknowledged video/activity Work progress in the existing four-second refresh. Only Discord's valid completion timestamp moves a quest to Completed. Synthetic operation-to-reader tests cover returned values, invalid and unrelated acknowledgments, and preservation of enrollment/reward metadata; the UI test covers percentage updates during Work. All 137 frontend/tooling tests passed. A new live account-affecting Work check and acceptance of the new packaged assets remain unverified; earlier draft results do not establish those outcomes.

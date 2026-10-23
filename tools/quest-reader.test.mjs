@@ -5,10 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('../src-tauri/src/quest/reader.rs', import.meta.url), 'utf8');
 const expression = source.match(/const READ_STATE: &str = r#"([\s\S]*?)"#;/)[1];
-function read(quests) {
-  const context = vm.createContext({ input: quests });
+function read(quests, optimistic = {}) {
+  const context = vm.createContext({ input: quests, optimistic });
   vm.runInContext(`
-    const store = { quests: new Map(input.map(q => [q.id, q])), getQuest() {} };
+    const store = { quests: new Map(input.map(q => [q.id, q])), getQuest() {},
+      getOptimisticProgress(id, kind) { return optimistic[kind]; } };
     const webpackChunkdiscord_app = { push: a => a[2]({ c: { one: { exports: { renamed: store } } } }), pop() {} };
     const DiscordNative = {};
   `, context);
@@ -21,6 +22,25 @@ const quest = (overrides = {}) => ({ id: '1', config: {
 }, ...overrides });
 
 describe('the real read-only client expression', () => {
+  it('reads Discord live video progress again on every refresh without inventing completion', () => {
+    const q = quest({ userStatus: { enrolledAt: '2026-10-01', progress: { WATCH_VIDEO: { value: 0 } } } });
+    q.config.taskConfigV2.tasks = { WATCH_VIDEO: { target: 100 } };
+    expect(read([q], { WATCH_VIDEO: 5 }).claimed[0].taskDetails[0].value).toBe(5);
+    expect(read([q], { WATCH_VIDEO: 25 }).claimed[0].taskDetails[0].value).toBe(25);
+    const nearlyDone = read([q], { WATCH_VIDEO: 100 }).claimed[0];
+    expect(nearlyDone.taskDetails[0].value).toBe(99);
+    expect(nearlyDone.state).toBe('claimed');
+    q.userStatus.completedAt = '2026-10-02';
+    expect(read([q], { WATCH_VIDEO: 100 }).claimed[0].state).toBe('completed');
+  });
+  it('keeps confirmed progress when live video progress is lower or invalid', () => {
+    const q = quest({ userStatus: { enrolledAt: '2026-10-01', progress: { WATCH_VIDEO_ON_MOBILE: { value: 20 } } } });
+    q.config.taskConfigV2.tasks = { WATCH_VIDEO_ON_MOBILE: { target: 100 } };
+    for (const value of [5, -1, NaN, Infinity, '25', undefined]) {
+      expect(read([q], { WATCH_VIDEO_ON_MOBILE: value }).claimed[0].taskDetails[0].value).toBe(20);
+    }
+    expect(read([q], { WATCH_VIDEO_ON_MOBILE: 25 }).claimed[0].taskDetails[0].value).toBe(25);
+  });
   it('does not invent completion or reject the feed for malformed optional metadata', () => {
     const q = quest({ userStatus: { enrolledAt: '2026-10-01', completedAt: 'not-a-date' } });
     q.config.messages.gamePublisher = { changedShape: true };
