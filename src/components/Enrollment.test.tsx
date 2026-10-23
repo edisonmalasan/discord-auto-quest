@@ -5,8 +5,10 @@ const offer={status:'review' as const,id:'123',name:'Example',reward:'200 Orbs',
 function Button(){const enrollment=useEnrollment(); return <button onClick={()=>enrollment?.review('123')}>Review offer</button>}
 function show(run=vi.fn().mockResolvedValue(offer)) {
  const refresh=vi.fn();
- render(<EnrollmentProvider run={run} refresh={refresh} disabled={false} onActiveChange={()=>{}}><h1 id="view-title" tabIndex={-1}>Available quests</h1><Button/></EnrollmentProvider>);
- return {run,refresh};
+ const active=()=>{};
+ const content=(button:boolean)=><EnrollmentProvider run={run} refresh={refresh} disabled={false} onActiveChange={active}><h1 id="view-title" tabIndex={-1}>Available quests</h1>{button&&<Button/>}</EnrollmentProvider>;
+ const view=render(content(true));
+ return {run,refresh,removeTrigger:()=>view.rerender(content(false))};
 }
 it('requires confirmation and cancellation makes no acceptance call',async()=>{
  const {run}=show(); fireEvent.click(screen.getByText('Review offer'));
@@ -33,4 +35,15 @@ it('keeps uncertainty visible and prevents automatic retries',async()=>{
 it('Escape cancels a review without accepting',async()=>{
  const {run}=show(); fireEvent.click(screen.getByText('Review offer')); await screen.findByRole('dialog');
  fireEvent.keyDown(screen.getByRole('dialog'),{key:'Escape'}); expect(screen.queryByRole('dialog')).toBeNull(); expect(run).toHaveBeenCalledTimes(1);
+});
+it.each(['Cancel','Escape'])('restores useful focus when the source card disappears: %s',async(action)=>{
+ const {removeTrigger}=show(); const trigger=screen.getByText('Review offer'); trigger.focus(); fireEvent.click(trigger); await screen.findByRole('button',{name:'Cancel'});
+ removeTrigger();
+ if(action==='Cancel')fireEvent.click(screen.getByRole('button',{name:'Cancel'}));else fireEvent.keyDown(screen.getByRole('dialog'),{key:'Escape'});
+ expect(screen.getByRole('heading',{name:'Available quests'})).toHaveFocus();
+});
+it('describes desktop and mobile video tasks as alternatives',async()=>{
+ show(vi.fn().mockResolvedValue({...offer,requirements:[{kind:'WATCH_VIDEO',target:30},{kind:'WATCH_VIDEO_ON_MOBILE',target:30}]}));
+ fireEvent.click(screen.getByText('Review offer')); await screen.findByRole('button',{name:'Confirm acceptance'});
+ expect(screen.getByText('Choose one task:')).toBeInTheDocument();
 });

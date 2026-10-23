@@ -13,7 +13,7 @@ export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children
  useEffect(()=>{const element=dialog.current;if(id&&element){if(!element.open){if(element.showModal)element.showModal();else element.setAttribute('open','');}if(!pending)cancel.current?.focus();}else element?.close?.();},[id,pending]);
  useEffect(()=>{onActiveChange(id!==null);return()=>onActiveChange(false);},[id,onActiveChange]);
  useEffect(()=>{if(!id&&notice)document.getElementById('view-title')?.focus();},[id,notice]);
- function close(){if(busy.current)return;dialog.current?.close?.();setId(null);setOffer(null);setError(null);origin.current?.focus();}
+ function close(){if(busy.current)return;dialog.current?.close?.();setId(null);setOffer(null);setError(null);if(origin.current?.isConnected)origin.current.focus();else document.getElementById('view-title')?.focus();}
  async function review(questId:string){
   if(disabled||busy.current||id)return;
   origin.current=document.activeElement as HTMLElement;setId(questId);setOffer(null);setError(null);setNotice('');busy.current=true;setPending(true);
@@ -35,7 +35,7 @@ export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children
    <h2 id="accept-title">{offer?`Accept ${offer.name}?`:'Review quest'}</h2>
    <p id="accept-description">Acceptance adds this quest to your Discord account. Work starts only when you choose Work my quests.</p>
    {pending&&<p role="status">{offer?'Waiting for Discord to confirm…':'Reading the current offer…'}</p>}
-   {offer&&<><p className="acceptance-reward">{offer.reward}</p><ul>{offer.requirements.map(task=><li key={task.kind}>{taskLabel(task.kind)} for {duration(task.target)}</li>)}</ul><p>Ends {new Date(offer.expiresAt).toLocaleString()}</p><p>Only accept if you meet the offer requirements. Review full offer details in Discord if you are unsure.</p></>}
+   {offer&&<><p className="acceptance-reward">{offer.reward}</p>{offer.requirements.length>1&&<p>Choose one task:</p>}<ul>{offer.requirements.map(task=><li key={task.kind}>{taskLabel(task.kind)} for {duration(task.target)}</li>)}</ul><p>Ends {new Date(offer.expiresAt).toLocaleString()}</p><p>Only accept if you meet the offer requirements. Review full offer details in Discord if you are unsure.</p></>}
    {error&&<p role="alert">{error}</p>}
    {disabled&&<p role="status">Reconnect to Discord before confirming.</p>}
    <div className="acceptance-buttons"><button ref={cancel} className="button secondary" disabled={pending} onClick={close}>{offer?'Cancel':'Close'}</button><button className="button secondary" disabled={pending} onClick={()=>void handoff()}>Open in Discord</button>{offer&&<button className="button primary" disabled={pending||disabled} onClick={()=>void confirm()}>Confirm acceptance</button>}</div>
