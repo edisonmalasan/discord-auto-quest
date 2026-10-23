@@ -51,3 +51,26 @@ a518f33cc304010953e68b03b956fa67882be1b31e4af20fc76eb0c3c96126bf  Discord-Auto-Q
 ## 1.0.0 preparation
 
 The first stable version is 1.0.0. Its exact installer and portable assets have not yet completed packaged acceptance. All earlier results and hashes above apply only to their named beta candidates. Clean-environment WebView2 provisioning is still unavailable. Keep the 1.0.0 release draft until the complete evidence record identifies its commit, hashes, environment, and passing results. Use [the evidence template](release-evidence.example.json) and [release instructions](../RELEASE.md).
+
+## 1.0.0 non-mutating UI verification
+
+On 2026-10-23 the exact draft installer upgraded the earlier beta.1 installation to 1.0.0 with exit 0 under a non-elevated account. The installed app's About panel showed 1.0.0, MIT, and the independent-project notice. Environment: Windows build 26200.9457 / 25H2, stable Discord 1.0.9265, WebView2 155.0.4283.62 already installed.
+
+| Check | Observed result |
+|---|---|
+| Live quest views | Ongoing 1, Available 14, Completed 10; the user-accepted Royal Match quest appeared at 0%. |
+| Navigation and search | All three views opened; filtering Available to Sensei returned one card; its filter survived switching views and was cleared after testing. |
+| In-app acceptance review | Sensei Pro and Rival Pro showed the reward, requirements, expiry, and a separate confirmation button. Cancel closed it; counts remained unchanged. No offer was accepted during this check. |
+| Card menu | The completed Play Nekome Demo card menu opened and dismissed on an outside click. No menu action was invoked. |
+| Brand assets | The installed executable, portable executable, and Start-menu shortcut each yielded the custom brand icon. No missing icon asset was found. |
+
+Installation was launched from a packaged test host: its normal app-data path resolved into that host's private storage. This qualifies the upgrade/launch observations above; it does not establish normal Windows Start-menu registration. The reported generic Windows Search icon remains pending verification through an ordinary desktop installation. Installer, uninstall, upgrade, and shortcut acceptance must be recorded in that normal context before their gates pass.
+
+The observations identify these immutable draft assets at commit 7890b56a4dd205980af98b5f924b1ac0d52f1a2f:
+
+```text
+3afe6e668c22987ace564f1c3ae65dc74ae6b9b280e0344af63df3574c823520  Discord-Auto-Quest-1.0.0-windows-x64-setup.exe
+38d92da84f20841cb4b329f6a6a7e428c88681be38db4cb6b1f6e10ce79b4d42  Discord-Auto-Quest-1.0.0-windows-x64-portable.zip
+```
+
+Portable launch, normal installation/uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
