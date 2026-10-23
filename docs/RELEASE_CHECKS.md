@@ -36,3 +36,14 @@ Local candidate SHA-256 values:
 Test the exact draft assets and record their hashes, commit, environment, and every required acceptance result. Earlier local results must not be reused as hash-specific proof for rebuilt CI assets. Exercise WebView2 provisioning in a clean standard-user Windows environment. A fresh user-accepted quest cycle and additional quest types remain unverified; no general support claim follows from one video result. The no-game condition was not independently recorded.
 
 The release tooling rejects incomplete acceptance evidence. Keep the beta draft until all required checks pass. Linux/macOS integration and signed Windows distribution remain follow-up work.
+
+## Beta.2 acceptance feature verification
+
+On 2026-10-23 the packaged Windows candidate passed live offer review and Cancel without enrollment. After explicit authorization for one named offer, confirmation accepted Play Nekome Demo and a separate live read confirmed enrollment. The app showed it in Ongoing at 0%, with Available decreasing from 16 to 15. Work, game download, and reward claiming were not invoked. This verifies one desktop-play acceptance flow, not every offer or the full beta.2 installation/release gates.
+
+The tested local candidate used runtime code from 557a82d, stable Discord 1.0.9265, and the existing Windows/WebView2 environment described above. Its hashes identify that tested build; later CI builds require their own release acceptance record.
+
+```text
+a518f33cc304010953e68b03b956fa67882be1b31e4af20fc76eb0c3c96126bf  Discord-Auto-Quest-0.2.0-beta.2-windows-x64-setup.exe
+5eab2ee0eec83f7f1ea9f29c35f0311bc388051a19013a6d3b6c2619442bd4ac  Discord-Auto-Quest-0.2.0-beta.2-windows-x64-portable.zip
+```

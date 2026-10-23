@@ -6,7 +6,7 @@ This project follows Semantic Versioning. Versions below 1.0 are provisional; pr
 
 - Review and confirm supported quest offers inside the app, with a Discord fallback.
 - Separate acceptance from Work and show uncertain results without automatic retries.
-- Real acceptance and beta.2 packaged-app acceptance remain unverified.
+- Verified acceptance of one desktop-play offer in the packaged Windows app. Broader acceptance coverage and the full beta.2 installation/release gates remain unverified.
 
 ## 0.2.0-beta.1 — Unreleased
 

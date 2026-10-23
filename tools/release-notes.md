@@ -7,7 +7,7 @@ Downloads:
 
 This beta is unsigned and has no automatic updater. Do not disable Windows security protections. Linux and macOS are not supported releases.
 
-Includes the Ongoing, Available, and Completed workspace, connection recovery, and deliberate review/confirmation for supported quest offers. Acceptance never starts Work or playback. Unsupported offers and reward claims continue in Discord. Actual acceptance in this new flow remains unverified.
+Includes the Ongoing, Available, and Completed workspace, connection recovery, and deliberate review/confirmation for supported quest offers. Acceptance never starts Work or playback. Unsupported offers and reward claims continue in Discord. One desktop-play offer was accepted successfully through the packaged Windows app; broader acceptance coverage remains unverified.
 
 Known limitations: a fresh accept-to-completion cycle and broader quest coverage remain unverified. Some quest tasks require user participation. Discord updates can interrupt compatibility. Stop does not guarantee cancellation of every previously started activity.
 
