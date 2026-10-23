@@ -104,6 +104,26 @@ mod recovery_tests {
     }
 
     #[tokio::test]
+    async fn stalled_acceptance_releases_the_session_without_replaying() {
+        let (session, server) = operation_session(false).await;
+        let state = DiscordState {
+            session: Mutex::new(Some(session)),
+        };
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(12),
+            state.enrollment("123", Some("reviewed")),
+        )
+        .await;
+        server.abort();
+        let error = result
+            .expect("acceptance must release recovery controls")
+            .unwrap_err();
+        assert!(matches!(error.code, ErrorCode::OperationUncertain));
+        assert!(!error.retryable);
+        assert!(state.session.lock().await.is_none());
+    }
+
+    #[tokio::test]
     async fn a_work_acknowledgment_failure_is_not_a_known_pre_dispatch_failure() {
         let (session, server) = operation_session(true).await;
         let state = DiscordState {
@@ -234,6 +254,32 @@ pub struct DiscordState {
 }
 
 impl DiscordState {
+    /// Review an offer or confirm a previously reviewed revision, on user request.
+    pub async fn enrollment(
+        &self,
+        id: &str,
+        revision: Option<&str>,
+    ) -> AppResult<serde_json::Value> {
+        let expression = crate::quest::enrollment::expression(id, revision)?;
+        let mut guard = self.session.lock().await;
+        let session = guard.as_mut().ok_or_else(|| {
+            AppError::not_supported("Reconnect to Discord before reviewing an offer.")
+        })?;
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(10),
+            session.evaluate(&expression),
+        )
+        .await;
+        match result {
+            Ok(Ok(value)) => crate::quest::enrollment::validate(value, id),
+            _ => {
+                *guard = None;
+                Err(AppError::new(ErrorCode::OperationUncertain,
+                    "Discord did not confirm the result. Reconnect and check your quests before trying again.", false))
+            }
+        }
+    }
+
     /// Restart only on the user's request, and hold reads until the new
     /// renderer answers. A session from the old process is no longer usable.
     pub async fn restart(&self) -> AppResult<()> {

@@ -8,8 +8,10 @@ const listDiscordQuests = vi.fn<() => Promise<QuestFeed>>();
 const startQuestWork = vi.fn<() => Promise<boolean>>();
 const stopQuestWork = vi.fn<() => Promise<void>>();
 const relaunchDiscord = vi.fn<() => Promise<void>>();
+const questEnrollment = vi.fn();
 
 vi.mock('../lib/ipc', () => ({
+  questEnrollment: (...args: unknown[]) => questEnrollment(...args),
   discordStatus: () => discordStatus(),
   listDiscordQuests: () => listDiscordQuests(),
   startQuestWork: () => startQuestWork(),
@@ -36,6 +38,20 @@ describe('useDiscord', () => {
     listDiscordQuests.mockResolvedValue({ available: [], claimed: [], expired: 0, desktopApp: true, runningGames: [] });
   });
   afterEach(() => vi.useRealTimers());
+
+  it('serializes acceptance with Work and never starts Work after acceptance', async () => {
+    let finish!: (value: {status:string;id:string}) => void;
+    questEnrollment.mockReturnValue(new Promise(resolve => {finish=resolve;}));
+    const {result}=renderHook(()=>useDiscord());
+    await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
+    let pending!: Promise<unknown>;
+    act(()=>{pending=result.current.enrollment('123','reviewed');});
+    expect(result.current.busy).toBe(true);
+    act(()=>result.current.work()); expect(startQuestWork).not.toHaveBeenCalled();
+    await expect(result.current.enrollment('123','reviewed')).rejects.toThrow();
+    await act(async()=>{finish({status:'accepted',id:'123'});await pending;});
+    expect(questEnrollment).toHaveBeenCalledTimes(1); expect(startQuestWork).not.toHaveBeenCalled();
+  });
 
   it('retains the last read as stale and clears a recovered read error', async () => {
     const { result } = renderHook(() => useDiscord());

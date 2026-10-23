@@ -5,8 +5,8 @@ import { AboutPopover } from './AboutPopover';
 import { QuestIndex } from './QuestIndex';
 
 const labels: Record<QuestView, string> = { ongoing: 'Ongoing', available: 'Available', completed: 'Completed' };
-const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Find your next quest. Accept it in Discord to get started.', completed: 'Your completed quests and rewards.' };
-const empty: Record<QuestView, string> = { ongoing: 'Accept a quest in Discord, then it will appear here.', available: 'There are no available quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
+const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Find your next quest. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
+const empty: Record<QuestView, string> = { ongoing: 'Accept a quest from Available or in Discord, then it will appear here.', available: 'There are no available quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
 interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode }
 
 export function QuestWorkspace({ views, loading, stale, controls, connection }: Props) {

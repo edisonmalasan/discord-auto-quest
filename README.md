@@ -2,7 +2,7 @@
 
 A desktop utility for viewing and working Discord quests you have already accepted.
 
-**Windows public beta: 0.2.0-beta.1.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Linux and macOS builds are development checks, not supported downloads.
+**Development candidate: 0.2.0-beta.2.** Windows 10/11 x64 and the stable Discord desktop client are the initial target. Download availability and publication status are shown in GitHub Releases. Linux and macOS builds are development checks, not supported downloads.
 
 ## Download and install
 
@@ -17,18 +17,20 @@ The beta is unsigned. Windows may display an unknown-publisher warning. Verify t
 
 1. Open the stable Discord desktop client and sign in there.
 2. Open Discord Auto Quest. If it requests a Discord restart, review the interruption warning and choose whether to restart.
-3. Browse Available quests and use **Accept in Discord** to accept a quest yourself.
+3. Browse Available quests and choose **Accept quest**. Review the current requirements, then confirm acceptance. Unsupported offers use **Open in Discord** instead. Acceptance does not start Work or video playback.
 4. Return to Ongoing and choose **Work my quests**. Progress and completion reflect Discord's records.
 5. Use **Stop** to request cleanup. An unconfirmed operation remains visible and may require reconnecting and retrying Stop.
 6. Claim rewards yourself in Discord. Completed and reward-claimed are distinct states.
 
-The app never accepts quests, claims rewards, or restarts Discord automatically. Restarting Discord interrupts calls and other Discord activity.
+The app never accepts quests automatically, claims rewards, or restarts Discord automatically. Restarting Discord interrupts calls and other Discord activity.
 
 ## Supported behavior and limitations
 
 - Quest availability and eligibility depend on Discord and the publisher. Some tasks still require user participation, such as sharing in a voice channel.
 - One accepted video quest completed in Windows beta testing. A fresh accept-to-completion cycle and broader quest coverage remain unverified; do not assume every quest type works.
-- Accept, claim, and reward controls open Discord's Quests page and identify the quest to select.
+- In-app acceptance initially supports standard Orbs offers for desktop play and video tasks. Special features, console/activity tasks, and unfamiliar offer configurations require Discord. One desktop-play offer was accepted successfully through the packaged Windows app; other acceptance flows remain unverified.
+- If acceptance cannot be confirmed, refresh or check Discord before trying again. The app does not automatically retry.
+- Claim, reward, and fallback controls open Discord's Quests page and identify the quest to select.
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.
 - Stop and connection timeouts do not guarantee cancellation of every activity already started in Discord.
 - Stable Discord installations are the supported target. PTB, Canary, Store-specific layouts, Windows ARM64, and 32-bit Windows are unverified.

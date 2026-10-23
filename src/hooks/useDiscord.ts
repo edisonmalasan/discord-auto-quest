@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError } from '../lib/ipc';
+import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError, questEnrollment } from '../lib/ipc';
+import type { EnrollmentRun } from '../types/enrollment';
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
 
 export type DiscordPhase = 'loading' | 'ready' | 'blocked' | 'error';
 export type ConnectionState = 'loading' | 'closed' | 'restart-needed' | 'connecting' | 'connected' | 'failed';
-type Action = 'restart' | 'work' | 'stop';
+type Action = 'restart' | 'work' | 'stop' | 'accept';
 export interface DiscordController {
   phase: DiscordPhase;
   status: DiscordStatus | null;
@@ -21,6 +22,7 @@ export interface DiscordController {
   work: () => void;
   stop: () => void;
   refresh: () => void;
+  enrollment: EnrollmentRun;
 }
 
 export function useDiscord(): DiscordController {
@@ -98,6 +100,14 @@ export function useDiscord(): DiscordController {
   }, [poll]);
 
   const restart = useCallback(() => act('restart'), [act]);
+  const enrollment: EnrollmentRun = useCallback(async (id, revision) => {
+    if (acting.current || needsStop.current || !fresh || !status?.ready || !feed?.desktopApp) throw new Error('Connect to Discord and stop Work before accepting a quest.');
+    acting.current = true;
+    const epoch = ++generation.current;
+    setPendingAction('accept');
+    try { return await questEnrollment(id, revision); }
+    finally { acting.current = false; if (mounted.current && generation.current === epoch) setPendingAction(null); }
+  }, [fresh, status, feed]);
   const work = useCallback(() => act('work'), [act]);
   const stop = useCallback(() => act('stop'), [act]);
   const refresh = useCallback(() => { if (!acting.current) void poll(generation.current); }, [poll]);
@@ -107,5 +117,5 @@ export function useDiscord(): DiscordController {
       : !status?.installed || status.running === false ? 'closed'
         : !status.ready ? 'restart-needed' : fresh ? 'connected' : 'connecting';
   return { phase, status, feed, error, operationError, pendingAction, busy: pendingAction !== null,
-    working, stale, connectionState, restart, work, stop, refresh };
+    working, stale, connectionState, restart, work, stop, refresh, enrollment };
 }

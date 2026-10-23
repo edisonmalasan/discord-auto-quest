@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { QuestCardModel } from '../lib/quest-view';
 import { copyQuestLink, openQuestExternal, openQuestInDiscord } from '../lib/quest-actions';
+import { useEnrollment } from './Enrollment';
 interface Props { card: QuestCardModel; stale: boolean; menuOpen: boolean; onMenuChange: (id: string | null) => void;
   onDiscord?: () => Promise<{ instruction: string | null }>; onExternal?: () => Promise<void>; onCopy?: () => Promise<void> }
 export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, onExternal, onCopy }: Props) {
   const { quest } = card;
+  const enrollment = useEnrollment();
   const root = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -53,7 +55,7 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
   const video = quest.tasks.some(t => t.startsWith('WATCH_VIDEO'));
   const alternatives = !video && quest.taskDetails.length > 1;
   const seconds = videoRemaining(card);
-  const label = card.view === 'available' ? 'Accept in Discord' : card.rewardState === 'claimable' ? 'Claim in Discord'
+  const label = card.view === 'available' ? enrollment ? 'Accept quest' : 'Accept in Discord' : card.rewardState === 'claimable' ? 'Claim in Discord'
     : card.rewardState === 'claimed' ? 'View reward in Discord' : card.view === 'completed' ? 'Check in Discord'
       : video ? `Watch${seconds !== null ? ` ${seconds}s` : ''} in Discord`
         : alternatives ? 'Platforms in Discord' : 'Open in Discord';
@@ -71,7 +73,7 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
     {card.expired && card.view === 'ongoing' ? <footer className="quest-footer"><button className="button secondary" disabled>Quest expired</button></footer> : <footer className="quest-footer">
     {quest.ctaLink && !(alternatives && card.view === 'ongoing') && <button className="button secondary" disabled={stale || pending} onClick={() => void perform('external')}>{quest.ctaLabel ?? 'Get Game'}</button>}
     {alternatives && card.view === 'ongoing' && <button className="button secondary" disabled>Quest accepted</button>}
-    {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired'} onClick={() => void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
+    {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired' || card.view === 'available' && enrollment?.disabled} onClick={() => card.view === 'available' && enrollment ? enrollment.review(quest.id) : void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
     </footer>}
     {error && <p className="card-feedback error" role="alert">{error}</p>}
     {notice && <p className="card-feedback" role="status">{notice}</p>}

@@ -27,5 +27,6 @@
 pub mod cdp;
 pub mod discord;
 pub mod driver;
+pub mod enrollment;
 pub mod payload;
 pub mod reader;

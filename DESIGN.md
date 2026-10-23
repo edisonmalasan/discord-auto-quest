@@ -38,6 +38,8 @@ Ongoing opens first. Each view retains its search and scroll position during the
 The main header owns one global Work my quests / Stop control; cards do not imply a per-quest runner.
 Connection and recovery controls live in the sidebar footer. Operation errors stay beside Work/Stop.
 
+Available cards can open a native modal to review a fresh supported offer and confirm acceptance. Cancel receives initial focus. Confirmation disables repeat submission, and success waits for Discord's enrolled record. Unsupported offers retain a Discord handoff. Acceptance does not start Work or playback.
+
 The grid shows one, two, and three columns at 880, 1200, and 1600 px respectively. A lone card
 stays compact and left-aligned. Content and footers grow for longer labels and text scaling;
 hero wordmarks and publisher rows remain in normal flow to avoid overlapping at narrow widths.
@@ -76,7 +78,7 @@ their voice-channel requirements.
 Accept in Discord, Watch in Discord, Claim in Discord, and View reward in Discord are explicit
 handoffs. The verified desktop route opens Quests and a visible instruction names the quest to
 select; a direct desktop quest route was not supported in the inspected client. External CTA
-buttons open supported HTTPS destinations and report failures. They never accept or claim here.
+buttons open supported HTTPS destinations and report failures. External links never accept or claim a reward.
 Copy quest link only copies the public quest URL. One anchored menu opens at a time, with arrow
 navigation, Escape/outside dismissal, and keyboard focus restoration. Unsupported account/ad-setting
 controls are not simulated.

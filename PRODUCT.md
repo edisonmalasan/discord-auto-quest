@@ -10,7 +10,8 @@ The first public beta targets Windows 10/11 x64 and stable Discord. Linux and ma
 
 - Discord is the authority for availability, progress, completion, and reward state.
 - Quest data is read at runtime and never bundled as a production catalogue or persisted as an account cache.
-- Accepting a quest and claiming its reward remain the user's actions in Discord.
+- A user may deliberately review and confirm acceptance of supported offers in this app. Unknown or special flows continue in Discord. Acceptance never starts Work, playback, or an activity automatically.
+- Reward claims remain the user's actions in Discord.
 - Restarting Discord requires the user's deliberate request and an interruption warning.
 - Work applies only to already accepted quests. Uncertainty must remain visible, with recovery controls available.
 - Only the user's own Discord desktop client is controlled. No unrelated process is modified.

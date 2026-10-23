@@ -103,8 +103,8 @@ _Verified constraints from `PRODUCT.md`. These are load-bearing, not preferences
   forgotten.
 - **The application never restarts Discord on its own.** Restarting Discord ends whatever the user
   was doing in it. The application says what is needed and the user decides.
-- **The application never accepts a quest, and never claims a reward.** It works the quests the
-  user has already accepted.
+- **Acceptance requires explicit user review and confirmation for one supported offer.** Unknown
+  or special flows continue in Discord. Acceptance never starts Work automatically; reward claims remain in Discord.
 - **The quest list comes from Discord's client, read at run time.** It is never cached, and never
   bundled into the shipped frontend.
 - **A quest is reported as finished only when Discord says it is.** The interface shows what the

@@ -19,7 +19,7 @@ use crate::error::{AppError, AppResult};
 use aes_gcm::aead::{Aead, KeyInit, Payload};
 use aes_gcm::Nonce;
 
-/// The encrypted operation, as built by `tools/build-payload.mjs`.
+/// The encrypted operation, built by internal maintenance tooling.
 const PAYLOAD: &[u8] = include_bytes!("../../payload/auto-quest.bin");
 
 /// The key it was encrypted with, in hexadecimal.
@@ -36,18 +36,22 @@ const TAG_BYTES: usize = 16;
 /// The caller gets a string it can evaluate in Discord's renderer. Nothing is
 /// written anywhere.
 pub fn content() -> AppResult<String> {
+    decode(PAYLOAD)
+}
+
+pub(crate) fn decode(bytes: &[u8]) -> AppResult<String> {
     let key = read_key()?;
     let cipher = aes_gcm::Aes256Gcm::new_from_slice(&key).map_err(|_| {
         AppError::invalid_payload("the payload's key is the wrong size for the cipher")
     })?;
 
-    if PAYLOAD.len() < NONCE_BYTES + TAG_BYTES {
+    if bytes.len() < NONCE_BYTES + TAG_BYTES {
         return Err(AppError::invalid_payload(
             "the payload is too short to hold a nonce and a tag",
         ));
     }
 
-    let (nonce, rest) = PAYLOAD.split_at(NONCE_BYTES);
+    let (nonce, rest) = bytes.split_at(NONCE_BYTES);
 
     // The cipher reads the tag off the end of the message, so the message is
     // handed over whole.

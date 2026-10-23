@@ -1,7 +1,7 @@
 {
   "name": "discord-auto-quest",
   "private": true,
-  "version": "0.2.0-beta.1",
+  "version": "0.2.0-beta.2",
   "type": "module",
   "description": "A desktop app that completes Discord quests for games you do not own.",
   "scripts": {
