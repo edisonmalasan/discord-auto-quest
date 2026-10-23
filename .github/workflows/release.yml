@@ -14,7 +14,7 @@ concurrency:
 jobs:
   check:
     name: checks
-    runs-on: ubuntu-24.04
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -27,13 +27,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
-      - name: Native prerequisites
-        timeout-minutes: 10
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends build-essential pkg-config file curl ca-certificates libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
       - run: npm ci
       - run: npm run version:check
       - run: npm run check:terms
@@ -45,19 +38,9 @@ jobs:
       - run: npm run build
       - run: npm run check:acceptance
   build:
-    name: ${{ matrix.platform }} build
+    name: windows build
     needs: check
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: windows
-            os: windows-latest
-          - platform: linux
-            os: ubuntu-24.04
-          - platform: macos
-            os: macos-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -68,39 +51,44 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
-      - name: Linux prerequisites
-        if: matrix.platform == 'linux'
-        timeout-minutes: 10
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
-          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends build-essential pkg-config file curl ca-certificates libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
       - run: npm ci
       - name: Candidate version
         id: version
         shell: bash
         run: node --input-type=module -e "import {readVersion} from './tools/version.mjs'; console.log('version='+readVersion())" >> "$GITHUB_OUTPUT"
       - name: Windows candidate
-        if: matrix.platform == 'windows'
         run: npm run release
-      - name: Other-platform compilation only
-        if: matrix.platform != 'windows'
-        run: |
-          npm run build
-          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-          node tools/check-payload.mjs src-tauri/target/release/discord-auto-quest
       - uses: actions/upload-artifact@v4
-        if: matrix.platform == 'windows'
         with:
           name: windows-candidate
           path: target/release/${{ steps.version.outputs.version }}/*
           if-no-files-found: error
+  macos:
+    name: macos build
+    if: vars.ENABLE_MACOS_BUILDS == 'true'
+    needs: check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - name: macOS compilation only
+        run: |
+          npm run build
+          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
+          node tools/check-payload.mjs src-tauri/target/release/discord-auto-quest
   draft:
     name: draft release
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-24.04
+    runs-on: windows-latest
     permissions:
       contents: write
     steps:

@@ -2,7 +2,9 @@
 
 ## Target and version
 
-The first full release is prepared as v1.0.1 for Windows 10/11 x64 and stable Discord. Linux/macOS CI checks compilation only; do not attach their development binaries. A stable version number does not replace the required acceptance evidence: keep the release draft while any required check is unavailable.
+The 1.0 release line targets Windows 10/11 x64 and stable Discord. Checks, packaging, and draft creation run on Windows. Linux build jobs are removed; macOS compilation is paused by default. Only Windows assets are released. A stable version number does not replace the required acceptance evidence: keep the release draft while any required check is unavailable.
+
+To resume optional macOS compilation, set the repository Actions variable ENABLE_MACOS_BUILDS to true under Settings → Secrets and variables → Actions → Variables. Leaving it unset or setting it to false skips that job without allocating a Mac runner. This enables compilation only, not macOS releases or support; it does not gate the Windows draft. Existing tags retain their original workflow configuration.
 
 package.json is authoritative. After changing it, run npm run version:sync and npm run version:check. Use complete SemVer: 1.0.1 for compatible fixes, 1.1.0 for compatible features, and 2.0.0 for breaking documented behavior or requirements. Preview builds use suffixes such as 1.1.0-beta.1 or 1.1.0-rc.1. The tag must exactly equal v plus the version. Never overwrite published tags or assets, and never rename an old beta binary into a stable download.
 
@@ -11,7 +13,7 @@ package.json is authoritative. After changing it, run npm run version:sync and n
 1. Open the repository's Settings → Actions → General. Ensure Actions is enabled and the actions used by .github/workflows/release.yml are permitted by repository/organization policy.
 2. Keep token permissions restricted. The workflow already grants contents: read generally and contents: write only to its draft-release job. It uses GitHub's built-in token; no personal access token or new repository secret is required for this configured flow. Organization policy may further restrict these permissions.
 3. Ensure your account can push release tags and manage releases. Respect any repository rulesets. Do not bypass protected branches.
-4. Keep release changes in a pull request. Merge only after checks and Windows/Linux/macOS build jobs pass.
+4. Keep release changes in a pull request. Merge only after checks and the Windows build job pass. macOS compilation is optional and paused by default.
 
 Sources: [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token), [managing releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository).
 
