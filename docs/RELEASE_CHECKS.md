@@ -1,4 +1,4 @@
-# Windows beta verification
+# Windows release verification
 
 Recorded 2026-10-23 for 0.2.0-beta.1. Publication remains blocked; prepare a draft prerelease only.
 
@@ -47,3 +47,7 @@ The tested local candidate used runtime code from 557a82d, stable Discord 1.0.92
 a518f33cc304010953e68b03b956fa67882be1b31e4af20fc76eb0c3c96126bf  Discord-Auto-Quest-0.2.0-beta.2-windows-x64-setup.exe
 5eab2ee0eec83f7f1ea9f29c35f0311bc388051a19013a6d3b6c2619442bd4ac  Discord-Auto-Quest-0.2.0-beta.2-windows-x64-portable.zip
 ```
+
+## 1.0.0 preparation
+
+The first stable version is 1.0.0. Its exact installer and portable assets have not yet completed packaged acceptance. All earlier results and hashes above apply only to their named beta candidates. Clean-environment WebView2 provisioning is still unavailable. Keep the 1.0.0 release draft until the complete evidence record identifies its commit, hashes, environment, and passing results. Use [the evidence template](release-evidence.example.json) and [release instructions](../RELEASE.md).
