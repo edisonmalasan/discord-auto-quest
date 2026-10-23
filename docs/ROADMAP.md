@@ -34,7 +34,7 @@ Required packaged-app checks: standard-user installation, launch, portable launc
 
 ## Deferred
 
-- Linux/macOS client discovery, launch, recovery, packaging, and real-client acceptance.
+- macOS client discovery, launch, recovery, packaging, and real-client acceptance, deferred until a Mac tester or hardware is available. Linux releases are excluded while Discord cannot award quest rewards there; compilation checks do not establish support.
 - Signed Windows distribution and automatic updates.
 
 Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, uninstall, and portable launch passed. Installed version and license resources matched; deliberate Discord restart recovered live data; existing accepted video completion and Work/Stop UI passed; navigation and Discord handoff passed. Clean-environment WebView2 provisioning remains unavailable and blocks publication. These results apply to the recorded local candidate, not automatically to later CI artifacts. See [release checks](RELEASE_CHECKS.md) for provenance and remaining gates.
@@ -42,3 +42,5 @@ Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, 
 ## Stable release preparation
 
 Version 1.0.0 starts the documented compatibility commitment. The release workflow supports stable drafts and preserves preview channels, exact tag/version matching, and acceptance/hash/commit gates. Windows remains the only supported target. The first stable download must remain a draft until its exact assets pass every required check, including clean-environment WebView2 provisioning. Historical beta observations above are retained as historical evidence only.
+
+Windows is the current priority. Non-mutating 1.0.0 UI verification confirmed About/version, live views, navigation, search, card-menu dismissal, and acceptance review/Cancel on the exact draft build. The exact portable ZIP also passed byte comparison, launch, live loading, and About/version checks with WebView2 already installed. A normal desktop maintenance reinstall then passed; the Start-menu shortcut displayed the custom badge and launched 1.0.0. The user confirmed the Windows Search badge was fixed. No account actions were performed. Clean first installation, normal cross-version upgrade, uninstall, recovery/Work/Stop, and clean-environment WebView2 provisioning remain unverified. See [the version-specific record](RELEASE_CHECKS.md#100-non-mutating-ui-verification) for provenance and remaining checks.
