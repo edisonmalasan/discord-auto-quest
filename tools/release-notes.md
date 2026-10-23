@@ -9,6 +9,6 @@ This beta is unsigned and has no automatic updater. Do not disable Windows secur
 
 Includes the Ongoing, Available, and Completed workspace, explicit Discord handoffs, and connection recovery. Accept quests and claim rewards yourself in Discord.
 
-Known limitations: video completion and a fresh accept-to-completion cycle remain unverified. Some quest tasks require user participation. Discord updates can interrupt compatibility. Stop does not guarantee cancellation of every previously started activity.
+Known limitations: a fresh accept-to-completion cycle and broader quest coverage remain unverified. Some quest tasks require user participation. Discord updates can interrupt compatibility. Stop does not guarantee cancellation of every previously started activity.
 
 MIT license and third-party notices are included in both distributions. Report security or conduct concerns privately to edisonmacaraegmalasan@gmail.com.

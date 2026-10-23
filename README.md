@@ -27,7 +27,7 @@ The app never accepts quests, claims rewards, or restarts Discord automatically.
 ## Supported behavior and limitations
 
 - Quest availability and eligibility depend on Discord and the publisher. Some tasks still require user participation, such as sharing in a voice channel.
-- Video completion and a fresh accept-to-completion cycle remain unverified. Do not assume every quest type works.
+- One accepted video quest completed in Windows beta testing. A fresh accept-to-completion cycle and broader quest coverage remain unverified; do not assume every quest type works.
 - Accept, claim, and reward controls open Discord's Quests page and identify the quest to select.
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.
 - Stop and connection timeouts do not guarantee cancellation of every activity already started in Discord.

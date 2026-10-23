@@ -9,4 +9,4 @@ This project follows Semantic Versioning. Versions below 1.0 are provisional; pr
 - Clear stale-data, connection-recovery, and uncertain-operation handling.
 - Current-user installation and portable distribution, with unsigned-build information.
 
-Known limits: video completion and a fresh accept-to-completion cycle are unverified. Linux/macOS are unsupported. See README.md for task limitations.
+Known limits: a fresh accept-to-completion cycle and broader quest coverage are unverified. Linux/macOS are unsupported. See README.md for task limitations.
