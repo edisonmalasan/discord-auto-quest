@@ -5,17 +5,17 @@
 //! **claimed**, with how far along each one is.
 //!
 //! Both come out of Discord's own quest store, read in its own renderer. The
-//! quest script does the same thing, but it is the script's own business: it
+//! quest operation does the same thing, but it is the operation's own business: it
 //! works a quest and says so. This is the application's business, and it has
-//! to keep working when the script does not — so the store is found by *shape*
+//! to keep working when the operation does not — so the store is found by *shape*
 //! rather than by the name of a minified export, with the names as the fast
 //! path.
 //!
-//! **Why that matters.** The script finds Discord's internals by guessing at
+//! **Why that matters.** The operation finds Discord's internals by guessing at
 //! export names, and those names move between Discord versions. When they
-//! move, the script stops attaching and the quest stops working. This reader
+//! move, the operation stops attaching and the quest stops working. This reader
 //! keeps working through that, so the application can still show what is
-//! available and say plainly that the script needs updating. That difference
+//! available and say plainly that the operation needs updating. That difference
 //! is the difference between "nothing happened" and a sentence.
 //!
 //! **What this is not.** Reading Discord's state is reading it. Nothing here
@@ -131,7 +131,7 @@ pub struct QuestList {
     pub expired: usize,
     /// Whether the client is the desktop application.
     ///
-    /// The quest script only works there, so the interface has to say so rather
+    /// The quest operation only works there, so the interface has to say so rather
     /// than offer a button that cannot work.
     pub desktop_app: bool,
     /// The games the client believes are running.
@@ -181,7 +181,7 @@ const READ_STATE: &str = r#"(function () {
     };
 
     const findStore = function (method, isTheRightOne, names) {
-      // The fast way: the export names the quest script uses. They are quick,
+      // The fast way: the export names the quest operation uses. They are quick,
       // and they are right until Discord renames something.
       for (const name of names) {
         for (const module of modules) {
@@ -492,7 +492,7 @@ mod tests {
 
     /// The expression and the struct have to agree on the field names.
     ///
-    /// The expression is JavaScript and the struct is Rust, and nothing else
+    /// The expression is code and the struct is Rust, and nothing else
     /// connects them. If one says `progress_seconds` and the other says
     /// `progressSeconds`, the application reads nothing at all — and says so
     /// in the least helpful way. This is the check that would have caught it,

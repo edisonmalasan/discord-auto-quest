@@ -3,7 +3,7 @@
 //!   cargo run --manifest-path src-tauri/Cargo.toml --example drive
 //!
 //! Attaches to Discord's renderer, reads its quest state, runs the quest
-//! script, and puts Discord's own methods back. It is the same path the
+//! operation, and puts Discord's own methods back. It is the same path the
 //! application's commands take.
 
 use discord_auto_quest_lib::discord::DiscordState;
@@ -65,21 +65,23 @@ async fn main() {
     }
 
     println!();
-    println!("running the quest script");
-    match state.run_script().await {
+    println!("running the quest operation");
+    match state.start_work().await {
         Ok(spoofing) => {
             if spoofing {
-                println!("  the script ran, and a game is being spoofed");
+                println!("  the operation ran, and a game is being spoofed");
             } else {
-                println!("  the script ran, and no game is being spoofed");
-                println!("  (either there was nothing to work on, or the script did not attach)");
+                println!("  the operation ran, and no game is being spoofed");
+                println!(
+                    "  (either there was nothing to work on, or the operation did not attach)"
+                );
             }
         }
-        Err(error) => println!("  the script did not run: {error}"),
+        Err(error) => println!("  the operation did not run: {error}"),
     }
 
     println!("putting Discord's own methods back");
-    match state.stop_script().await {
+    match state.stop_work().await {
         Ok(()) => println!("  done"),
         Err(error) => println!("  could not: {error}"),
     }

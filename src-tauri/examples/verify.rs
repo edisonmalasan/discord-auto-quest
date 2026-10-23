@@ -7,13 +7,13 @@
 //!
 //! 1. find Discord, and check whether its debugger is answering;
 //! 2. read the quest state out of the client's own store;
-//! 3. run the quest script inside the renderer, and follow what it prints;
+//! 3. run the quest operation inside the renderer, and follow what it prints;
 //! 4. read the quest state again, and see whether the progress moved;
 //! 5. put Discord's own methods back, so nothing is left spoofed.
 //!
 //! It reports what it found at every step, and ends with a summary that says
 //! whether the mechanism worked. It changes nothing in Discord beyond the
-//! spoof the script itself makes, and it puts that back before it finishes.
+//! spoof the operation itself makes, and it puts that back before it finishes.
 //!
 //! **`--restart` restarts Discord first.** It has to be asked for: restarting
 //! Discord ends whatever the user was doing in it, which is why the
@@ -23,7 +23,7 @@ use std::time::{Duration, Instant};
 
 use discord_auto_quest_lib::quest::{cdp, discord, driver, reader};
 
-/// How long to follow the script's output for.
+/// How long to follow the operation's output for.
 const WATCH: Duration = Duration::from_secs(20);
 
 /// How long to wait between reading the quest state again.
@@ -104,7 +104,7 @@ async fn main() {
 
     // The browser replays its console history when the debugger attaches, so
     // everything that was ever printed is in the way. It is drained first, so
-    // that what follows is what the script says *now*.
+    // that what follows is what the operation says *now*.
     let mut history = 0usize;
     while let Ok(Some(_)) =
         tokio::time::timeout(Duration::from_millis(500), session.next_console_line()).await
@@ -160,17 +160,17 @@ async fn main() {
     report.claimed_before = before.claimed.len();
     report.available = before.available.len();
 
-    // 3. Run the script, and follow what it prints.
-    println!("\n3. The quest script");
+    // 3. Run the operation, and follow what it prints.
+    println!("\n3. The quest operation");
     let started = Instant::now();
 
     match driver::run(&mut session).await {
         Ok(()) => {
-            println!("   the script ran.");
+            println!("   the operation ran.");
         }
         Err(error) => {
-            println!("   the script did not attach: {error}");
-            println!("\nsummary: FAILED — the script did not attach to Discord.");
+            println!("   the operation did not attach: {error}");
+            println!("\nsummary: FAILED — the operation did not attach to Discord.");
             report.finish(&mut session).await;
             std::process::exit(1);
         }
@@ -180,14 +180,14 @@ async fn main() {
     println!("   a game is being spoofed: {}", yes_no(spoofing));
     report.spoofing = spoofing;
 
-    // The script prints what it is doing. Those lines are the evidence, and
+    // The operation prints what it is doing. Those lines are the evidence, and
     // the quest state is read again while it works, so the progress can be
     // reported as it moves rather than only at the end.
     //
     // Discord's own client logs to the console as well, and it logs a great
     // deal. Those lines are CSS-formatted — `%c[Something]` — so they are
-    // counted apart from the script's, which are plain sentences.
-    let mut script_lines: Vec<String> = Vec::new();
+    // counted apart from the operation's, which are plain sentences.
+    let mut work_lines: Vec<String> = Vec::new();
     let mut other = 0usize;
     let mut moved = false;
     let mut last_poll = Instant::now();
@@ -206,7 +206,7 @@ async fn main() {
                 if line.starts_with("%c") {
                     other += 1;
                 } else {
-                    script_lines.push(line);
+                    work_lines.push(line);
                 }
             }
             Ok(None) => break,
@@ -242,7 +242,7 @@ async fn main() {
     // The same line more than once is the same message said again — the
     // client repeats itself — so it is counted rather than listed.
     let mut said: Vec<(String, usize)> = Vec::new();
-    for line in &script_lines {
+    for line in &work_lines {
         match said.iter_mut().find(|(text, _)| text == line) {
             Some((_, count)) => *count += 1,
             None => said.push((line.clone(), 1)),
@@ -250,7 +250,7 @@ async fn main() {
     }
 
     if said.is_empty() {
-        println!("   (the script printed nothing of its own)");
+        println!("   (the operation printed nothing of its own)");
     } else {
         for (line, count) in &said {
             if *count > 1 {
@@ -266,7 +266,7 @@ async fn main() {
     }
 
     // 4. Read the state again, and report where every quest stands.
-    println!("\n4. The progress, after the script has run");
+    println!("\n4. The progress, after the operation has run");
     let after = reader::read_state(&mut session).await.ok();
 
     if let Some(after) = &after {
@@ -296,12 +296,12 @@ async fn main() {
     }
 
     report.moved = moved;
-    report.script_lines = script_lines.len();
-    report.progress_lines = script_lines
+    report.work_lines = work_lines.len();
+    report.progress_lines = work_lines
         .iter()
         .filter(|line| line.contains("progress"))
         .count();
-    report.nothing_to_do = script_lines
+    report.nothing_to_do = work_lines
         .iter()
         .any(|line| line.contains("uncompleted quests"));
 
@@ -315,7 +315,7 @@ async fn main() {
     println!("  quests on offer:        {}", report.available);
     println!("  quests accepted:        {}", report.claimed_before);
     println!("  a game was spoofed:     {}", yes_no(report.spoofing));
-    println!("  the script said:        {} lines", report.script_lines);
+    println!("  the operation said:        {} lines", report.work_lines);
     println!("  the progress moved:     {}", yes_no(report.moved));
     println!("  Discord was restored:   {}", yes_no(report.restored));
 
@@ -324,13 +324,13 @@ async fn main() {
     println!(
         "\n  {}\n",
         if worked {
-            "The mechanism works: the script attached, and Discord is counting."
+            "The mechanism works: the operation attached, and Discord is counting."
         } else if report.nothing_to_do {
             "The mechanism is fine, and there was nothing to work on: every quest you have \
-         accepted is finished, or its task is one the script does not handle. Accept a \
+         accepted is finished, or its task is one the operation does not handle. Accept a \
          fresh quest and run this again."
         } else {
-            "The script attached but nothing counted, and it did not say why. That is worth \
+            "The operation attached but nothing counted, and it did not say why. That is worth \
          a look — and it is the case the roadmap calls N5."
         }
     );
@@ -343,7 +343,7 @@ struct Report {
     claimed_before: usize,
     spoofing: bool,
     moved: bool,
-    script_lines: usize,
+    work_lines: usize,
     progress_lines: usize,
     nothing_to_do: bool,
     restored: bool,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { discordStatus, listDiscordQuests, relaunchDiscord, runQuestScript, stopQuestScript, toAppError } from '../lib/ipc';
+import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError } from '../lib/ipc';
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
 
@@ -75,8 +75,8 @@ export function useDiscord(): DiscordController {
     void (async () => {
       try {
         if (action === 'restart') await relaunchDiscord();
-        else if (action === 'work') await runQuestScript();
-        else await stopQuestScript();
+        else if (action === 'work') await startQuestWork();
+        else await stopQuestWork();
         if (!mounted.current || generation.current !== epoch) return;
         needsStop.current = action === 'work';
         setWorking(needsStop.current);

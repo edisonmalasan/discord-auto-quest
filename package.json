@@ -1,25 +1,28 @@
 {
   "name": "discord-auto-quest",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0-beta.1",
   "type": "module",
   "description": "A desktop app that completes Discord quests for games you do not own.",
   "scripts": {
     "dev": "vite",
-    "dev:app": "node scripts/dev.mjs dev",
+    "dev:app": "node tools/dev.mjs dev",
     "build": "npm run version:check && tsc --noEmit && vite build",
-    "build:payload": "node scripts/build-payload.mjs",
-    "check:acceptance": "node scripts/check-acceptance.mjs",
-    "check:payload": "node scripts/check-payload.mjs",
+    "check:acceptance": "node tools/check-acceptance.mjs",
+    "check:payload": "node tools/check-payload.mjs",
     "preview": "vite preview",
-    "release": "node scripts/release.mjs",
+    "release": "node tools/release.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "tauri": "node scripts/dev.mjs",
+    "tauri": "node tools/dev.mjs",
     "verify": "cargo run --manifest-path src-tauri/Cargo.toml --example verify",
-    "version:check": "node scripts/version.mjs check",
-    "version:sync": "node scripts/version.mjs sync"
+    "version:check": "node tools/version.mjs check",
+    "version:sync": "node tools/version.mjs sync",
+    "check:terms": "node tools/terms.mjs",
+    "release:draft": "node tools/publish.mjs draft",
+    "release:publish": "node tools/publish.mjs promote",
+    "check:notices": "node tools/check-notices.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
@@ -42,5 +45,8 @@
     "typescript": "^5.9.3",
     "vite": "^8.3.4",
     "vitest": "^4.1.12"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

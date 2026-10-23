@@ -5,15 +5,15 @@ import type { DiscordStatus, QuestFeed } from '../types/quests';
 
 const discordStatus = vi.fn<() => Promise<DiscordStatus>>();
 const listDiscordQuests = vi.fn<() => Promise<QuestFeed>>();
-const runQuestScript = vi.fn<() => Promise<boolean>>();
-const stopQuestScript = vi.fn<() => Promise<void>>();
+const startQuestWork = vi.fn<() => Promise<boolean>>();
+const stopQuestWork = vi.fn<() => Promise<void>>();
 const relaunchDiscord = vi.fn<() => Promise<void>>();
 
 vi.mock('../lib/ipc', () => ({
   discordStatus: () => discordStatus(),
   listDiscordQuests: () => listDiscordQuests(),
-  runQuestScript: () => runQuestScript(),
-  stopQuestScript: () => stopQuestScript(),
+  startQuestWork: () => startQuestWork(),
+  stopQuestWork: () => stopQuestWork(),
   relaunchDiscord: () => relaunchDiscord(),
   attachDiscord: () => Promise.resolve(),
   appVersion: () => Promise.resolve('0.1.0'),
@@ -30,8 +30,8 @@ describe('useDiscord', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     relaunchDiscord.mockResolvedValue();
-    stopQuestScript.mockResolvedValue();
-    runQuestScript.mockResolvedValue(true);
+    stopQuestWork.mockResolvedValue();
+    startQuestWork.mockResolvedValue(true);
     discordStatus.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
     listDiscordQuests.mockResolvedValue({ available: [], claimed: [], expired: 0, desktopApp: true, runningGames: [] });
   });
@@ -65,30 +65,30 @@ describe('useDiscord', () => {
 
   it('guards two same-tick Work calls before React rerenders', async () => {
     let acknowledge!: (value: boolean) => void;
-    runQuestScript.mockReturnValue(new Promise(resolve => { acknowledge = resolve; }));
+    startQuestWork.mockReturnValue(new Promise(resolve => { acknowledge = resolve; }));
     const { result } = renderHook(() => useDiscord());
     await waitFor(() => expect(result.current.feed).not.toBeNull());
     act(() => { result.current.work(); result.current.work(); });
-    expect(runQuestScript).toHaveBeenCalledTimes(1);
+    expect(startQuestWork).toHaveBeenCalledTimes(1);
     await act(async () => acknowledge(true));
   });
 
   it('keeps Stop available and prevents another Work after an uncertain dispatch', async () => {
-    runQuestScript.mockRejectedValue({ code: 'OPERATION_UNCERTAIN', message: 'Work outcome is unknown. Try Stop before working again.', retryable: false });
+    startQuestWork.mockRejectedValue({ code: 'OPERATION_UNCERTAIN', message: 'Work outcome is unknown. Try Stop before working again.', retryable: false });
     const { result } = renderHook(() => useDiscord());
     await waitFor(() => expect(result.current.feed).not.toBeNull());
     act(() => result.current.work());
     await waitFor(() => expect(result.current.busy).toBe(false));
     expect(result.current.working).toBe(true);
     act(() => result.current.work());
-    expect(runQuestScript).toHaveBeenCalledTimes(1);
+    expect(startQuestWork).toHaveBeenCalledTimes(1);
     act(() => result.current.stop());
-    await waitFor(() => expect(stopQuestScript).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(stopQuestWork).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(result.current.working).toBe(false));
   });
 
   it('does not erase a failed Stop when a later read succeeds', async () => {
-    stopQuestScript.mockRejectedValue(Error('Stop failed'));
+    stopQuestWork.mockRejectedValue(Error('Stop failed'));
     const { result } = renderHook(() => useDiscord());
     await waitFor(() => expect(result.current.feed).not.toBeNull());
     act(() => result.current.work());
@@ -134,7 +134,7 @@ describe('useDiscord', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('says the quest script is running once it has run', async () => {
+  it('says the quest operation is running once it has run', async () => {
     discordStatus.mockResolvedValue({
       installed: true,
       ready: true,
@@ -148,7 +148,7 @@ describe('useDiscord', () => {
       desktopApp: true,
       runningGames: [],
     });
-    runQuestScript.mockResolvedValue(true);
+    startQuestWork.mockResolvedValue(true);
 
     const { result } = renderHook(() => useDiscord());
 
@@ -159,7 +159,7 @@ describe('useDiscord', () => {
     });
 
     await waitFor(() => expect(result.current.working).toBe(true));
-    expect(runQuestScript).toHaveBeenCalled();
+    expect(startQuestWork).toHaveBeenCalled();
   });
 
   it('retries the quest read when the debugger opens before Discord finishes loading', async () => {

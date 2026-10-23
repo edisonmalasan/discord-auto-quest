@@ -2,7 +2,7 @@
 //!
 //! Discord is a Chromium application. Started with a remote debugging port, it
 //! speaks the protocol on loopback, and the protocol lets us evaluate
-//! JavaScript inside Discord's own renderer and read back what that JavaScript
+//! code inside Discord's own renderer and read back what that code
 //! prints.
 //!
 //! This module is the transport and nothing else. What we *do* with it lives in
@@ -134,7 +134,7 @@ impl Session {
         Ok(session)
     }
 
-    /// Run JavaScript in the renderer and return its value.
+    /// Run code in the renderer and return its value.
     ///
     /// The expression is awaited, so it may be a promise, and its result is
     /// returned by value rather than as a handle.
@@ -154,7 +154,7 @@ impl Session {
 
         if let Some(details) = response.pointer("/result/exceptionDetails") {
             return Err(AppError::io(format!(
-                "the script raised an error: {}",
+                "the operation raised an error: {}",
                 describe_exception(details)
             )));
         }
@@ -167,7 +167,7 @@ impl Session {
 
     /// The next line the page printed, if there is one.
     ///
-    /// This is how the quest script's `Quest progress: 12/900` lines reach the
+    /// This is how the quest operation's `Quest progress: 12/900` lines reach the
     /// user. It returns `None` when the connection closes.
     pub async fn next_console_line(&mut self) -> Option<String> {
         loop {
@@ -251,7 +251,7 @@ impl Drop for Session {
     }
 }
 
-/// A readable description of what a script raised.
+/// A readable description of what a operation raised.
 fn describe_exception(details: &Value) -> String {
     let text = details
         .get("exception")

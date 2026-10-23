@@ -5,7 +5,7 @@
 ## Project
 
 - **Name:** `discord-auto-quest`
-- **Purpose:** A desktop app that completes Discord quests, by running a script inside the Discord
+- **Purpose:** A desktop app that completes Discord quests, by running a operation inside the Discord
   desktop client the user is already signed in to, so that the client's own quest heartbeat counts
   the quest.
 - **Current state:** The mechanism is **proved** on the real client — an accepted quest was driven
@@ -42,17 +42,17 @@ supersedes it._
 
 | Layer              | Technology / version         | Evidence                             |
 | ------------------ | ---------------------------- | ------------------------------------ |
-| Frontend / UI      | React 19, TypeScript 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
+| Frontend / UI      | React 19, TS 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
 | Backend / runtime  | Rust 1.82+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
 | Mechanism          | Chrome DevTools Protocol over a websocket | `src-tauri/src/quest/cdp.rs` |
 | Payload            | AES-256-GCM, embedded as ciphertext | `src-tauri/src/quest/payload.rs` |
-| Storage            | None. The quest script is decrypted in memory and never written to disk. | `src-tauri/src/quest/payload.rs` |
+| Storage            | None. The quest operation is decrypted in memory and never written to disk. | `src-tauri/src/quest/payload.rs` |
 | Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
 | Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/tests/` |
 
-**Target shape:** a Tauri v2 desktop app with a TypeScript webview frontend and a Rust backend.
+**Target shape:** a Tauri v2 desktop app with a TS webview frontend and a Rust backend.
 There are no helper executables: the application drives Discord's own renderer, and the quest
-script ships encrypted inside the binary.
+operation ships encrypted inside the binary.
 
 ## Build, Test, and Development Commands
 
@@ -66,8 +66,7 @@ _These commands exist in this repository. Run them from the repository root._
 | Build frontend       | `npm run build` | Checks the version, then type-checks and writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
 | Verify the mechanism | `npm run verify` | Runs the whole loop against the real client and reports on it. |
-| Rebuild the payload  | `npm run build:payload` | Re-encrypts `re/scripts/auto-quest.js` into the embedded ciphertext. |
-| Check the payload    | `npm run check:payload -- <path>` | Asserts the built binary carries none of the script's strings. |
+| Check the payload    | `npm run check:payload -- <path>` | Asserts the built binary carries none of the operation's strings. |
 | Check the acceptance cases | `npm run check:acceptance` | Asserts the shipped bundle and notices. |
 | Check the version    | `npm run version:check` | Asserts every manifest agrees with `package.json`. |
 | Fix the version      | `npm run version:sync` | Writes the version into the manifests that carry a copy. |
@@ -98,9 +97,9 @@ git diff --check   # whitespace errors only; not a link or fence checker
 
 _Verified constraints from `PRODUCT.md`. These are load-bearing, not preferences._
 
-- **The quest script must not be readable in the shipped executable.** It ships as ciphertext and
+- **The quest operation must not be readable in the shipped executable.** It ships as ciphertext and
   is decrypted in memory. The check runs against the built artefact, not the source.
-- **The plaintext script never touches disk at run time.** It is evaluated in the renderer and
+- **The plaintext operation never touches disk at run time.** It is evaluated in the renderer and
   forgotten.
 - **The application never restarts Discord on its own.** Restarting Discord ends whatever the user
   was doing in it. The application says what is needed and the user decides.
@@ -114,7 +113,7 @@ _Verified constraints from `PRODUCT.md`. These are load-bearing, not preferences
   internals to drive.
 - **No Discord RPC Rich Presence.** It does not complete quests, it requires application IDs this
   project does not own, and it risks the user's account.
-- **The reader finds Discord's internals by shape, not by a pinned export name.** The quest script
+- **The reader finds Discord's internals by shape, not by a pinned export name.** The quest operation
   is pinned; the reader must survive a rename, so the application can still say what it can see.
 
 ## Working Method (Lightweight ICM)

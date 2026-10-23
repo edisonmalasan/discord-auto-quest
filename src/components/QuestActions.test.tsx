@@ -47,5 +47,12 @@ describe('quest menus',()=>{
   expect(screen.getByRole('menu')).toBeInTheDocument();
   fireEvent.pointerDown(screen.getByRole('heading',{name:'Ongoing quests'}));
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Quest actions for First Quest'})).toHaveFocus();
+ });
+
+ it('preserves the clicked outside control focus',async()=>{
+  render(tree()); await userEvent.click(screen.getByRole('button',{name:'Quest actions for First Quest'}));
+  const search=screen.getByRole('searchbox'); await userEvent.click(search);
+  expect(search).toHaveFocus(); expect(screen.queryByRole('menu')).not.toBeInTheDocument();
  });
 });

@@ -18,7 +18,7 @@ export async function appVersion(): Promise<string> {
  * Discord
  *
  * The application drives the Discord desktop client: it attaches to the
- * client's renderer, reads its quests, and runs the quest script inside it.
+ * client's renderer, reads its quests, and runs the quest operation inside it.
  * ------------------------------------------------------------------ */
 
 /** Where Discord stands, and what the user has to do about it. */
@@ -41,14 +41,14 @@ export async function listDiscordQuests(): Promise<QuestFeed> {
   return invoke<QuestFeed>('list_discord_quests');
 }
 
-/** Run the quest script in Discord. */
-export async function runQuestScript(): Promise<boolean> {
-  return invoke<boolean>('run_quest_script');
+/** Run the quest operation in Discord. */
+export async function startQuestWork(): Promise<boolean> {
+  return invoke<boolean>('start_quest_work');
 }
 
 /** Put Discord's own methods back. */
-export async function stopQuestScript(): Promise<void> {
-  await invoke<void>('stop_quest_script');
+export async function stopQuestWork(): Promise<void> {
+  await invoke<void>('stop_quest_work');
 }
 
 /**

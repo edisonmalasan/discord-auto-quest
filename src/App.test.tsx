@@ -9,7 +9,7 @@ const work = vi.fn(); const stop = vi.fn(); const restart = vi.fn();
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('./lib/ipc', () => ({
  discordStatus: () => status(), listDiscordQuests: () => list(),
- runQuestScript: () => work(), stopQuestScript: () => stop(), relaunchDiscord: () => restart(),
+ startQuestWork: () => work(), stopQuestWork: () => stop(), relaunchDiscord: () => restart(),
  appVersion: () => Promise.resolve('0.1.0'),
  toAppError: (v: unknown) => typeof v === 'object' && v && 'message' in v ? v : { code: 'UNKNOWN', message: String(v), retryable: true },
 }));
@@ -72,11 +72,11 @@ describe('the quest workspace', () => {
   expect(restart).not.toHaveBeenCalled(); await userEvent.click(button);
   await waitFor(() => expect(restart).toHaveBeenCalledTimes(1));
  });
- it('reports a script failure without pretending it started', async () => {
-  work.mockRejectedValue({ code: 'NOT_SUPPORTED', message: 'The quest script did not attach.', retryable: false });
+ it('reports a operation failure without pretending it started', async () => {
+  work.mockRejectedValue({ code: 'NOT_SUPPORTED', message: 'The quest operation did not attach.', retryable: false });
   render(<App />); await screen.findByText('Active Quest');
   await userEvent.click(screen.getByRole('button', { name: 'Work my quests' }));
-  expect(await screen.findByText('The quest script did not attach.')).toBeInTheDocument();
+  expect(await screen.findByText('The quest operation did not attach.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
  });
  it('keeps last data visible but disables live actions until a failed poll recovers',async()=>{

@@ -1,17 +1,17 @@
-//! The quest script, as it ships.
+//! The quest operation, as it ships.
 //!
-//! The script is the heart of the mechanism, and it is the one piece of this
+//! The operation is the heart of the mechanism, and it is the one piece of this
 //! project that must not be readable by anyone who has the application. So it
 //! is not in the application as text: it is encrypted when the payload is
 //! built, embedded as ciphertext, and decrypted into memory when it is needed.
 //!
-//! It is never written to disk. The decrypted script is handed straight to the
+//! It is never written to disk. The decrypted operation is handed straight to the
 //! renderer and forgotten.
 //!
 //! **What this is, honestly.** The key is in the application, so this is
-//! *obfuscation* and not secrecy: the script is not sitting in the executable
+//! *obfuscation* and not secrecy: the operation is not sitting in the executable
 //! as text, but the executable can decrypt it. A determined analyst with the
-//! binary can recover the script. What it buys is that the script is not
+//! binary can recover the operation. What it buys is that the operation is not
 //! handed over by `strings`, by a grep, or by anyone who opens the file.
 
 use crate::error::{AppError, AppResult};
@@ -19,7 +19,7 @@ use crate::error::{AppError, AppResult};
 use aes_gcm::aead::{Aead, KeyInit, Payload};
 use aes_gcm::Nonce;
 
-/// The encrypted script, as built by `scripts/build-payload.mjs`.
+/// The encrypted operation, as built by `tools/build-payload.mjs`.
 const PAYLOAD: &[u8] = include_bytes!("../../payload/auto-quest.bin");
 
 /// The key it was encrypted with, in hexadecimal.
@@ -31,11 +31,11 @@ const NONCE_BYTES: usize = 12;
 /// How much of the payload is the authentication tag.
 const TAG_BYTES: usize = 16;
 
-/// The quest script, decrypted.
+/// The quest operation, decrypted.
 ///
 /// The caller gets a string it can evaluate in Discord's renderer. Nothing is
 /// written anywhere.
-pub fn script() -> AppResult<String> {
+pub fn content() -> AppResult<String> {
     let key = read_key()?;
     let cipher = aes_gcm::Aes256Gcm::new_from_slice(&key).map_err(|_| {
         AppError::invalid_payload("the payload's key is the wrong size for the cipher")
@@ -95,10 +95,10 @@ fn read_key() -> AppResult<Vec<u8>> {
     Ok(bytes)
 }
 
-/// A phrase from the script, used to check that it is not readable in the
+/// A phrase from the operation, used to check that it is not readable in the
 /// application.
 ///
-/// It is a phrase the script *prints*, so it is in the plaintext and nowhere
+/// It is a phrase the operation *prints*, so it is in the plaintext and nowhere
 /// else — if it turns up in the built executable, the payload is not
 /// encrypted.
 pub const MARKER: &str = "Quest progress:";
@@ -108,21 +108,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_payload_decrypts_to_the_script() {
-        let script = script().expect("the payload decrypts");
+    fn the_payload_decrypts_to_the_work() {
+        let operation = content().expect("the payload decrypts");
 
         assert!(
-            script.contains(MARKER),
-            "the decrypted script is the quest script"
+            operation.contains(MARKER),
+            "the decrypted operation is the quest operation"
         );
         assert!(
-            script.contains("webpackChunkdiscord_app"),
-            "it is the script that reaches into Discord's modules"
+            operation.contains("webpackChunkdiscord_app"),
+            "it is the operation that reaches into Discord's modules"
         );
     }
 
     #[test]
-    fn the_payload_does_not_contain_the_script_in_the_clear() {
+    fn the_payload_does_not_contain_the_operation_in_the_clear() {
         let payload = String::from_utf8_lossy(PAYLOAD);
 
         assert!(

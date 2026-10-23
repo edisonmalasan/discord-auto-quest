@@ -1,22 +1,11 @@
-# NOTICE
+# Notices
 
-`discord-auto-quest` is an independent implementation. It is not the upstream
-project, it does not use upstream's name, logo, or branding, and it is not
-affiliated with, endorsed by, or connected to Discord Inc.
+Discord Auto Quest is an independent project, distributed under the MIT License.
+It is not affiliated with, endorsed by, or connected to Discord Inc.
+Discord and quest publishers retain their respective trademarks and media rights.
 
-## This project's own licence
+The following upstream notice is retained:
 
-This project is distributed under the MIT License. The full text is in
-[`LICENSE`](LICENSE).
-
-## Upstream material
-
-This project was written after a clean-room behavioural and structural study of
-an earlier MIT-licensed project by the same author as the upstream study in
-`re/`, **Discord Quest Completer** by Mark Terence Tiglao. The upstream project
-is MIT licensed, and the notice below is retained as its licence requires.
-
-```text
 MIT License
 
 Copyright (c) 2025 Mark Terence Tiglao
@@ -38,19 +27,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
 
-What was taken from upstream is what upstream made public under that licence:
-the *behaviour* of the quest mechanism, and the fact that Discord has no
-quest API — that a quest is counted by the client, from the running-games
-store the client keeps. The implementation in this repository is new, and it
-does not use upstream's mechanism: this project runs the quest script inside
-the Discord desktop client over the Chrome DevTools Protocol, where the
-upstream materialised a stub process at a mirrored path. No upstream source
-file, snapshot, or bundled artefact is shipped here, and none was ever
-shipped here.
-
-## Discord
-
-Discord is a registered trademark of Discord Inc. This project is not affiliated
-with Discord Inc. Use is at the user's own risk.
+Dependency notices are distributed in THIRD_PARTY_NOTICES.txt.
