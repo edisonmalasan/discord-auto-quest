@@ -65,7 +65,7 @@ On 2026-10-23 the exact draft installer upgraded the earlier beta.1 installation
 | Brand assets | The installed executable, portable executable, and Start-menu shortcut each yielded the custom brand icon. No missing icon asset was found. |
 | Portable launch | On 2026-10-24 (Asia/Manila), all six extracted files were compared with the exact ZIP; the portable app launched with WebView2 already installed, loaded live counts 1/14/10, and showed version 1.0.0 and MIT in About. |
 
-Installation was launched from a packaged test host: its normal app-data path resolved into that host's private storage. This qualifies the upgrade/launch observations above; it does not establish normal Windows Start-menu registration. The reported generic Windows Search icon remains pending verification through an ordinary desktop installation. Installer, uninstall, upgrade, and shortcut acceptance must be recorded in that normal context before their gates pass.
+The initial upgrade was launched from a packaged test host whose app-data path resolved into private storage, so it does not establish a normal desktop cross-version upgrade. On 2026-10-24 (Asia/Manila), Windows Explorer launched the exact installer in the ordinary desktop context. Add/Reinstall components completed successfully at the default current-user destination without requesting data deletion. The installed app launched and showed 1.0.0/MIT and live counts 1/14/10. Its Start-menu shortcut visibly carried the custom blue badge and launched the app through Explorer. The user separately confirmed that Windows Search now displays the custom badge. This verifies maintenance reinstall and shortcut registration, not clean first installation or cross-version upgrade.
 
 The observations identify these immutable draft assets at commit 7890b56a4dd205980af98b5f924b1ac0d52f1a2f:
 
@@ -74,4 +74,4 @@ The observations identify these immutable draft assets at commit 7890b56a4dd2059
 38d92da84f20841cb4b329f6a6a7e428c88681be38db4cb6b1f6e10ce79b4d42  Discord-Auto-Quest-1.0.0-windows-x64-portable.zip
 ```
 
-Normal installation/uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
+Clean first installation, normal cross-version upgrade, uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
