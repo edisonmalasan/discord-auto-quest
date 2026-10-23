@@ -52,6 +52,23 @@ async fn list_discord_quests(state: State<'_, AppState>) -> AppResult<QuestList>
     state.discord.quests().await
 }
 
+#[tauri::command]
+async fn review_quest_offer(
+    state: State<'_, AppState>,
+    id: String,
+) -> AppResult<serde_json::Value> {
+    state.discord.enrollment(&id, None).await
+}
+
+#[tauri::command]
+async fn confirm_quest_acceptance(
+    state: State<'_, AppState>,
+    id: String,
+    revision: String,
+) -> AppResult<serde_json::Value> {
+    state.discord.enrollment(&id, Some(&revision)).await
+}
+
 /// Run the quest operation in Discord.
 #[tauri::command]
 async fn start_quest_work(state: State<'_, AppState>) -> AppResult<bool> {
@@ -76,6 +93,8 @@ pub fn run() {
             discord_status,
             relaunch_discord,
             list_discord_quests,
+            review_quest_offer,
+            confirm_quest_acceptance,
             start_quest_work,
             stop_quest_work
         ])

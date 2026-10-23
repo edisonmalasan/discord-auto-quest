@@ -2,6 +2,11 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
+import type { EnrollmentResult } from '../types/enrollment';
+
+export async function questEnrollment(id: string, revision?: string): Promise<EnrollmentResult> {
+  return revision === undefined ? invoke('review_quest_offer', { id }) : invoke('confirm_quest_acceptance', { id, revision });
+}
 
 /**
  * The version of the running application.

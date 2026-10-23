@@ -20,6 +20,12 @@ These outcomes refer to the current desktop product. Earlier retired implementat
 
 The merged workspace provides Ongoing, Available, and Completed views; per-view search; native-style cards; explicit Discord handoffs; and restrained, reduced-motion-aware interaction. Failed reads retain marked stale data. Uncertain Work retains Stop and blocks duplicate dispatch. Timeouts release stalled connections without asserting that renderer activity was cancelled.
 
+## In-app acceptance candidate
+
+Development version 0.2.0-beta.2 adds deliberate review and confirmation for supported standard Orbs offers. Acceptance is separate from Work and playback; special features and unfamiliar configurations retain a Discord handoff. Fresh offers are checked again at confirmation and unknown outcomes are never retried automatically.
+
+Verified so far: 104 frontend/tooling tests, including synthetic acceptance and controller serialization; live read-only offer preparation recognized eight of 16 current offers without accepting anything. Actual live acceptance and beta.2 packaged-app acceptance remain unverified. The beta.1 tag and draft assets are preserved.
+
 ## Windows beta release gates
 
 Implementation and initial checks completed for 0.2.0-beta.1: current-user installer, portable archive, notices, strict version validation, terminology audit, and prerelease publication controls. Release gates must record actual pass/fail/unavailable evidence before publication.

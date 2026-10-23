@@ -2,6 +2,12 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 0.2.0-beta.2 — Unreleased
+
+- Review and confirm supported quest offers inside the app, with a Discord fallback.
+- Separate acceptance from Work and show uncertain results without automatic retries.
+- Real acceptance and beta.2 packaged-app acceptance remain unverified.
+
 ## 0.2.0-beta.1 — Unreleased
 
 - Windows x64 public beta packaging and release preparation.
