@@ -57,6 +57,11 @@ describe('release gates', () => {
     expect(validateEvidence(evidence)).toBe(true);
     for(const name of checks) expect(()=>validateEvidence({...evidence,checks:{...evidence.checks,[name]:'unavailable'}})).toThrow(name);
   });
+  it('distinguishes historical beta observations from pending stable acceptance in curated notes',()=>{
+    const notes=readFileSync(new URL('./release-notes.md',import.meta.url),'utf8');
+    expect(notes).toContain('0.2.0-beta.2');
+    expect(notes).toMatch(/1\.0\.0.*acceptance.*pending/i);
+  });
   it('permits both supported Discord media hosts in native policies',()=>{
     const config=JSON.parse(readFileSync(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8'));
     for(const policy of [config.app.security.csp,config.app.security.devCsp]) {
