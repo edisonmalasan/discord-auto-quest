@@ -12,7 +12,7 @@ function show(run=vi.fn().mockResolvedValue(offer)) {
 }
 it('requires confirmation and cancellation makes no acceptance call',async()=>{
  const {run}=show(); fireEvent.click(screen.getByText('Review offer'));
- const cancel=await screen.findByRole('button',{name:'Cancel'}); expect(cancel).toHaveFocus();
+ const cancel=await screen.findByRole('button',{name:'Cancel'}); await waitFor(()=>expect(cancel).toHaveFocus());
  expect(screen.getByRole('dialog')).toHaveTextContent('Example'); expect(run).toHaveBeenCalledTimes(1);
  fireEvent.click(cancel); expect(screen.queryByRole('dialog')).toBeNull(); expect(run).toHaveBeenCalledTimes(1);
 });
