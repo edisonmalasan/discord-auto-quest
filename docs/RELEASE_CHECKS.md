@@ -63,6 +63,7 @@ On 2026-10-23 the exact draft installer upgraded the earlier beta.1 installation
 | In-app acceptance review | Sensei Pro and Rival Pro showed the reward, requirements, expiry, and a separate confirmation button. Cancel closed it; counts remained unchanged. No offer was accepted during this check. |
 | Card menu | The completed Play Nekome Demo card menu opened and dismissed on an outside click. No menu action was invoked. |
 | Brand assets | The installed executable, portable executable, and Start-menu shortcut each yielded the custom brand icon. No missing icon asset was found. |
+| Portable launch | On 2026-10-24 (Asia/Manila), all six extracted files were compared with the exact ZIP; the portable app launched with WebView2 already installed, loaded live counts 1/14/10, and showed version 1.0.0 and MIT in About. |
 
 Installation was launched from a packaged test host: its normal app-data path resolved into that host's private storage. This qualifies the upgrade/launch observations above; it does not establish normal Windows Start-menu registration. The reported generic Windows Search icon remains pending verification through an ordinary desktop installation. Installer, uninstall, upgrade, and shortcut acceptance must be recorded in that normal context before their gates pass.
 
@@ -73,4 +74,4 @@ The observations identify these immutable draft assets at commit 7890b56a4dd2059
 38d92da84f20841cb4b329f6a6a7e428c88681be38db4cb6b1f6e10ce79b4d42  Discord-Auto-Quest-1.0.0-windows-x64-portable.zip
 ```
 
-Portable launch, normal installation/uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
+Normal installation/uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
