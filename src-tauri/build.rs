@@ -6,7 +6,7 @@ use std::path::PathBuf;
 /// so the about panel cannot show a version that disagrees with the one the
 /// application was shipped as.
 ///
-/// The quest script is **not** built here. It is encrypted when the payload is
+/// The quest operation is **not** built here. It is encrypted when the payload is
 /// built, embedded as ciphertext, and decrypted in memory when it is needed —
 /// see `quest::payload`.
 fn main() {
@@ -45,7 +45,7 @@ fn inject_version() {
 
 /// The `version` field of a `package.json`, read without a JSON parser.
 ///
-/// The build script has no dependencies, and a version field is a string in an
+/// The build operation has no dependencies, and a version field is a string in an
 /// object: the one line that carries it is enough.
 fn read_version(text: &str) -> Result<String, String> {
     for line in text.lines() {

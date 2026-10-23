@@ -16,7 +16,13 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
   useEffect(() => {
     if (!menuOpen) return;
     menu.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
-    function outside(event: PointerEvent) { if (!root.current?.contains(event.target as Node)) onMenuChange(null); }
+    function outside(event: PointerEvent) {
+      if (root.current?.contains(event.target as Node)) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const control = target?.closest<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex]');
+      onMenuChange(null);
+      if (!control || control.tabIndex < 0) trigger.current?.focus();
+    }
     document.addEventListener('pointerdown', outside);
     return () => document.removeEventListener('pointerdown', outside);
   }, [menuOpen, onMenuChange]);

@@ -1,4 +1,4 @@
-//! Run a JavaScript file inside a browser's renderer and print what it returns.
+//! Run a code file inside a browser's renderer and print what it returns.
 //!
 //!   cargo run --manifest-path src-tauri/Cargo.toml --example cdp_probe -- <port> <file.js>
 //!
@@ -17,9 +17,9 @@ async fn main() {
         std::process::exit(2);
     };
 
-    let script = match arguments.next() {
+    let operation = match arguments.next() {
         Some(path) => std::fs::read_to_string(&path)
-            .unwrap_or_else(|error| panic!("the script could not be read: {error}")),
+            .unwrap_or_else(|error| panic!("the operation could not be read: {error}")),
         None => "1 + 1".to_string(),
     };
 
@@ -44,7 +44,7 @@ async fn main() {
         .await
         .expect("the session connects");
 
-    let value = session.evaluate(&script).await.expect("it runs");
+    let value = session.evaluate(&operation).await.expect("it runs");
     println!("\n--- result ---");
     println!(
         "{}",

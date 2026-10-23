@@ -85,9 +85,9 @@ mod recovery_tests {
             };
             let result = tokio::time::timeout(std::time::Duration::from_secs(12), async {
                 if work {
-                    state.run_script().await.map(|_| ())
+                    state.start_work().await.map(|_| ())
                 } else {
-                    state.stop_script().await
+                    state.stop_work().await
                 }
             })
             .await;
@@ -109,7 +109,7 @@ mod recovery_tests {
         let state = DiscordState {
             session: Mutex::new(Some(session)),
         };
-        let error = state.run_script().await.unwrap_err();
+        let error = state.start_work().await.unwrap_err();
         assert_eq!(
             serde_json::to_value(error.code).unwrap(),
             "OPERATION_UNCERTAIN"
@@ -153,7 +153,7 @@ mod recovery_tests {
 
     #[tokio::test]
     async fn stop_without_a_connection_does_not_report_a_false_success() {
-        assert!(DiscordState::default().stop_script().await.is_err());
+        assert!(DiscordState::default().stop_work().await.is_err());
     }
 
     #[tokio::test]
@@ -304,11 +304,11 @@ impl DiscordState {
         Ok(())
     }
 
-    /// Run the quest script.
+    /// Run the quest operation.
     ///
-    /// The script is the payload, decrypted in memory. It is never written to
+    /// The operation is the payload, decrypted in memory. It is never written to
     /// disk, and it never leaves this machine.
-    pub async fn run_script(&self) -> AppResult<bool> {
+    pub async fn start_work(&self) -> AppResult<bool> {
         let mut guard = self.session.lock().await;
         let session = guard.as_mut().ok_or_else(|| {
             AppError::not_supported("Discord has to be attached to before a quest can be worked")
@@ -337,7 +337,7 @@ impl DiscordState {
     }
 
     /// Put Discord's own methods back.
-    pub async fn stop_script(&self) -> AppResult<()> {
+    pub async fn stop_work(&self) -> AppResult<()> {
         let mut guard = self.session.lock().await;
         let Some(session) = guard.as_mut() else {
             return Err(AppError::network(
@@ -406,7 +406,7 @@ impl DiscordState {
         Ok(self.quests().await?.running_games)
     }
 
-    /// Whether the client is the desktop application, which the script needs.
+    /// Whether the client is the desktop application, which the operation needs.
     pub async fn is_desktop_app(&self) -> AppResult<bool> {
         let mut guard = self.session.lock().await;
         let Some(session) = guard.as_mut() else {

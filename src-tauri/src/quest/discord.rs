@@ -2,7 +2,7 @@
 //!
 //! Discord is a Chromium application. It speaks the Chrome DevTools Protocol
 //! when it is started with a remote debugging port, and that protocol is how
-//! the quest script gets into the renderer.
+//! the quest operation gets into the renderer.
 //!
 //! This module knows where Discord is, whether it is running with a debugger,
 //! and how to list the pages it exposes. It does not decide whether to
@@ -216,7 +216,7 @@ pub async fn list_targets(port: u16) -> AppResult<Vec<Target>> {
 ///
 /// Discord exposes more than one page: the main window, popouts, and workers.
 /// The main window is the one whose address is Discord's own application, and
-/// it is the one the quest script has to run in.
+/// it is the one the quest operation has to run in.
 pub fn pick_renderer(targets: &[Target]) -> Option<&Target> {
     let pages: Vec<&Target> = targets.iter().filter(|target| target.is_page()).collect();
 
@@ -242,7 +242,7 @@ pub fn pick_renderer(targets: &[Target]) -> Option<&Target> {
 /// Attach to Discord's renderer and hand the session back.
 ///
 /// The session is kept, because reading the quest state means asking Discord
-/// again and again, and running the script means driving the same page.
+/// again and again, and running the operation means driving the same page.
 pub async fn attach_to_discord(install: &Install) -> AppResult<Session> {
     wait_for_renderer(install, Duration::from_secs(30)).await
 }
@@ -276,13 +276,13 @@ async fn wait_for_renderer(install: &Install, timeout: Duration) -> AppResult<Se
 async fn attach_once(install: &Install) -> AppResult<Session> {
     let port = install.debug_port().ok_or_else(|| {
         AppError::not_supported(
-            "Discord is not running with a debugging port, so the quest script cannot be run in it",
+            "Discord is not running with a debugging port, so the quest operation cannot be run in it",
         )
     })?;
 
     let targets = list_targets(port).await?;
     let target = pick_renderer(&targets).ok_or_else(|| {
-        AppError::not_supported("Discord's debugger exposes no page to run the quest script in")
+        AppError::not_supported("Discord's debugger exposes no page to run the quest operation in")
     })?;
 
     Session::connect(&target.web_socket_url).await

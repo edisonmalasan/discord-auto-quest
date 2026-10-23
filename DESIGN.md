@@ -97,9 +97,4 @@ Pointer presses scale to 0.97 over 160 ms. Pointer-opened menus enter with opaci
 menus and navigation are immediate. Reduced motion removes transforms/transitions. There are
 no card hover lifts, looping decorations, interpolated progress, or poll-driven entrance effects.
 
-The [approved design](docs/superpowers/specs/2026-10-23-ui-redesign-design.md) retains the visual
-references and intended behavior; the [roadmap](docs/ROADMAP.md) records verified progress.
-
-Two minor review follow-ups remain: native CSP currently falls back for artwork served only
-by media.discordapp.net, and outside menu dismissal onto non-focusable background can lose
-keyboard focus. Escape and menu actions restore trigger focus.
+The [roadmap](docs/ROADMAP.md) records verified progress.

@@ -1,38 +1,16 @@
-# Build and check the application on every platform we ship.
-#
-# Each platform builds in the environment it will run in, because the desktop
-# window needs a webview toolkit and native libraries that cannot be carried
-# across: a Windows build made on Linux would link against the wrong libraries,
-# and a macOS build needs the macOS frameworks.
-#
-# The artifacts are uploaded rather than published. Publishing is a separate,
-# deliberate step, so a green run cannot put something in front of a user by
-# itself.
-
+# Verify each candidate before creating a draft prerelease.
 name: release
-
 on:
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish the release
-        type: boolean
-        default: false
   pull_request:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
-
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
 permissions:
   contents: read
-
-env:
-  CARGO_TERM_COLOR: always
-  # The Tauri CLI is invoked through cargo, so it is installed once per job.
-  TAURI_CLI_VERSION: "^2"
-
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   check:
     name: checks
@@ -44,167 +22,95 @@ jobs:
           components: rustfmt, clippy
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: |
-            src-tauri -> target
-      - name: the libraries the window renders through
+          workspaces: src-tauri -> target
+      - name: Native prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential pkg-config file curl ca-certificates \
-            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
-            librsvg2-dev
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config file curl ca-certificates libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
       - run: npm ci
-      - name: the version
-        run: npm run version:check
-      - name: formatting
-        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
-      - name: lint
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-      - name: the frontend tests
-        run: npm test -- --run
-      - name: the backend tests
-        run: cargo test --manifest-path src-tauri/Cargo.toml
-      - name: the acceptance cases
-        run: |
-          npm run build
-          npm run check:acceptance
-
-  linux:
-    name: linux archive
-    runs-on: ubuntu-latest
+      - run: npm run version:check
+      - run: npm run check:terms
+      - run: npm run check:notices
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+      - run: npm test
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - run: npm run build
+      - run: npm run check:acceptance
+  build:
+    name: ${{ matrix.platform }} build
     needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+          - platform: linux
+            os: ubuntu-latest
+          - platform: macos
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: |
-            src-tauri -> target
-      - name: the libraries the window renders through
+          workspaces: src-tauri -> target
+      - name: Linux prerequisites
+        if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential pkg-config file curl ca-certificates \
-            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
-            librsvg2-dev
+          sudo apt-get install -y --no-install-recommends build-essential pkg-config file curl ca-certificates libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
       - run: npm ci
-      - name: build
+      - name: Candidate version
+        id: version
+        shell: bash
+        run: node --input-type=module -e "import {readVersion} from './tools/version.mjs'; console.log('version='+readVersion())" >> "$GITHUB_OUTPUT"
+      - name: Windows candidate
+        if: matrix.platform == 'windows'
+        run: npm run release
+      - name: Other-platform compilation only
+        if: matrix.platform != 'windows'
         run: |
-          # The application embeds the frontend, so the frontend is built first.
-          # Without it the build fails with "the frontendDist configuration is
-          # set to ../dist but this path doesn't exist".
           npm run build
           cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: the payload is not readable
-        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest
+          node tools/check-payload.mjs src-tauri/target/release/discord-auto-quest
       - uses: actions/upload-artifact@v4
+        if: matrix.platform == 'windows'
         with:
-          name: linux-archive
-          path: |
-            src-tauri/target/release/discord-auto-quest
-
-  windows:
-    name: windows archive
-    runs-on: windows-latest
-    needs: check
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            src-tauri -> target
-      - run: npm ci
-      - name: build
-        run: |
-          # The application embeds the frontend, so the frontend is built first.
-          npm run build
-          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: the payload is not readable
-        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest.exe
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-archive
-          path: |
-            src-tauri/target/release/discord-auto-quest.exe
-
-  macos:
-    name: macos archive
-    runs-on: macos-latest
-    needs: check
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            src-tauri -> target
-      - run: npm ci
-      - name: build
-        run: |
-          # The application embeds the frontend, so the frontend is built first.
-          npm run build
-          cargo build --release --features custom-protocol --manifest-path src-tauri/Cargo.toml
-      - name: the payload is not readable
-        run: node scripts/check-payload.mjs src-tauri/target/release/discord-auto-quest
-      - uses: actions/upload-artifact@v4
-        with:
-          name: macos-archive
-          path: |
-            src-tauri/target/release/discord-auto-quest
-
-  # The release is cut from the artifacts the three builds produced, so what is
-  # published is exactly what was built and checked rather than a second build
-  # that might differ. The job runs only for a tag: a plain run builds and stops
-  # there, and nothing reaches a user until the tag is pushed.
-  publish:
-    name: publish the release
-    needs: [linux, windows, macos]
+          name: windows-candidate
+          path: target/release/${{ steps.version.outputs.version }}/*
+          if-no-files-found: error
+  draft:
+    name: draft prerelease
+    needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify release ancestry
+        run: git merge-base --is-ancestor HEAD origin/main
       - uses: actions/download-artifact@v4
         with:
-          path: artifacts
-      - name: the files to publish
-        run: |
-          mkdir -p publish
-          find artifacts -type f \( -name '*.exe' -o -name 'discord-auto-quest' \) \
-            -exec bash -c 'for file; do cp "$file" "publish/$(basename "$file")"; done' _ {} +
-          cp LICENSE NOTICE README.md publish/
-          echo "publish: the files that will be published"
-          ls -la publish
-      - name: the checksums
-        run: |
-          cd publish
-          sha256sum * > SHA256SUMS
-          cat SHA256SUMS
-      - name: cut the release
+          name: windows-candidate
+          path: candidate
+      - name: Create draft from verified candidate
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          gh release create "$GITHUB_REF_NAME" \
-            --title "discord-auto-quest $version" \
-            --generate-notes \
-            publish/*
-          echo "publish: https://github.com/${{ github.repository }}/releases/tag/$GITHUB_REF_NAME"
+        run: node tools/publish.mjs draft candidate

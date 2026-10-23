@@ -8,7 +8,7 @@ import { defineConfig, loadEnv } from 'vite';
  *
  * The Tauri shell has to be told which port the dev server is on, and the dev
  * server has to take a port nobody else is using. So the port is chosen once,
- * by `scripts/dev.mjs`, and handed to the dev server through the environment.
+ * by `tools/dev.mjs`, and handed to the dev server through the environment.
  *
  * When the port was not chosen for us — the dev server is run on its own, with
  * `npm run dev` — the port below is a starting point rather than a promise, and
@@ -63,7 +63,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
+    include: ['src/**/*.test.{ts,tsx}', 'tools/**/*.test.mjs'],
     // The suite is small, and a worker that is slow to start can starve its
     // own tests of wall clock. A generous timeout, and fewer workers than the
     // machine has cores, keeps a run from failing on a slow disk rather than

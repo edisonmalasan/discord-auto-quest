@@ -99,7 +99,7 @@ export interface QuestFeed {
   /**
    * Whether the client is the desktop application.
    *
-   * The quest script only works there, so the interface has to say so rather
+   * The quest operation only works there, so the interface has to say so rather
    * than offer a button that cannot work.
    */
   desktopApp: boolean;

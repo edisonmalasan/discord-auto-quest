@@ -4,7 +4,7 @@
 //! the running-games store the client keeps, and the client's heartbeat is
 //! what moves the progress.
 //!
-//! So the quest script runs *inside* Discord's renderer, over the Chrome
+//! So the quest operation runs *inside* Discord's renderer, over the Chrome
 //! DevTools Protocol, and makes the client believe the game is running.
 //! That is the whole mechanism.
 //!
@@ -13,10 +13,10 @@
 //! - `discord` finds Discord and the debugger inside it.
 //! - `cdp` speaks the DevTools Protocol: evaluate an expression in the
 //!   renderer, and read back what it prints.
-//! - `payload` holds the quest script, encrypted, and decrypts it in memory.
+//! - `payload` holds the quest operation, encrypted, and decrypts it in memory.
 //!   It is never written to disk.
 //! - `driver` prepares and restores Discord's own methods, and runs the
-//!   script inside a function wrapper.
+//!   operation inside a function wrapper.
 //! - `reader` reads the quest state out of the client's store, by shape
 //!   rather than by a pinned export name, so a Discord update does not stop
 //!   the application from saying what it can see.

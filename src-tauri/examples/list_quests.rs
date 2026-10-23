@@ -3,7 +3,7 @@
 //!   cargo run --manifest-path src-tauri/Cargo.toml --example list_quests -- <port>
 //!
 //! The reader is the application's own: it finds Discord's quest store by
-//! shape, so it keeps working when the export names the quest script uses
+//! shape, so it keeps working when the export names the quest operation uses
 //! move.
 
 use discord_auto_quest_lib::quest::cdp::Session;

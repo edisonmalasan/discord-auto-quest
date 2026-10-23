@@ -4,7 +4,7 @@ pub mod quest;
 
 /// The version of this build.
 ///
-/// It is set by the build script from the workspace manifest, so the about
+/// It is set by the build operation from the workspace manifest, so the about
 /// panel cannot show a version that disagrees with the one the application
 /// was shipped as.
 pub const VERSION: &str = env!("APP_VERSION");
@@ -52,16 +52,16 @@ async fn list_discord_quests(state: State<'_, AppState>) -> AppResult<QuestList>
     state.discord.quests().await
 }
 
-/// Run the quest script in Discord.
+/// Run the quest operation in Discord.
 #[tauri::command]
-async fn run_quest_script(state: State<'_, AppState>) -> AppResult<bool> {
-    state.discord.run_script().await
+async fn start_quest_work(state: State<'_, AppState>) -> AppResult<bool> {
+    state.discord.start_work().await
 }
 
 /// Put Discord's own methods back.
 #[tauri::command]
-async fn stop_quest_script(state: State<'_, AppState>) -> AppResult<()> {
-    state.discord.stop_script().await
+async fn stop_quest_work(state: State<'_, AppState>) -> AppResult<()> {
+    state.discord.stop_work().await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -76,8 +76,8 @@ pub fn run() {
             discord_status,
             relaunch_discord,
             list_discord_quests,
-            run_quest_script,
-            stop_quest_script
+            start_quest_work,
+            stop_quest_work
         ])
         .run(tauri::generate_context!())
         .expect("error while running the discord-auto-quest application");
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn the_version_is_the_one_the_workspace_manifest_states() {
-        // The build script reads the version from `package.json` and checks the
+        // The build operation reads the version from `package.json` and checks the
         // crate's own manifest against it, so these two are the same number by
         // construction. The assertion is here so a change that breaks that
         // arrangement is caught by the test suite rather than by a user.
@@ -98,7 +98,8 @@ mod tests {
 
     #[test]
     fn the_version_is_a_release_number() {
-        let parts: Vec<&str> = VERSION.split('.').collect();
+        let core = VERSION.split(['-', '+']).next().expect("version core");
+        let parts: Vec<&str> = core.split('.').collect();
 
         assert_eq!(parts.len(), 3, "the version is major.minor.patch");
         for part in parts {

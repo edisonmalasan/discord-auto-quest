@@ -4,7 +4,7 @@
 //! with `cargo test --manifest-path src-tauri/Cargo.toml -- --ignored`.
 //!
 //! They exist because the transport is the whole of the mechanism: if the
-//! application cannot evaluate JavaScript in a Chromium renderer and read back
+//! application cannot evaluate code in a Chromium renderer and read back
 //! what it prints, nothing else in the project matters.
 
 use std::path::{Path, PathBuf};
@@ -165,7 +165,7 @@ async fn what_the_page_prints_comes_back() {
 
 #[tokio::test]
 #[ignore = "starts a browser"]
-async fn a_script_that_throws_is_reported_as_a_failure() {
+async fn a_operation_that_throws_is_reported_as_a_failure() {
     let Some(browser) = TestBrowser::start() else {
         eprintln!("no browser was found, so there was nothing to test against");
         return;
@@ -176,7 +176,7 @@ async fn a_script_that_throws_is_reported_as_a_failure() {
     let error = session
         .evaluate("throw new Error('the internals moved')")
         .await
-        .expect_err("a thrown script is a failure");
+        .expect_err("a thrown operation is a failure");
 
     assert!(
         error.message.contains("the internals moved"),

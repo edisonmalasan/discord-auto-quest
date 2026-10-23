@@ -1,0 +1,126 @@
+{
+  "lines": [
+    {
+      "path": "index.html",
+      "lineBase64": "ICAgIDxzY3JpcHQgdHlwZT0ibW9kdWxlIiBzcmM9Ii9zcmMvbWFpbi50c3giPjwvc2NyaXB0Pg==",
+      "reason": "Required HTML module entry"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAidHlwZXNjcmlwdCI6ICJeNS45LjMiLA==",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgImhhc0luc3RhbGxTY3JpcHQiOiB0cnVlLA==",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICJub2RlX21vZHVsZXMvdHlwZXNjcmlwdCI6IHs=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgInJlc29sdmVkIjogImh0dHBzOi8vcmVnaXN0cnkubnBtanMub3JnL3R5cGVzY3JpcHQvLS90eXBlc2NyaXB0LTUuOS4zLnRneiIs",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package.json",
+      "lineBase64": "ICAic2NyaXB0cyI6IHs=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package.json",
+      "lineBase64": "ICAgICJ0eXBlc2NyaXB0IjogIl41LjkuMyIs",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "bmFtZSA9ICJqYXZhc2NyaXB0Y29yZS1ycyI=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJqYXZhc2NyaXB0Y29yZS1ycy1zeXMiLA==",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "bmFtZSA9ICJqYXZhc2NyaXB0Y29yZS1ycy1zeXMi",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "bmFtZSA9ICJzZXJpYWxpemUtdG8tamF2YXNjcmlwdCI=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJzZXJpYWxpemUtdG8tamF2YXNjcmlwdC1pbXBsIiw=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "bmFtZSA9ICJzZXJpYWxpemUtdG8tamF2YXNjcmlwdC1pbXBsIg==",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJzZXJpYWxpemUtdG8tamF2YXNjcmlwdCIs",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJqYXZhc2NyaXB0Y29yZS1ycyIs",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJqYXZhc2NyaXB0Y29yZS1ycy1zeXMiLA==",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "lineBase64": "ICJqYXZhc2NyaXB0Y29yZS1ycyIs",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "lineBase64": "ICAgICAgImNzcCI6ICJkZWZhdWx0LXNyYyAnc2VsZic7IGltZy1zcmMgJ3NlbGYnIGh0dHBzOi8vY2RuLmRpc2NvcmRhcHAuY29tIGh0dHBzOi8vbWVkaWEuZGlzY29yZGFwcC5uZXQgZGF0YTo7IHN0eWxlLXNyYyAnc2VsZicgJ3Vuc2FmZS1pbmxpbmUnOyBzY3JpcHQtc3JjICdzZWxmJyIs",
+      "reason": "Required security directive"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "lineBase64": "ICAgICAgImRldkNzcCI6ICJkZWZhdWx0LXNyYyAnc2VsZic7IGltZy1zcmMgJ3NlbGYnIGh0dHBzOi8vY2RuLmRpc2NvcmRhcHAuY29tIGh0dHBzOi8vbWVkaWEuZGlzY29yZGFwcC5uZXQgZGF0YTo7IHN0eWxlLXNyYyAnc2VsZicgJ3Vuc2FmZS1pbmxpbmUnOyBzY3JpcHQtc3JjICdzZWxmJyAndW5zYWZlLWlubGluZScgJ3Vuc2FmZS1ldmFsJzsgY29ubmVjdC1zcmMgJ3NlbGYnIGlwYzogaHR0cDovL2lwYy5sb2NhbGhvc3Qgd3M6Ly9sb2NhbGhvc3Q6KiBodHRwOi8vbG9jYWxob3N0Oioi",
+      "reason": "Required security directive"
+    },
+    {
+      "path": "src/lib/quest-actions.test.ts",
+      "lineBase64": "ICAgIGZvciAoY29uc3QgdXJsIG9mIFsnamF2YXNjcmlwdDphbGVydCgxKScsICdmaWxlOi8vL2M6L3gnLCAnZGlzY29yZDovLy0nLCAnYmFkJywgJ2h0dHBzOi8vdXNlcjpwYXNzQGV4YW1wbGUuY29tJ10pIGF3YWl0IGV4cGVjdChvcGVuUXVlc3RFeHRlcm5hbCh1cmwpKS5yZWplY3RzLnRvVGhyb3coKTs=",
+      "reason": "Unsafe URL scheme regression case"
+    },
+    {
+      "path": "src/test/preview.html",
+      "lineBase64": "PCFkb2N0eXBlIGh0bWw+PGh0bWwgbGFuZz0iZW4iPjxoZWFkPjxtZXRhIGNoYXJzZXQ9InV0Zi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLGluaXRpYWwtc2NhbGU9MSI+PHRpdGxlPkRpc2NvcmQgQXV0byBRdWVzdCDigJQgdmlzdWFsIGZpeHR1cmVzPC90aXRsZT48L2hlYWQ+PGJvZHk+PGRpdiBpZD0icm9vdCI+PC9kaXY+PHNjcmlwdCB0eXBlPSJtb2R1bGUiIHNyYz0iL3NyYy90ZXN0L3ByZXZpZXcudHN4Ij48L3NjcmlwdD48L2JvZHk+PC9odG1sPg==",
+      "reason": "Required HTML module entry"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogInNlcmlhbGl6ZS10by1qYXZhc2NyaXB0Iiw=",
+      "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogInNlcmlhbGl6ZS10by1qYXZhc2NyaXB0LWltcGwiLA==",
+      "reason": "Required tool or dependency metadata"
+    }
+  ],
+  "licensedFiles": [
+    {
+      "path": "THIRD_PARTY_NOTICES.txt",
+      "sha256": "28aa5d614ac405b139142a4613a470e8415d4df86247d7ffbb8ab1753af91f60",
+      "reason": "Verbatim audited third-party license material"
+    }
+  ]
+}
