@@ -14,12 +14,12 @@ This project follows Semantic Versioning. Versions below 1.0 are provisional; pr
 
 Packaged installation, live account checks, and signed update acceptance remain release gates. See docs/RELEASE_CHECKS.md.
 
-## 1.0.1 — Unreleased
+## 1.0.1 — 2026-10-24
 
 - Include Discord's live video playback progress in the quest percentage refresh, while keeping completion dependent on Discord's confirmation.
 - Refresh video and activity Work progress from Discord's acknowledgments without extra requests or estimated progress.
 
-## 1.0.0 — Unreleased
+## 1.0.0 — 2026-10-24
 
 - Prepare the first stable Windows x64 release and its GitHub draft workflow.
 - Include the quest workspace, connection recovery, and deliberate in-app acceptance for supported offers.
