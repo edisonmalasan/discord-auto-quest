@@ -1,12 +1,29 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/edisonmalasan/discord-auto-quest/main/public/quest-badge.svg" alt="Discord Auto Quest logo" width="80" height="80">
+  <img src="https://raw.githubusercontent.com/edisonmalasan/discord-auto-quest/main/public/quest-badge.svg" alt="Discord Auto Quest logo" width="64" height="64">
 </p>
 
-# Discord Auto Quest
+<h1 align="center">Discord Auto Quest</h1>
 
-A Windows desktop app for browsing, accepting, and working Discord quests from one workspace.
+<p align="center">
+  <strong>A Windows desktop app for browsing, accepting, and working Discord quests.</strong>
+</p>
 
-[Download latest release](https://github.com/edisonmalasan/discord-auto-quest/releases/latest) · [Release history](https://github.com/edisonmalasan/discord-auto-quest/releases) · [Report a problem](https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose) · [Contribute](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md)
+<p align="center">
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest"><img src="https://img.shields.io/github/v/release/edisonmalasan/discord-auto-quest" alt="Latest release"></a>
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/actions/workflows/release.yml"><img src="https://github.com/edisonmalasan/discord-auto-quest/actions/workflows/release.yml/badge.svg?branch=main" alt="Windows build status"></a>
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/blob/main/src-tauri/Cargo.toml"><img src="https://img.shields.io/badge/Tauri-2-24C8D8" alt="Tauri 2"></a>
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4" alt="Platform: Windows x64"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest">Download</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases">Releases</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose">Report a problem</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md">Contribute</a>
+</p>
+
+---
 
 Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord.
 
