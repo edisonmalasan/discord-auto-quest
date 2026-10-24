@@ -20,7 +20,7 @@ These outcomes refer to the current desktop product. Earlier retired implementat
 
 The merged workspace provides Ongoing, Available, and Completed views; per-view search; native-style cards; explicit Discord handoffs; and restrained, reduced-motion-aware interaction. Failed reads retain marked stale data. Uncertain Work retains Stop and blocks duplicate dispatch. Timeouts release stalled connections without asserting that renderer activity was cancelled.
 
-The README now leads with public Windows downloads, distinguishes setup, portable, and checksum assets, and provides installation, update, usage, troubleshooting, and documentation links. It retains platform limits and unverified acceptance coverage; the latest-release link follows GitHub's published release rather than a hard-coded version.
+The README uses a centered brand header with a tagline, release/build/license/platform badges, and navigation. It leads with public Windows downloads, distinguishes setup, portable, and checksum assets, and provides installation, update, usage, troubleshooting, and documentation links. It retains platform limits and unverified acceptance coverage; the latest-release link follows GitHub's published release rather than a hard-coded version.
 
 ## In-app acceptance candidate
 
