@@ -78,7 +78,7 @@ pub(crate) fn decode(bytes: &[u8]) -> AppResult<String> {
 fn read_key() -> AppResult<Vec<u8>> {
     let text: String = KEY.chars().filter(|c| !c.is_whitespace()).collect();
 
-    if text.len() % 2 != 0 {
+    if !text.len().is_multiple_of(2) {
         return Err(AppError::invalid_payload(
             "the payload's key is not a whole number of bytes",
         ));

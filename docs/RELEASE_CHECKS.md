@@ -75,3 +75,19 @@ The observations identify these immutable draft assets at commit 7890b56a4dd2059
 ```
 
 Clean first installation, normal cross-version upgrade, uninstall, live recovery/handoffs, Work/Stop, and clean-environment WebView2 provisioning remain unverified for these exact assets. No account-affecting actions were performed. Windows Sandbox is unavailable on this test host. Keep the release draft; earlier beta results are not substitutes for these missing checks.
+
+## Historical publication status
+
+GitHub records 1.0.0 and 1.0.1 as published on 2026-10-24 in Asia/Manila (2026-10-23 21:49:58 and 22:46:46 UTC). Their earlier unverified acceptance results remain unverified; publication does not establish that those checks passed.
+
+## 1.1.0 preparation — 2026-10-24
+
+Source implementation is prepared; release acceptance is pending. Local verification passed 176 frontend/tooling tests across 23 files and 44 backend harness tests importing the actual runtime/controller modules and download-deadline helper. The new card regression verifies that descriptions/actions follow the selected task alongside its percentage. Harness Clippy passed with the declared Rust 1.90 minimum. These synthetic tests perform no Discord account actions.
+
+Windows CI run 40091308269 at 7648618 passed full-crate Clippy, all 50 backend tests, frontend/tooling tests, production frontend build, and version/terminology/notices/bundle acceptance checks. Three browser integration tests remained ignored. Its Windows packaging job built and verified a validation setup EXE and portable archive, including the executable-content check. The downloaded setup EXE independently yielded the custom blue application badge. These unsigned validation assets have a validation marker and cannot be promoted; they do not establish signed production-candidate acceptance. Final branch CI remains required after subsequent UI/documentation edits.
+
+Isolated browser verification at 880, 1200, and 1600 CSS pixels confirmed waiting/Stop controls, an accepted 0% ring, removal of the preview overlay, About/version/update controls, and confirmed download progress inside the modal. The wide viewport had no horizontal page overflow. This used mock IPC and sample data; no installer, notification delivery, update installation, or Discord behavior was exercised.
+
+The full local production dependency build exhausted memory while compiling Windows notification dependencies; CI supplied full-crate verification. Exact 1.1.0 production installer/portable acceptance, installed updates between signed test candidates, notification delivery/identity, normal close cleanup, and live continuous Work remain unverified. Clean-environment WebView2 provisioning remains unavailable. No earlier artifact hashes above establish acceptance for 1.1.0.
+
+The production signing identity is stored outside the repository, and signing secrets are configured in GitHub Actions. A same-host backup exists; an independent recoverable backup remains unverified and blocks publication. Only the public key is embedded. Keep the release draft until its exact five assets and every required result in the evidence template pass.

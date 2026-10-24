@@ -52,19 +52,19 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
       items[next]?.focus();
     }
   }
-  const video = quest.tasks.some(t => t.startsWith('WATCH_VIDEO'));
-  const alternatives = !video && quest.taskDetails.length > 1;
+  const taskKinds = quest.selectedTaskKind ? [quest.selectedTaskKind] : quest.tasks;
+  const video = taskKinds.length > 0 && taskKinds.every(t => t.startsWith('WATCH_VIDEO'));
+  const alternatives = !video && new Set(quest.taskDetails.map(task => task.platform).filter(Boolean)).size > 1;
   const seconds = videoRemaining(card);
   const label = card.view === 'available' ? enrollment ? 'Accept quest' : 'Accept in Discord' : card.rewardState === 'claimable' ? 'Claim in Discord'
     : card.rewardState === 'claimed' ? 'View reward in Discord' : card.view === 'completed' ? 'Check in Discord'
       : video ? `Watch${seconds !== null ? ` ${seconds}s` : ''} in Discord`
         : alternatives ? 'Platforms in Discord' : 'Open in Discord';
-  const gameCtaOnly = card.view === 'ongoing' && !video && !alternatives && quest.ctaLink;
+  const gameCtaOnly = card.view === 'ongoing' && !video && !alternatives && (quest.selectedTaskKind || quest.tasks.length === 1) && quest.ctaLink;
   return <div className="quest-action-region" ref={root} data-keyboard={keyboard}>
     <button ref={trigger} className="quest-menu-trigger" aria-label={`Quest actions for ${quest.name}`} aria-haspopup="menu" aria-expanded={menuOpen}
       aria-controls={menuOpen ? `menu-${quest.id}` : undefined} onClick={event => { setKeyboard(event.detail === 0); onMenuChange(menuOpen ? null : quest.id); }}
       onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setKeyboard(true); onMenuChange(quest.id); } }}>•••</button>
-    {quest.heroVideo && video && <button className="media-indicator" aria-label={`Watch preview for ${quest.name} in Discord`} disabled={stale || pending} onClick={() => void perform('discord')}>▶</button>}
     {menuOpen && <div className="quest-menu" id={`menu-${quest.id}`} ref={menu} role="menu" aria-label={`Actions for ${quest.name}`} onKeyDown={navigateMenu}>
       {quest.ctaLink && <button role="menuitem" tabIndex={-1} disabled={pending || stale} onClick={() => { close(); void perform('external'); }}>{quest.ctaLabel ?? 'Get Game'}</button>}
       <button role="menuitem" tabIndex={-1} disabled={pending} onClick={() => { close(); void perform('copy'); }}>Copy quest link</button>

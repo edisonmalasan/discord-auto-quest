@@ -2,12 +2,15 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQuest, makeFeed } from './test/fixtures/quests';
+import { stoppedWork } from './types/work';
 import type { DiscordStatus, QuestFeed } from './types/quests';
 const status = vi.fn<() => Promise<DiscordStatus>>();
 const list = vi.fn<() => Promise<QuestFeed>>();
+let backendWork=stoppedWork();
 const work = vi.fn(); const stop = vi.fn(); const restart = vi.fn();
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('./lib/ipc', () => ({
+ questWorkStatus: async()=>backendWork,
  discordStatus: () => status(), listDiscordQuests: () => list(),
  startQuestWork: () => work(), stopQuestWork: () => stop(), relaunchDiscord: () => restart(),
  appVersion: () => Promise.resolve('0.1.0'),
@@ -23,7 +26,8 @@ describe('the quest workspace', () => {
  afterEach(()=>vi.useRealTimers());
  beforeEach(() => {
   vi.clearAllMocks(); status.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
-  list.mockResolvedValue(feed); work.mockResolvedValue(true); stop.mockResolvedValue(undefined); restart.mockResolvedValue(undefined);
+  backendWork=stoppedWork();
+  list.mockResolvedValue(feed); work.mockImplementation(async()=>{backendWork={...stoppedWork(),phase:'waiting'};return backendWork;}); stop.mockImplementation(async()=>{backendWork=stoppedWork();return backendWork;}); restart.mockResolvedValue(undefined);
  });
  it('starts in Ongoing and navigates to distinct live views', async () => {
   render(<App />); await screen.findByText('Active Quest');
@@ -65,6 +69,13 @@ describe('the quest workspace', () => {
   await userEvent.click(screen.getByRole('button', { name: 'Work my quests' }));
   await userEvent.click(await screen.findByRole('button', { name: 'Stop' }));
   await waitFor(() => expect(stop).toHaveBeenCalledTimes(1));
+ });
+ it('arms continuous Work with an empty queue and reports waiting', async()=>{
+  list.mockResolvedValue(makeFeed()); render(<App/>);
+  await screen.findByText('No ongoing quests');
+  await userEvent.click(screen.getByRole('button',{name:'Work my quests'}));
+  expect(await screen.findByRole('button',{name:'Stop'})).toBeEnabled();
+  expect(screen.getByText('Waiting for accepted quests')).toBeInTheDocument();
  });
  it('refreshes the percentage ring during Work and keeps completion tied to Discord', async () => {
   vi.useFakeTimers();

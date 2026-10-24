@@ -18,6 +18,7 @@ export function QuestCard({ card, stale, menuOpen, onMenuChange }: Props) {
       <div className="quest-reward-line">{card.rewardState !== 'claimed' && card.view !== 'completed' && <span>Claim</span>}{quantity !== null && <OrbIcon/>}<strong>{reward}</strong>
         {boost && <span className="boost-pill">◉ Unlock {boost}x</span>}</div>
       <p className="quest-description">{description(card)}</p>
+      {card.view === 'ongoing' && !card.expired && !card.progress && <p className="quest-description">Progress unavailable.</p>}
     </div></div>
     <QuestActions card={card} stale={stale} menuOpen={menuOpen} onMenuChange={onMenuChange}/>
   </article>;
@@ -36,11 +37,12 @@ function description(card: QuestCardModel) {
   if (card.rewardState === 'expired') return 'Quest completed. The reward claim window has ended.';
   if (card.view === 'completed') return 'Quest completed. Check your reward status in Discord.';
   if (card.expired) return 'This quest has ended.';
-  if (q.tasks.some(t => t.startsWith('WATCH_VIDEO'))) return `Watch the video to win ${q.rewardName ?? 'your reward'}!`;
+  const taskKinds = q.selectedTaskKind ? [q.selectedTaskKind] : q.tasks;
+  if (taskKinds.length && taskKinds.every(t => t.startsWith('WATCH_VIDEO'))) return `Watch the video${q.selectedTaskKind === 'WATCH_VIDEO_ON_MOBILE' ? ' on mobile' : ''} to win ${q.rewardName ?? 'your reward'}!`;
   if (card.progress?.unit === 'count') return `Reach ${card.progress.target} ${card.progress.target === 1 ? 'achievement' : 'achievements'} in ${q.gameTitle ?? 'the activity'} to earn your reward.`;
-  const needs = requirement(q);
+  const needs = requirement({ ...q, tasks: taskKinds });
   const extra = needs ? ` This quest ${needs}.` : '';
   if (card.progress?.unit === 'seconds') return `${taskLabel(card.progress.taskKind)}${q.gameTitle ? `: ${q.gameTitle}` : ''} for ${duration(card.progress.target)} to earn ${q.rewardName ?? 'your reward'}.${extra}`;
-  return `Complete a supported task in Discord: ${q.tasks.map(taskLabel).join(' / ')}.${extra}`;
+  return `Complete a supported task in Discord: ${taskKinds.map(taskLabel).join(' / ')}.${extra}`;
 }
 export function OrbIcon() { return <svg className="orb-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="m8 1 7 7-7 7-7-7z" fill="none" stroke="currentColor" strokeWidth="2"/><path d="m8 4 4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5"/></svg>; }

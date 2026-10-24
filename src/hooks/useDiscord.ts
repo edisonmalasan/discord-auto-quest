@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError, questEnrollment } from '../lib/ipc';
+import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError, questEnrollment, questWorkStatus } from '../lib/ipc';
 import type { EnrollmentRun } from '../types/enrollment';
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
+import { stoppedWork, type WorkState } from '../types/work';
 
 export type DiscordPhase = 'loading' | 'ready' | 'blocked' | 'error';
 export type ConnectionState = 'loading' | 'closed' | 'restart-needed' | 'connecting' | 'connected' | 'failed';
@@ -15,6 +16,7 @@ export interface DiscordController {
   operationError: AppErrorShape | null;
   busy: boolean;
   working: boolean;
+  workState: WorkState;
   stale: boolean;
   pendingAction: Action | null;
   connectionState: ConnectionState;
@@ -32,7 +34,8 @@ export function useDiscord(): DiscordController {
   const [error, setError] = useState<AppErrorShape | null>(null);
   const [operationError, setOperationError] = useState<AppErrorShape | null>(null);
   const [pendingAction, setPendingAction] = useState<Action | null>(null);
-  const [working, setWorking] = useState(false);
+  const [workState, setWorkState] = useState<WorkState>(stoppedWork);
+  const working = workState.phase !== 'stopped';
   const [fresh, setFresh] = useState(false);
   const mounted = useRef(false);
   const generation = useRef(0);
@@ -46,8 +49,12 @@ export function useDiscord(): DiscordController {
     let statusRead = false;
     const current = () => mounted.current && generation.current === epoch;
     try {
-      const found = await discordStatus();
+      const [found, session] = await Promise.all([discordStatus(), questWorkStatus()]);
       if (!current()) return;
+      if (!(needsStop.current && session.phase === 'stopped')) {
+        needsStop.current = session.phase !== 'stopped';
+        setWorkState(session);
+      }
       statusRead = true; setStatus(found); setPhase(found.ready ? 'ready' : 'blocked');
       if (!found.ready) { setFresh(false); setError(null); return; }
       const quests = await listDiscordQuests();
@@ -76,19 +83,24 @@ export function useDiscord(): DiscordController {
     if (action === 'restart') setFresh(false);
     void (async () => {
       try {
-        if (action === 'restart') await relaunchDiscord();
-        else if (action === 'work') await startQuestWork();
-        else await stopQuestWork();
+        let session: WorkState;
+        if (action === 'restart') {
+          if (needsStop.current) {
+            session = await stopQuestWork();
+            if (session.phase !== 'stopped') throw new Error('Stop Work before restarting Discord.');
+          }
+          await relaunchDiscord(); session = stoppedWork();
+        } else session = action === 'work' ? await startQuestWork() : await stopQuestWork();
         if (!mounted.current || generation.current !== epoch) return;
-        needsStop.current = action === 'work';
-        setWorking(needsStop.current);
+        needsStop.current = session.phase !== 'stopped';
+        setWorkState(session);
         await poll(epoch);
       } catch (failure) {
         if (mounted.current && generation.current === epoch) {
           const problem = toAppError(failure);
           if (action === 'work' && problem.code === 'OPERATION_UNCERTAIN') {
             needsStop.current = true;
-            setWorking(true);
+            setWorkState(previous => ({...previous, phase:'paused', message:problem.message}));
           }
           setOperationError(problem);
         }
@@ -101,13 +113,13 @@ export function useDiscord(): DiscordController {
 
   const restart = useCallback(() => act('restart'), [act]);
   const enrollment: EnrollmentRun = useCallback(async (id, revision) => {
-    if (acting.current || needsStop.current || !fresh || !status?.ready || !feed?.desktopApp) throw new Error('Connect to Discord and stop Work before accepting a quest.');
+    if (acting.current || ['starting','stopping','paused'].includes(workState.phase) || !fresh || !status?.ready || !feed?.desktopApp) throw new Error('Reconnect and resolve the Work session before accepting a quest.');
     acting.current = true;
     const epoch = ++generation.current;
     setPendingAction('accept');
     try { return await questEnrollment(id, revision); }
     finally { acting.current = false; if (mounted.current && generation.current === epoch) setPendingAction(null); }
-  }, [fresh, status, feed]);
+  }, [fresh, status, feed, workState.phase]);
   const work = useCallback(() => act('work'), [act]);
   const stop = useCallback(() => act('stop'), [act]);
   const refresh = useCallback(() => { if (!acting.current) void poll(generation.current); }, [poll]);
@@ -117,5 +129,5 @@ export function useDiscord(): DiscordController {
       : !status?.installed || status.running === false ? 'closed'
         : !status.ready ? 'restart-needed' : fresh ? 'connected' : 'connecting';
   return { phase, status, feed, error, operationError, pendingAction, busy: pendingAction !== null,
-    working, stale, connectionState, restart, work, stop, refresh, enrollment };
+    working, workState, stale, connectionState, restart, work, stop, refresh, enrollment };
 }

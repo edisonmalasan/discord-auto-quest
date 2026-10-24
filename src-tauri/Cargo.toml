@@ -1,8 +1,8 @@
 [package]
 name = "discord-auto-quest"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.90"
 description = "A desktop app that completes Discord quests for games you do not own."
 license = "MIT"
 publish = false
@@ -36,6 +36,9 @@ tokio-tungstenite = "0.29.0"
 tokio = { version = "1", features = ["net", "rt", "macros", "time", "sync"] }
 futures-util = "0.3.34"
 aes-gcm = "0.10.3"
+tauri-plugin-updater = "2"
+tauri-plugin-notification = "2"
+semver = "1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt"] }
@@ -45,3 +48,6 @@ codegen-units = 1
 lto = true
 opt-level = "s"
 strip = true
+
+[target."cfg(windows)".dependencies]
+winreg = "0.55"

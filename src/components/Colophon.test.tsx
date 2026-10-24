@@ -23,6 +23,7 @@ describe('Colophon', () => {
 
     render(<Colophon />);
 
+    expect(screen.getByRole('heading', { name: 'About Discord Auto Quest' })).toBeInTheDocument();
     expect(screen.getByText('MIT')).toBeInTheDocument();
     expect(
       screen.getByText(/not affiliated with, endorsed by, or connected to Discord Inc\./i),

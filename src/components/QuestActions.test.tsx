@@ -9,6 +9,11 @@ const q1=makeQuest({id:'111',state:'claimed',name:'First Quest'});
 const q2=makeQuest({id:'222',state:'claimed',name:'Second Quest'});
 function tree(quests=[q1,q2]) { return <QuestWorkspace views={buildQuestViews(makeFeed({claimed:quests}),Date.now())} loading={false} stale={false} controls={null} connection={null}/>; }
 describe('quest menus',()=>{
+ it('keeps the video footer handoff without a second preview play control',()=>{
+  render(tree([makeQuest({id:'111',name:'Video Quest',state:'claimed',heroVideo:'https://example.com/preview.mp4',tasks:['WATCH_VIDEO'],ctaLink:null,taskDetails:[{kind:'WATCH_VIDEO',value:0,target:60,unit:'seconds',platform:null}]})]));
+  expect(screen.getByRole('button',{name:'Watch 60s in Discord'})).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:/Watch preview/})).not.toBeInTheDocument();
+ });
  it('announces newly confirmed completion without announcing initial history',async()=>{
   const {rerender}=render(tree());
   expect(screen.queryByText('First Quest completed. Check Completed for your reward.')).not.toBeInTheDocument();

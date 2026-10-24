@@ -10,6 +10,17 @@ function show(overrides: Partial<QuestSummary>) {
  return render(<QuestCard card={card} stale={false} menuOpen={false} onMenuChange={()=>{}}/>);
 }
 describe('native quest card variants',()=>{
+ it('uses the selected desktop task for its copy and actions when video alternatives exist',()=>{
+  show({state:'claimed',selectedTaskKind:'PLAY_ON_DESKTOP',tasks:['WATCH_VIDEO','PLAY_ON_DESKTOP','STREAM_ON_DESKTOP'],taskDetails:[
+   {kind:'WATCH_VIDEO',value:0,target:60,unit:'seconds',platform:null},
+   {kind:'PLAY_ON_DESKTOP',value:45,target:900,unit:'seconds',platform:'Desktop'},
+   {kind:'STREAM_ON_DESKTOP',value:0,target:900,unit:'seconds',platform:'Desktop'},
+  ]});
+  expect(screen.getByText(/Play on desktop: Example Game/)).toBeInTheDocument();
+  expect(screen.queryByText(/only while a video|voice channel/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:/Watch.*in Discord/})).not.toBeInTheDocument();
+  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','5');
+ });
  it('keeps the external game action on an available multi-platform quest',()=>{
   show({state:'available',ctaLabel:'Get Game',taskDetails:[
    {kind:'PLAY_ON_DESKTOP',value:0,target:900,unit:'seconds',platform:'Desktop'},
@@ -31,6 +42,11 @@ describe('native quest card variants',()=>{
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','0');
   expect(screen.getByAltText('700 Orbs')).toHaveAttribute('src','https://cdn.discordapp.com/quests/reward.png');
   expect(document.querySelector('img[src*=game]')).toBeNull();
+ });
+ it('names unavailable progress instead of leaving an unexplained empty ring',()=>{
+  show({state:'claimed',taskDetails:[]});
+  expect(screen.getByText('Progress unavailable.')).toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
  });
  it('shows confirmed claimed reward quantity and date',()=>{
   show({state:'completed',rewardClaimState:'claimed',rewardClaimedAt:'2026-10-22T12:00:00Z',claimedRewardOrbs:840});

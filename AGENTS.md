@@ -43,10 +43,10 @@ supersedes it._
 | Layer              | Technology / version         | Evidence                             |
 | ------------------ | ---------------------------- | ------------------------------------ |
 | Frontend / UI      | React 19, TS 5.9, Tailwind CSS 4, Vite 8 | `package.json`            |
-| Backend / runtime  | Rust 1.82+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
+| Backend / runtime  | Rust 1.90+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
 | Mechanism          | Chrome DevTools Protocol over a websocket | `src-tauri/src/quest/cdp.rs` |
 | Payload            | AES-256-GCM, embedded as ciphertext | `src-tauri/src/quest/payload.rs` |
-| Storage            | None. The quest operation is decrypted in memory and never written to disk. | `src-tauri/src/quest/payload.rs` |
+| Storage            | Notification preferences only. The quest operation is decrypted in memory and never written to disk. | `src-tauri/src/updates.rs`, `src-tauri/src/quest/payload.rs` |
 | Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
 | Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/tests/` |
 
@@ -104,7 +104,7 @@ _Verified constraints from `PRODUCT.md`. These are load-bearing, not preferences
 - **The application never restarts Discord on its own.** Restarting Discord ends whatever the user
   was doing in it. The application says what is needed and the user decides.
 - **Acceptance requires explicit user review and confirmation for one supported offer.** Unknown
-  or special flows continue in Discord. Acceptance never starts Work automatically; reward claims remain in Discord.
+  or special flows continue in Discord. Acceptance never enables Work. If continuous Work is already enabled, confirmation explains that acceptance joins its queue; reward claims remain in Discord.
 - **The quest list comes from Discord's client, read at run time.** It is never cached, and never
   bundled into the shipped frontend.
 - **A quest is reported as finished only when Discord says it is.** The interface shows what the

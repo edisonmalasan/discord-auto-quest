@@ -1,16 +1,20 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { stoppedWork, type WorkState } from '../types/work';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
 
 const discordStatus = vi.fn<() => Promise<DiscordStatus>>();
 const listDiscordQuests = vi.fn<() => Promise<QuestFeed>>();
-const startQuestWork = vi.fn<() => Promise<boolean>>();
-const stopQuestWork = vi.fn<() => Promise<void>>();
+const startQuestWork = vi.fn<() => Promise<WorkState>>();
+const stopQuestWork = vi.fn<() => Promise<WorkState>>();
 const relaunchDiscord = vi.fn<() => Promise<void>>();
 const questEnrollment = vi.fn();
+const questWorkStatus = vi.fn();
+let backendWork = stoppedWork();
 
 vi.mock('../lib/ipc', () => ({
+  questWorkStatus: () => questWorkStatus(),
   questEnrollment: (...args: unknown[]) => questEnrollment(...args),
   discordStatus: () => discordStatus(),
   listDiscordQuests: () => listDiscordQuests(),
@@ -31,9 +35,11 @@ const { useDiscord } = await import('./useDiscord');
 describe('useDiscord', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    backendWork=stoppedWork();
+    questWorkStatus.mockImplementation(async()=>backendWork);
     relaunchDiscord.mockResolvedValue();
-    stopQuestWork.mockResolvedValue();
-    startQuestWork.mockResolvedValue(true);
+    stopQuestWork.mockImplementation(async()=>{backendWork=stoppedWork();return backendWork;});
+    startQuestWork.mockImplementation(async()=>{backendWork={...stoppedWork(),phase:'waiting'};return backendWork;});
     discordStatus.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
     listDiscordQuests.mockResolvedValue({ available: [], claimed: [], expired: 0, desktopApp: true, runningGames: [] });
   });
@@ -51,6 +57,24 @@ describe('useDiscord', () => {
     await expect(result.current.enrollment('123','reviewed')).rejects.toThrow();
     await act(async()=>{finish({status:'accepted',id:'123'});await pending;});
     expect(questEnrollment).toHaveBeenCalledTimes(1); expect(startQuestWork).not.toHaveBeenCalled();
+  });
+
+  it('restores an active backend session after a webview reload', async () => {
+    questWorkStatus.mockResolvedValue({phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:'Waiting for accepted quests'});
+    const {result}=renderHook(()=>useDiscord());
+    await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
+    expect(result.current.working).toBe(true);
+    expect(result.current.workState.phase).toBe('waiting');
+    expect(startQuestWork).not.toHaveBeenCalled();
+  });
+  it('allows deliberate acceptance while an established continuous session waits', async () => {
+    questWorkStatus.mockResolvedValue({phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:null});
+    questEnrollment.mockResolvedValue({status:'accepted',id:'123'});
+    const {result}=renderHook(()=>useDiscord());
+    await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
+    await act(async()=>{await result.current.enrollment('123','reviewed');});
+    expect(questEnrollment).toHaveBeenCalledWith('123','reviewed');
+    expect(startQuestWork).not.toHaveBeenCalled();
   });
 
   it('retains the last read as stale and clears a recovered read error', async () => {
@@ -80,13 +104,13 @@ describe('useDiscord', () => {
   });
 
   it('guards two same-tick Work calls before React rerenders', async () => {
-    let acknowledge!: (value: boolean) => void;
+    let acknowledge!: (value: WorkState) => void;
     startQuestWork.mockReturnValue(new Promise(resolve => { acknowledge = resolve; }));
     const { result } = renderHook(() => useDiscord());
     await waitFor(() => expect(result.current.feed).not.toBeNull());
     act(() => { result.current.work(); result.current.work(); });
     expect(startQuestWork).toHaveBeenCalledTimes(1);
-    await act(async () => acknowledge(true));
+    await act(async () => acknowledge({...stoppedWork(),phase:'waiting'}));
   });
 
   it('keeps Stop available and prevents another Work after an uncertain dispatch', async () => {
@@ -164,7 +188,7 @@ describe('useDiscord', () => {
       desktopApp: true,
       runningGames: [],
     });
-    startQuestWork.mockResolvedValue(true);
+    startQuestWork.mockImplementation(async()=>{backendWork={...stoppedWork(),phase:'waiting'};return backendWork;});
 
     const { result } = renderHook(() => useDiscord());
 

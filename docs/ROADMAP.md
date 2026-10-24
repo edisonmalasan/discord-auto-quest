@@ -37,7 +37,7 @@ Required packaged-app checks: standard-user installation, launch, portable launc
 ## Deferred
 
 - macOS client discovery, launch, recovery, packaging, and real-client acceptance, deferred until a Mac tester or hardware is available. macOS CI compilation is paused by default; Linux build jobs and releases are excluded. See [release configuration](../RELEASE.md) for the optional macOS setting.
-- Signed Windows distribution and automatic updates.
+- Windows publisher signing. Confirmed in-app updating is being prepared for 1.1.0; unattended installation remains out of scope.
 
 Local candidate acceptance: non-admin installation, launch, upgrade from 0.1.0, uninstall, and portable launch passed. Installed version and license resources matched; deliberate Discord restart recovered live data; existing accepted video completion and Work/Stop UI passed; navigation and Discord handoff passed. Clean-environment WebView2 provisioning remains unavailable and blocks publication. These results apply to the recorded local candidate, not automatically to later CI artifacts. See [release checks](RELEASE_CHECKS.md) for provenance and remaining gates.
 
@@ -50,3 +50,11 @@ Windows is the current priority. Non-mutating 1.0.0 UI verification confirmed Ab
 ## Progress synchronization
 
 The 1.0.1 fix includes Discord's live video playback values and acknowledged video/activity Work progress in the existing four-second refresh. Only Discord's valid completion timestamp moves a quest to Completed. Synthetic operation-to-reader tests cover returned values, invalid and unrelated acknowledgments, and preservation of enrollment/reward metadata; the UI test covers percentage updates during Work. All 137 frontend/tooling tests and 39 backend tests passed; Rust formatting and Clippy also passed. A new live account-affecting Work check and acceptance of the new packaged assets remain unverified; earlier draft results do not establish those outcomes.
+
+## Continuous Work and confirmed updates — 1.1.0 preparation
+
+The implementation adds a backend-owned continuous queue, explicit waiting and paused states, confirmed cancellation, task-consistent progress/copy/actions including 0%, completion notices, installed-copy notification preferences, and confirmed signed updater delivery. Expired or ineligible active work is cleaned up before advancing. About and card controls are simplified; setup/uninstall use the application icon. PR/main builds remain unsigned validation builds; trusted tag candidates require five version-matched assets and updater signatures.
+
+Verified locally: 176 frontend/tooling tests and 44 backend harness tests, including actual runtime modules, cleanup uncertainty, queue refill/deduplication, task alternatives, completion deduplication, selected-task card behavior, and stalled-download recovery. Disposable-key fixtures verify Tauri signing compatibility and signed-version binding. Full Windows CI checks and packaging passed at 7648618 (run 40091308269), including all 50 backend tests, Clippy, bundle acceptance, and executable-content validation. The downloaded validation setup carried the custom app badge. Final branch checks remain required for later UI/documentation edits.
+
+Exact signed production assets, installed updates, native completion notifications, live continuous Work, independent signing-key recovery, and clean-environment WebView2 provisioning remain publication gates. Earlier beta/stable observations are not substitutes for those checks. GitHub lists 1.0.0/1.0.1 as already published; their historical missing checks remain open observations. See [the current acceptance record](RELEASE_CHECKS.md#110-preparation--2026-10-24).

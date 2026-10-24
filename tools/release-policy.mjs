@@ -2,7 +2,7 @@ import { validVersion, verifyTag } from './version.mjs';
 export function candidateNames(version) {
   if (!validVersion(version)) throw new Error('Invalid candidate version');
   const prefix=`Discord-Auto-Quest-${version}-windows-x64`;
-  return {setup:`${prefix}-setup.exe`,portable:`${prefix}-portable.zip`,checksums:'SHA256SUMS'};
+  return {setup:`${prefix}-setup.exe`,portable:`${prefix}-portable.zip`,signature:`${prefix}-setup.exe.sig`,manifest:'latest.json',checksums:'SHA256SUMS'};
 }
 export function verifyCandidateFiles(files,version) {
   const expected=Object.values(candidateNames(version)).sort();
@@ -26,11 +26,12 @@ export function promotionOptions(tag,version,release) {
 export function releaseFlags(options) {
   return ['draft','prerelease','latest'].map(name=>`--${name}=${options[name]}`);
 }
-export const requiredChecks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'];
+export const requiredChecks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow','continuousWork','completionNotifications','confirmedUpdate','updateFailureRecovery','portableUpdateFallback','signingKeyBackup'];
 export function validateEvidence(evidence) {
   if(!/^[a-f0-9]{40}$/.test(evidence.commit??'') || !evidence.windows || !evidence.discord) throw new Error('Missing tested environment');
   for(const check of requiredChecks) if(evidence.checks?.[check]!=='pass') throw new Error(`Unverified acceptance: ${check}`);
   const names=candidateNames(evidence.version);
-  for(const file of [names.setup,names.portable]) if(!/^[a-f0-9]{64}$/.test(evidence.hashes?.[file]??'')) throw new Error('Missing tested artifact hash');
+  if(Object.keys(evidence.hashes??{}).length!==5) throw new Error('Missing exact tested artifact hashes');
+  for(const file of Object.values(names)) if(!/^[a-f0-9]{64}$/.test(evidence.hashes?.[file]??'')) throw new Error('Missing tested artifact hash');
   return true;
 }

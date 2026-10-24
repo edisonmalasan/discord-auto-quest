@@ -721,6 +721,12 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "minisign-verify",
+    "version": "0.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "cargo",
     "name": "miniz_oxide",
     "version": "0.8.9",
     "license": "MIT OR Zlib OR Apache-2.0"
@@ -754,6 +760,12 @@
     "name": "new_debug_unreachable",
     "version": "1.0.6",
     "license": "MIT"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "notify-rust",
+    "version": "4.18.2",
+    "license": "MIT OR Apache-2.0"
   },
   {
     "ecosystem": "cargo",
@@ -961,6 +973,12 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "reqwest",
+    "version": "0.13.5",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
     "name": "ring",
     "version": "0.17.14",
     "license": "Apache-2.0 AND ISC"
@@ -987,6 +1005,12 @@
     "ecosystem": "cargo",
     "name": "rustls-pki-types",
     "version": "1.15.1",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "rustls-platform-verifier",
+    "version": "0.7.1",
     "license": "MIT OR Apache-2.0"
   },
   {
@@ -1285,8 +1309,20 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "tauri-plugin-notification",
+    "version": "2.7.0",
+    "license": "Apache-2.0 OR MIT"
+  },
+  {
+    "ecosystem": "cargo",
     "name": "tauri-plugin-opener",
     "version": "2.7.2",
+    "license": "Apache-2.0 OR MIT"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tauri-plugin-updater",
+    "version": "2.14.0",
     "license": "Apache-2.0 OR MIT"
   },
   {
@@ -1312,6 +1348,18 @@
     "name": "tauri-winres",
     "version": "0.3.7",
     "license": "MIT"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tauri-winrt-notification",
+    "version": "0.8.1",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "tempfile",
+    "version": "3.27.0",
+    "license": "MIT OR Apache-2.0"
   },
   {
     "ecosystem": "cargo",
@@ -1664,7 +1712,19 @@
   {
     "ecosystem": "cargo",
     "name": "windows-sys",
+    "version": "0.59.0",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "windows-sys",
     "version": "0.61.2",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "windows-targets",
+    "version": "0.52.6",
     "license": "MIT OR Apache-2.0"
   },
   {
@@ -1681,8 +1741,20 @@
   },
   {
     "ecosystem": "cargo",
+    "name": "windows_x86_64_msvc",
+    "version": "0.52.6",
+    "license": "MIT OR Apache-2.0"
+  },
+  {
+    "ecosystem": "cargo",
     "name": "winnow",
     "version": "1.0.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "winreg",
+    "version": "0.55.0",
     "license": "MIT"
   },
   {
@@ -1756,6 +1828,12 @@
     "name": "zerovec-derive",
     "version": "0.11.6",
     "license": "Unicode-3.0"
+  },
+  {
+    "ecosystem": "cargo",
+    "name": "zip",
+    "version": "4.6.1",
+    "license": "MIT"
   },
   {
     "ecosystem": "cargo",

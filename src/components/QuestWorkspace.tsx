@@ -3,13 +3,14 @@ import { searchQuests, type QuestView, type QuestViews } from '../lib/quest-view
 import { AppMark } from './AppMark';
 import { AboutPopover } from './AboutPopover';
 import { QuestIndex } from './QuestIndex';
+import type { QuestCompletion } from '../types/work';
 
 const labels: Record<QuestView, string> = { ongoing: 'Ongoing', available: 'Available', completed: 'Completed' };
 const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Find your next quest. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
 const empty: Record<QuestView, string> = { ongoing: 'Accept a quest from Available or in Discord, then it will appear here.', available: 'There are no available quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
-interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode }
+interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode; notices?: ReactNode; completion?: QuestCompletion | null; onDismissCompletion?: () => void }
 
-export function QuestWorkspace({ views, loading, stale, controls, connection }: Props) {
+export function QuestWorkspace({ views, loading, stale, controls, connection, notices, completion, onDismissCompletion }: Props) {
   const [view, setView] = useState<QuestView>('ongoing');
   const [queries, setQueries] = useState<Record<QuestView, string>>({ ongoing: '', available: '', completed: '' });
   const [openMenuQuestId, setMenu] = useState<string | null>(null);
@@ -40,6 +41,8 @@ export function QuestWorkspace({ views, loading, stale, controls, connection }: 
     <main className="quest-main">
       <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
       <header className="workspace-header"><span><NavIcon kind={view} />{labels[view]} quests</span>{controls}</header>
+      {notices}
+      {completion && <div className="completion-notice" role="status"><span>{completion.name} completed. Claim your reward in Discord.</span><button className="button secondary" onClick={()=>{setView('completed');onDismissCompletion?.();}}>View completed</button><button className="button secondary" aria-label="Dismiss completion notification" onClick={onDismissCompletion}>Dismiss</button></div>}
       <div ref={scroll} className="workspace-scroll" onScroll={event => { positions.current[view] = event.currentTarget.scrollTop; }}>
         <section className="quest-content" aria-labelledby="view-title">
           <h1 id="view-title" ref={heading} tabIndex={-1}>{labels[view]} quests</h1><p className="view-description">{descriptions[view]}</p>
