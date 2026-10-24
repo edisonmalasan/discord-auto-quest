@@ -125,7 +125,7 @@ For the verification record and outstanding release checks, see [release checks]
 | Problem | What to try |
 | --- | --- |
 | No quests appear | Confirm the Discord desktop client is open and has finished loading, then choose Retry. Check Discord for offers available to your account. |
-| No ongoing quests | Accept a supported offer from Available, or accept it in Discord, then refresh. Work requires an already accepted quest. |
+| No ongoing quests | Accept a supported offer from Available, or accept it in Discord, then refresh. Work can wait for an accepted quest; available offers are never accepted automatically. |
 | A Discord restart is requested | Restart only when interrupting your Discord activity is acceptable. The app needs a local connection to the desktop client. |
 | Connection lost or cards marked stale | Wait for Discord to finish starting, then Retry. Avoid repeatedly starting Work after an uncertain result. |
 | A percentage has not changed | Allow the next refresh and check Discord. The app shows progress Discord reports; stale cards indicate the connection needs recovery. |

@@ -46,7 +46,7 @@ supersedes it._
 | Backend / runtime  | Rust 1.90+, Tauri 2, reqwest 0.12 (rustls) | `src-tauri/Cargo.toml`              |
 | Mechanism          | Chrome DevTools Protocol over a websocket | `src-tauri/src/quest/cdp.rs` |
 | Payload            | AES-256-GCM, embedded as ciphertext | `src-tauri/src/quest/payload.rs` |
-| Storage            | None. The quest operation is decrypted in memory and never written to disk. | `src-tauri/src/quest/payload.rs` |
+| Storage            | Notification preferences only. The quest operation is decrypted in memory and never written to disk. | `src-tauri/src/updates.rs`, `src-tauri/src/quest/payload.rs` |
 | Build / tooling    | Vite 8, `@tauri-apps/cli` 2  | `package.json`, `vite.config.ts`      |
 | Tests              | Vitest 4 (frontend), `cargo test` (backend) | `src/**/*.test.ts(x)`, `src-tauri/tests/` |
 
