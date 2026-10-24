@@ -26,7 +26,7 @@ export function promotionOptions(tag,version,release) {
 export function releaseFlags(options) {
   return ['draft','prerelease','latest'].map(name=>`--${name}=${options[name]}`);
 }
-export const requiredChecks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow','continuousWork','completionNotifications','confirmedUpdate','updateFailureRecovery','portableUpdateFallback','signingKeyBackup'];
+export const requiredChecks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow','desktopSelection','orbsOnlyAvailable','continuousWork','completionNotifications','confirmedUpdate','updateFailureRecovery','portableUpdateFallback','signingKeyBackup'];
 export function validateEvidence(evidence) {
   if(!/^[a-f0-9]{40}$/.test(evidence.commit??'') || !evidence.windows || !evidence.discord) throw new Error('Missing tested environment');
   for(const check of requiredChecks) if(evidence.checks?.[check]!=='pass') throw new Error(`Unverified acceptance: ${check}`);

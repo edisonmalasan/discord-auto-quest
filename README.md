@@ -25,7 +25,7 @@
 
 ---
 
-Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord. The 1.1 features described here require a 1.1.x build; users of 1.0.1 need one manual upgrade.
+Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord. Desktop selection and the Orbs-only Available list require 1.2.0 or later. Users of 1.0.1 need one manual upgrade for in-app updates.
 
 ## Downloads
 
@@ -46,8 +46,8 @@ Windows builds are **unsigned**. Windows may display an unknown-publisher warnin
 
 | Feature | What it does |
 | --- | --- |
-| Quest workspace | Switch between Ongoing, Available, and Completed quests, with search to find a quest. |
-| In-app acceptance | Review and confirm one supported offer at a time. While Work is off, acceptance leaves the quest idle. An active continuous session queues it after confirmation. |
+| Quest workspace | Switch between Ongoing, Available, and Completed quests, with search. Available shows only confirmed positive Orbs rewards; accepted and completed quests retain every reward type. |
+| In-app acceptance | Review and confirm one supported offer at a time. While Work is off, acceptance leaves the quest idle. Desktop/console alternatives use Desktop after acceptance and confirmed selection. An active continuous session queues it only when Desktop is confirmed. |
 | Work and Stop | Start a continuous session, work accepted quests sequentially, and wait for new acceptances until Stop. |
 | Progress updates | Refresh percentages from Discord about every four seconds, including during Work. Completion requires Discord's confirmation. |
 | Connection recovery | Show connection errors, mark retained cards as stale, and offer Retry when Discord is ready. |
@@ -101,7 +101,8 @@ Compare the result with the entry for that exact filename in `SHA256SUMS`. Lette
 
 1. Open the stable Discord desktop client and sign in there.
 2. Open Discord Auto Quest. If it requests a Discord restart, review the interruption warning and choose whether to restart.
-3. Browse Available quests and choose **Accept quest**. Review the current requirements, then confirm acceptance. Unsupported offers use **Open in Discord** instead. When continuous Work is already on, the dialog explains that an accepted supported quest joins its queue; otherwise it remains idle.
+3. Browse Available quests and choose **Accept quest**. Review the Orb reward, Desktop requirements, and expiry, then confirm acceptance. For supported Desktop/console offers, the app selects Desktop and verifies it. Unsupported offers use **Open in Discord** instead. When continuous Work is already on, the dialog explains that an accepted supported quest joins its queue; otherwise it remains idle.
+   If an accepted multi-platform quest has no platform selected, choose **Use Desktop** in Ongoing. **Desktop** confirms the native selection. If selection is unconfirmed, refresh and recover selection there; do not accept the quest again. Console-selected quests use **Platforms in Discord**.
 4. Choose **Work my quests** to enable continuous Work, including when Ongoing is empty. Supported accepted quests run one at a time; the session waits for new accepted quests until Stop. Percentages refresh from Discord about every four seconds, including during Work. Progress moves when Discord provides an update; completion requires Discord's confirmation.
 5. Use **Stop** to request cleanup. An unconfirmed cleanup pauses dispatch and blocks another run or update. Reconnect and retry Stop. Closing the app requests cleanup; minimizing keeps the session running.
 6. Completion feedback links to Completed. Optionally enable **Windows notifications** in About on an installed copy; portable copies show in-app feedback only. Claim rewards yourself in Discord. Completed and reward-claimed are distinct states.
@@ -112,7 +113,7 @@ The app never accepts quests automatically, claims rewards, or restarts Discord 
 
 - Quest availability and eligibility depend on Discord and the publisher.
 - One accepted video quest completed in Windows beta testing. A fresh accept-to-completion cycle and broader quest coverage remain unverified; do not assume every quest type works.
-- In-app acceptance initially supports standard Orbs offers for desktop play and video tasks. Special features, console/activity tasks, and unfamiliar offer configurations require Discord. One desktop-play offer was accepted successfully through the packaged Windows app; other acceptance flows remain unverified.
+- In-app acceptance supports standard Orbs offers for video and Desktop play, including known Desktop/Xbox/PlayStation alternatives joined by OR. Console execution, special features, mixed-reward acceptance, activity tasks, and unfamiliar configurations continue in Discord. Earlier Windows testing accepted one desktop-play offer; exact 1.2.0 live acceptance and Desktop selection remain unverified.
 - If acceptance cannot be confirmed, refresh or check Discord before trying again. The app does not automatically retry.
 - Claim, reward, and fallback controls open Discord's Quests page and identify the quest to select.
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.

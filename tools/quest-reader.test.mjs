@@ -5,11 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(new URL('../src-tauri/src/quest/reader.rs', import.meta.url), 'utf8');
 const expression = source.match(/const READ_STATE: &str = r#"([\s\S]*?)"#;/)[1];
-function read(quests, optimistic = {}) {
-  const context = vm.createContext({ input: quests, optimistic });
+function read(quests, optimistic = {}, nativePlatforms = {}) {
+  const context = vm.createContext({ input: quests, optimistic, nativePlatforms });
   vm.runInContext(`
     const store = { quests: new Map(input.map(q => [q.id, q])), getQuest() {},
-      getOptimisticProgress(id, kind) { return optimistic[kind]; } };
+      getOptimisticProgress(id, kind) { return optimistic[kind]; },
+      selectedTaskPlatform(id) { return nativePlatforms[id]; } };
     const webpackChunkdiscord_app = { push: a => a[2]({ c: { one: { exports: { renamed: store } } } }), pop() {} };
     const DiscordNative = {};
   `, context);
@@ -22,6 +23,26 @@ const quest = (overrides = {}) => ({ id: '1', config: {
 }, ...overrides });
 
 describe('the real read-only client expression', () => {
+  it('recognizes structured positive Orbs rewards without guessing from names or games',()=>{
+    const amounts=[0.5,1,37,700,12345];
+    for(const amount of amounts){const q=quest();q.config.rewardsConfig.rewards=[{type:4,orbQuantity:amount}];expect(read([q]).available[0]).toMatchObject({hasOrbReward:true,rewardOrbs:amount});}
+    for(const reward of [{type:4,orbQuantity:0},{type:4,orbQuantity:-1},{type:4,orbQuantity:NaN},{type:4,orbQuantity:Infinity},{type:4,orbQuantity:'700'},{type:999,orbQuantity:700,name:'700 Orbs'},{type:3,name:'Any game reward'}]){
+      const q=quest();q.config.rewardsConfig.rewards=[reward];expect(read([q]).available[0].hasOrbReward).toBe(false);
+    }
+    const q=quest();q.config.rewardsConfig.rewards=[];expect(read([q]).available[0].hasOrbReward).toBe(false);
+  });
+  it('uses the matching Orb reward in mixed offers and never sums different Orb amounts',()=>{
+    const q=quest();q.config.rewardsConfig.rewards=[{type:3,name:'Other reward'},{type:4,orbQuantity:387}];
+    expect(read([q]).available[0]).toMatchObject({hasOrbReward:true,rewardOrbs:387,rewardType:'4'});
+    q.config.rewardsConfig.rewards.push({type:4,orbQuantity:999});
+    expect(read([q]).available[0]).toMatchObject({hasOrbReward:true,rewardOrbs:null,rewardName:'Orbs reward — see Discord for amounts'});
+  });
+  it('keeps native platform selection distinct from desktop task progress and queue eligibility',()=>{
+    const q=quest({userStatus:{enrolledAt:'2026-10-01'}});q.config.taskConfigV2.tasks.PLAY_ON_XBOX={target:900};
+    const unknown=read([q]).claimed[0];expect(unknown).toMatchObject({nativePlatform:null,selectedTaskKind:'PLAY_ON_DESKTOP',progressSeconds:0,workEligible:false});
+    expect(read([q],{}, {'1':'CONSOLE'}).claimed[0].workEligible).toBe(false);
+    expect(read([q],{}, {'1':'DESKTOP'}).claimed[0]).toMatchObject({nativePlatform:'desktop',progressSeconds:0,workEligible:true});
+  });
   it('reads Discord live video progress again on every refresh without inventing completion', () => {
     const q = quest({ userStatus: { enrolledAt: '2026-10-01', progress: { WATCH_VIDEO: { value: 0 } } } });
     q.config.taskConfigV2.tasks = { WATCH_VIDEO: { target: 100 } };

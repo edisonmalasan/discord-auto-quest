@@ -6,8 +6,8 @@ import { QuestIndex } from './QuestIndex';
 import type { QuestCompletion } from '../types/work';
 
 const labels: Record<QuestView, string> = { ongoing: 'Ongoing', available: 'Available', completed: 'Completed' };
-const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Find your next quest. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
-const empty: Record<QuestView, string> = { ongoing: 'Accept a quest from Available or in Discord, then it will appear here.', available: 'There are no available quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
+const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Orbs rewards only. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
+const empty: Record<QuestView, string> = { ongoing: 'Accept a quest from Available or in Discord, then it will appear here.', available: 'There are no available Orbs quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
 interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode; notices?: ReactNode; completion?: QuestCompletion | null; onDismissCompletion?: () => void }
 
 export function QuestWorkspace({ views, loading, stale, controls, connection, notices, completion, onDismissCompletion }: Props) {
@@ -42,7 +42,7 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
           </label>
           {loading ? <div role="status" aria-label="Loading quests"><span className="sr-only">Loading quests…</span><div className="quest-grid" aria-hidden="true">{[1,2,3].map(n => <div className="card-skeleton" key={n}><div/><span/><span/></div>)}</div></div>
             : cards.length ? <QuestIndex cards={cards} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} />
-              : <div className="empty-state"><NavIcon kind={view}/><h2>{queries[view].trim() ? 'No matching quests' : `No ${labels[view].toLowerCase()} quests`}</h2><p>{queries[view].trim() ? 'Try another quest, game, or publisher name.' : empty[view]}</p>{queries[view].trim() && <button className="button secondary" onClick={() => setQueries({ ...queries, [view]: '' })}>Clear search</button>}</div>}
+              : <div className="empty-state"><NavIcon kind={view}/><h2>{queries[view].trim() ? 'No matching quests' : view === 'available' ? 'No available Orbs quests' : `No ${labels[view].toLowerCase()} quests`}</h2><p>{queries[view].trim() ? 'Try another quest, game, or publisher name.' : empty[view]}</p>{queries[view].trim() && <button className="button secondary" onClick={() => setQueries({ ...queries, [view]: '' })}>Clear search</button>}</div>}
         </section>
       </div>
     </main>

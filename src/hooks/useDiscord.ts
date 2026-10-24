@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError, questEnrollment, questWorkStatus } from '../lib/ipc';
-import type { EnrollmentRun } from '../types/enrollment';
+import { discordStatus, listDiscordQuests, relaunchDiscord, startQuestWork, stopQuestWork, toAppError, questEnrollment, questWorkStatus, selectQuestDesktop } from '../lib/ipc';
+import type { EnrollmentRun, DesktopSelectionRun } from '../types/enrollment';
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
 import { stoppedWork, type WorkState } from '../types/work';
 
 export type DiscordPhase = 'loading' | 'ready' | 'blocked' | 'error';
 export type ConnectionState = 'loading' | 'closed' | 'restart-needed' | 'connecting' | 'connected' | 'failed';
-type Action = 'restart' | 'work' | 'stop' | 'accept';
+type Action = 'restart' | 'work' | 'stop' | 'accept' | 'platform';
 export interface DiscordController {
   phase: DiscordPhase;
   status: DiscordStatus | null;
@@ -25,6 +25,7 @@ export interface DiscordController {
   stop: () => void;
   refresh: () => void;
   enrollment: EnrollmentRun;
+  selectDesktop: DesktopSelectionRun;
 }
 
 export function useDiscord(): DiscordController {
@@ -118,8 +119,16 @@ export function useDiscord(): DiscordController {
     const epoch = ++generation.current;
     setPendingAction('accept');
     try { return await questEnrollment(id, revision); }
-    finally { acting.current = false; if (mounted.current && generation.current === epoch) setPendingAction(null); }
-  }, [fresh, status, feed, workState.phase]);
+    finally { acting.current = false; if (revision) await poll(epoch); if (mounted.current && generation.current === epoch) setPendingAction(null); }
+  }, [fresh, status, feed, workState.phase, poll]);
+  const selectDesktop: DesktopSelectionRun = useCallback(async (id) => {
+    if (acting.current || ['starting','stopping','paused'].includes(workState.phase) || workState.activeQuestId === id || !fresh || !status?.ready || !feed?.desktopApp) throw new Error('Reconnect and resolve the active Work job before choosing Desktop.');
+    acting.current = true;
+    const epoch = ++generation.current;
+    setPendingAction('platform');
+    try { return await selectQuestDesktop(id); }
+    finally { acting.current = false; await poll(epoch); if (mounted.current && generation.current === epoch) setPendingAction(null); }
+  }, [fresh, status, feed, workState, poll]);
   const work = useCallback(() => act('work'), [act]);
   const stop = useCallback(() => act('stop'), [act]);
   const refresh = useCallback(() => { if (!acting.current) void poll(generation.current); }, [poll]);
@@ -129,5 +138,5 @@ export function useDiscord(): DiscordController {
       : !status?.installed || status.running === false ? 'closed'
         : !status.ready ? 'restart-needed' : fresh ? 'connected' : 'connecting';
   return { phase, status, feed, error, operationError, pendingAction, busy: pendingAction !== null,
-    working, workState, stale, connectionState, restart, work, stop, refresh, enrollment };
+    working, workState, stale, connectionState, restart, work, stop, refresh, enrollment, selectDesktop };
 }

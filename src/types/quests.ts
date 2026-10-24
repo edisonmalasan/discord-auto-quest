@@ -49,6 +49,9 @@ export interface QuestSummary {
   targetSeconds: number;
   /** The reward, in orbs, if it has one. */
   rewardOrbs: number | null;
+  hasOrbReward: boolean;
+  nativePlatform: 'desktop' | 'console' | null;
+  desktopSelectionSupported: boolean;
   /** The reward as Discord words it: "200 Orbs". */
   rewardName: string | null;
   /** What a premium member gets, if it is more. */

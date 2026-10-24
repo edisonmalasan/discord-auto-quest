@@ -5,6 +5,7 @@ export function makeQuest(overrides: Partial<QuestSummary> = {}): QuestSummary {
     id: '123', name: 'Example Quest', gameTitle: 'Example Game', publisher: 'Example Studio',
     tasks: ['PLAY_ON_DESKTOP'], expiresAt: '2099-10-25T00:00:00Z', state: 'available',
     progressSeconds: 0, targetSeconds: 900, rewardOrbs: 700, rewardName: '700 Orbs',
+    hasOrbReward: true, nativePlatform: null, desktopSelectionSupported: false,
     premiumOrbs: 840, banner: null, logotype: null, tile: null, ctaLabel: 'Get Game',
     ctaLink: 'https://example.com/game', accent: null, enrolledAt: null, completedAt: null,
     rewardClaimedAt: null, rewardClaimState: 'unknown', rewardClaimable: null,

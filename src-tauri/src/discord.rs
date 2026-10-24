@@ -285,7 +285,7 @@ fn skip_message(
     waiting: bool,
 ) -> Option<String> {
     let skipped = work.skipped_count(list);
-    (skipped > 0).then(|| format!("{}Skipped {skipped} accepted quest(s): expired, unsupported, or missing required task data.", if waiting { "Waiting for eligible accepted quests. " } else { "Working your accepted quests. " }))
+    (skipped > 0).then(|| format!("{}Skipped {skipped} accepted quest(s): expired, unsupported, Desktop not selected, or missing required task data.", if waiting { "Waiting for eligible accepted quests. " } else { "Working your accepted quests. " }))
 }
 
 impl DiscordState {
@@ -352,13 +352,34 @@ impl DiscordState {
     ) -> AppResult<serde_json::Value> {
         let expression = crate::quest::enrollment::expression(id, revision)?;
         let _operation = self.operation.lock().await;
+        self.enrollment_locked(id, &expression).await
+    }
+    pub async fn select_desktop(&self, id: &str) -> AppResult<serde_json::Value> {
+        let expression = crate::quest::enrollment::desktop_expression(id)?;
+        let _operation = self.operation.lock().await;
+        {
+            let work = self.work.lock().await;
+            if work.state.active_quest_id.as_deref() == Some(id)
+                || matches!(
+                    work.state.phase,
+                    WorkPhase::Starting | WorkPhase::Stopping | WorkPhase::Paused
+                )
+            {
+                return Err(AppError::not_supported(
+                    "Resolve or stop the active Work job before changing this platform.",
+                ));
+            }
+        }
+        self.enrollment_locked(id, &expression).await
+    }
+    async fn enrollment_locked(&self, id: &str, expression: &str) -> AppResult<serde_json::Value> {
         let mut guard = self.session.lock().await;
         let session = guard.as_mut().ok_or_else(|| {
             AppError::not_supported("Reconnect to Discord before reviewing an offer.")
         })?;
         match tokio::time::timeout(
             std::time::Duration::from_secs(10),
-            session.evaluate(&expression),
+            session.evaluate(expression),
         )
         .await
         {
@@ -535,7 +556,7 @@ impl DiscordState {
                     return Err(AppError::new(ErrorCode::OperationUncertain,runtime.message.unwrap_or_else(||"The active runtime could not be confirmed. Use Stop before continuing.".into()),false));
                 }
                 let quest=list.claimed.iter().find(|q|q.id==id).ok_or_else(||AppError::new(ErrorCode::OperationUncertain,"The active quest disappeared. Confirm Stop before continuing.",false))?;
-                if (quest.state==reader::QuestState::Completed && quest.completed_at.is_some()) || !quest.work_eligible {
+                if (quest.state==reader::QuestState::Completed && quest.completed_at.is_some()) || !quest.work_eligible || !quest.desktop_ready() {
                     driver::stop(session).await?;
                     let mut work=self.work.lock().await;work.state.active_quest_id=None;work.state.active_task_kind=None;
                 } else {
@@ -673,7 +694,13 @@ mod continuous_tests {
                 let message: serde_json::Value =
                     serde_json::from_str(request.to_text().unwrap()).unwrap();
                 let expression = message["params"]["expression"].as_str().unwrap_or("");
-                let value = if expression.contains("const report =") {
+                let value = if expression.contains("\"mode\":\"select-desktop\"") {
+                    tokio::time::sleep(std::time::Duration::from_millis(40)).await;
+                    let mut snapshot = reads.lock().await;
+                    snapshot["claimed"][0]["nativePlatform"] = serde_json::json!("desktop");
+                    snapshot["claimed"][0]["workEligible"] = serde_json::json!(true);
+                    serde_json::json!({"status":"selected","id":"123","platform":"desktop"})
+                } else if expression.contains("const report =") {
                     reads.lock().await.clone()
                 } else if expression.contains("window.__daqRequest =") {
                     count.fetch_add(1, Ordering::SeqCst);
@@ -732,6 +759,28 @@ mod continuous_tests {
         state.stop_work().await.unwrap();
         state.reconcile_work().await.unwrap();
         assert_eq!(dispatches.load(Ordering::SeqCst), 1);
+        server.abort();
+    }
+    #[tokio::test]
+    async fn selection_and_reconciliation_serialize_before_dispatching_a_desktop_job() {
+        let mut pending = feed(&[("123", "claimed", 1)]);
+        pending["claimed"][0]["tasks"] = serde_json::json!(["PLAY_ON_DESKTOP", "PLAY_ON_XBOX"]);
+        pending["claimed"][0]["selectedTaskKind"] = serde_json::json!("PLAY_ON_DESKTOP");
+        pending["claimed"][0]["workEligible"] = serde_json::json!(false);
+        let (state, _, dispatches, server) = connected(pending).await;
+        assert_eq!(state.start_work().await.unwrap().phase, WorkPhase::Waiting);
+        assert_eq!(dispatches.load(Ordering::SeqCst), 0);
+        let (selection, reconciliation) =
+            tokio::join!(state.select_desktop("123"), state.reconcile_work());
+        assert_eq!(selection.unwrap()["status"], "selected");
+        assert_eq!(
+            reconciliation.unwrap().active_quest_id.as_deref(),
+            Some("123")
+        );
+        assert_eq!(dispatches.load(Ordering::SeqCst), 1);
+        assert!(state.select_desktop("123").await.is_err());
+        assert_eq!(dispatches.load(Ordering::SeqCst), 1);
+        state.stop_work().await.unwrap();
         server.abort();
     }
     #[tokio::test]

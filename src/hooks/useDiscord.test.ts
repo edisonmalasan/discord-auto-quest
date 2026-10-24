@@ -11,10 +11,12 @@ const stopQuestWork = vi.fn<() => Promise<WorkState>>();
 const relaunchDiscord = vi.fn<() => Promise<void>>();
 const questEnrollment = vi.fn();
 const questWorkStatus = vi.fn();
+const selectQuestDesktop = vi.fn();
 let backendWork = stoppedWork();
 
 vi.mock('../lib/ipc', () => ({
   questWorkStatus: () => questWorkStatus(),
+  selectQuestDesktop: (...args: unknown[]) => selectQuestDesktop(...args),
   questEnrollment: (...args: unknown[]) => questEnrollment(...args),
   discordStatus: () => discordStatus(),
   listDiscordQuests: () => listDiscordQuests(),
@@ -57,6 +59,18 @@ describe('useDiscord', () => {
     await expect(result.current.enrollment('123','reviewed')).rejects.toThrow();
     await act(async()=>{finish({status:'accepted',id:'123'});await pending;});
     expect(questEnrollment).toHaveBeenCalledTimes(1); expect(startQuestWork).not.toHaveBeenCalled();
+  });
+  it('selects Desktop with a fresh read and never enables Work',async()=>{
+    selectQuestDesktop.mockResolvedValue({status:'selected',id:'123',platform:'desktop'});
+    const {result}=renderHook(()=>useDiscord());await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
+    const reads=listDiscordQuests.mock.calls.length;
+    await act(async()=>{await result.current.selectDesktop('123');});
+    expect(selectQuestDesktop).toHaveBeenCalledWith('123');expect(listDiscordQuests.mock.calls.length).toBeGreaterThan(reads);expect(startQuestWork).not.toHaveBeenCalled();
+  });
+  it('blocks platform changes to the active Work job',async()=>{
+    questWorkStatus.mockResolvedValue({...stoppedWork(),phase:'working',activeQuestId:'123',activeTaskKind:'PLAY_ON_DESKTOP'});
+    const {result}=renderHook(()=>useDiscord());await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
+    await expect(result.current.selectDesktop('123')).rejects.toThrow(/active Work/);expect(selectQuestDesktop).not.toHaveBeenCalled();
   });
 
   it('restores an active backend session after a webview reload', async () => {

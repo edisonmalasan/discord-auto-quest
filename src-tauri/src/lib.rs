@@ -99,7 +99,20 @@ async fn confirm_quest_acceptance(
     state.discord.enrollment(&id, Some(&revision)).await
 }
 
-/// Run the quest operation in Discord.
+/// Select Desktop for an eligible accepted quest without enabling Work.
+#[tauri::command]
+async fn select_quest_desktop(
+    state: State<'_, AppState>,
+    updates: State<'_, updates::UpdateManager>,
+    id: String,
+) -> AppResult<serde_json::Value> {
+    let _gate = updates
+        .work_gate
+        .try_lock()
+        .map_err(|_| AppError::not_supported("Wait for the current update or action to finish."))?;
+    state.discord.select_desktop(&id).await
+}
+
 #[tauri::command]
 async fn start_quest_work(
     state: State<'_, AppState>,
@@ -181,6 +194,7 @@ pub fn run() {
             list_discord_quests,
             review_quest_offer,
             confirm_quest_acceptance,
+            select_quest_desktop,
             start_quest_work,
             stop_quest_work,
             work_status,

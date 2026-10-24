@@ -2,6 +2,14 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 1.2.0 — Unreleased
+
+- Review and accept supported Desktop/console OR offers with Desktop intent; verify native Desktop selection before Work queue eligibility.
+- Recover selection for eligible accepted quests with Use Desktop, preserving 0% and confirmed acceptance if selection fails. Console-selected quests continue in Discord.
+- Show only confirmed positive Orbs rewards in Available, including arbitrary amounts and mixed-reward offers. Keep every reward type in Ongoing and Completed.
+- Serialize acceptance and selection with Work reconciliation; uncertain results are never automatically retried.
+- Exact packaged live acceptance, platform selection, installation, and existing updater/notification checks remain release gates.
+
 ## 1.1.1 — Unreleased
 
 - Announce completion only from backend-confirmed session events. Loading historical completed quests or observing an unrelated completion no longer produces a second announcement.

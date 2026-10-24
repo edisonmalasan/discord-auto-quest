@@ -75,8 +75,11 @@ keep their values and targets paired; ambiguous platform selection shows require
 than an invented percentage. Counts and seconds remain distinct. Streaming/activity cards retain
 their voice-channel requirements.
 
-Accept in Discord, Watch in Discord, Claim in Discord, and View reward in Discord are explicit
-handoffs. The verified desktop route opens Quests and a visible instruction names the quest to
+Available membership and counts include only confirmed positive Orbs rewards, before search and sorting. The empty state says No available Orbs quests. Accepted and completed rewards remain visible.
+
+Accept quest opens deliberate review showing reward, expiry, Desktop requirements and platform intent. Known Desktop/console alternatives select Desktop only after confirmed acceptance. Accepted but unconfirmed selection is recoverable with Use Desktop; Console-selected quests use a Discord handoff. Desktop is shown only after native confirmation, separately from the task chosen for progress. Active jobs and conflicting actions block selection.
+
+Watch in Discord, Claim in Discord, and View reward in Discord are explicit handoffs. The verified desktop route opens Quests and a visible instruction names the quest to
 select; a direct desktop quest route was not supported in the inspected client. External CTA
 buttons open supported HTTPS destinations and report failures. External links never accept or claim a reward.
 Copy quest link only copies the public quest URL. One anchored menu opens at a time, with arrow

@@ -47,3 +47,11 @@ it('describes desktop and mobile video tasks as alternatives',async()=>{
  fireEvent.click(screen.getByText('Review offer')); await screen.findByRole('button',{name:'Confirm acceptance'});
  expect(screen.getByText('Choose one task:')).toBeInTheDocument();
 });
+it('shows Desktop intent and keeps accepted-but-unconfirmed selection recoverable without reenrolling',async()=>{
+ const run=vi.fn().mockResolvedValueOnce({...offer,platform:'desktop',requiresDesktopSelection:true}).mockResolvedValueOnce({status:'accepted',id:'123',desktopSelection:'unconfirmed',message:'Quest accepted, but Desktop selection is unconfirmed. Find it in Ongoing.'});
+ show(run);fireEvent.click(screen.getByText('Review offer'));await screen.findByRole('button',{name:'Confirm acceptance'});
+ expect(screen.getByText('Desktop')).toBeInTheDocument();
+ fireEvent.click(screen.getByText('Confirm acceptance'));
+ expect(await screen.findByText(/Quest accepted, but Desktop selection is unconfirmed/)).toBeInTheDocument();
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(run).toHaveBeenCalledTimes(2);
+});

@@ -78,11 +78,16 @@ pub struct QuestSummary {
     /// How many seconds it needs.
     pub target_seconds: u64,
     /// The reward, in orbs, if it has one.
-    pub reward_orbs: Option<u64>,
+    pub reward_orbs: Option<f64>,
+    #[serde(default)]
+    pub has_orb_reward: bool,
+    pub native_platform: Option<String>,
+    #[serde(default)]
+    pub desktop_selection_supported: bool,
     /// The reward as Discord words it: "200 Orbs".
     pub reward_name: Option<String>,
     /// What a premium member gets, if it is more.
-    pub premium_orbs: Option<u64>,
+    pub premium_orbs: Option<f64>,
     /// The banner across the top of the card.
     pub banner: Option<String>,
     /// The game's wordmark, drawn over the banner.
@@ -118,6 +123,14 @@ pub struct QuestSummary {
 }
 
 impl QuestSummary {
+    pub fn desktop_ready(&self) -> bool {
+        let multi = self.tasks.iter().any(|t| t == "PLAY_ON_DESKTOP")
+            && self
+                .tasks
+                .iter()
+                .any(|t| t == "PLAY_ON_XBOX" || t == "PLAY_ON_PLAYSTATION");
+        !multi || self.native_platform.as_deref() == Some("desktop")
+    }
     /// Whether the quest is counting, or has finished counting.
     pub fn is_running(&self) -> bool {
         self.state == QuestState::Claimed && self.progress_seconds < self.target_seconds
@@ -269,7 +282,11 @@ const READ_STATE: &str = r#"(function () {
       const messages = config.messages || {};
       const assets = config.assets || {};
       const rewards = (config.rewardsConfig && config.rewardsConfig.rewards) || [];
-      const reward = rewards[0] || {};
+      const orbRewards = Array.isArray(rewards) ? rewards.filter(function (r) {
+        return r && r.type === 4 && typeof r.orbQuantity === 'number' && Number.isFinite(r.orbQuantity) && r.orbQuantity > 0;
+      }) : [];
+      const reward = orbRewards[0] || rewards[0] || {};
+      const ambiguousOrbs = new Set(orbRewards.map(function (r) { return r.orbQuantity; })).size > 1;
       const cta = config.ctaConfig || {};
 
       const tasks = config.taskConfigV2 && config.taskConfigV2.tasks
@@ -325,6 +342,14 @@ const READ_STATE: &str = r#"(function () {
       const progress = legacyTask ? Math.floor(legacyTask.value || 0) : 0;
       const target = legacyTask ? Math.floor(legacyTask.target || 0) : 0;
       const completedAt = timestamp(user.completedAt);
+      let nativePlatform = null;
+      try {
+        const selected = typeof questStore.selectedTaskPlatform === 'function' ? questStore.selectedTaskPlatform(quest.id) : null;
+        nativePlatform = selected === 'DESKTOP' ? 'desktop' : (selected === 'CONSOLE' ? 'console' : null);
+      } catch (error) { /* unavailable platform remains unknown */ }
+      const multiPlatform = taskNames.includes('PLAY_ON_DESKTOP') && taskNames.some(function (kind) {
+        return kind === 'PLAY_ON_XBOX' || kind === 'PLAY_ON_PLAYSTATION';
+      });
       const claimedAt = timestamp(user.claimedAt);
       const claimKnown = Object.prototype.hasOwnProperty.call(user, 'claimedAt') &&
         (user.claimedAt === null || claimedAt !== null);
@@ -348,11 +373,14 @@ const READ_STATE: &str = r#"(function () {
           : (timestamp(user.enrolledAt) ? 'claimed' : 'available'),
         progressSeconds: progress,
         targetSeconds: target,
-        rewardOrbs: rewards.length ? integer(reward.orbQuantity) : null,
+        rewardOrbs: !ambiguousOrbs && orbRewards.length ? number(reward.orbQuantity) : null,
+        hasOrbReward: orbRewards.length > 0,
+        nativePlatform: nativePlatform,
+        desktopSelectionSupported: false,
         rewardName: rewards.length
-          ? (text(reward.messages && reward.messages.name) || text(reward.name))
+          ? (ambiguousOrbs ? 'Orbs reward — see Discord for amounts' : (text(reward.messages && reward.messages.name) || text(reward.name)))
           : null,
-        premiumOrbs: rewards.length ? integer(reward.premiumOrbQuantity) : null,
+        premiumOrbs: !ambiguousOrbs && orbRewards.length ? number(reward.premiumOrbQuantity) : null,
         banner: asset('questBarHero') || asset('hero'),
         logotype: asset('logotypeDark') || asset('logotypeLight'),
         tile: asset('gameTileDark') || asset('gameTileLight'),
@@ -374,6 +402,7 @@ const READ_STATE: &str = r#"(function () {
         selectedTaskKind: selectedKind,
         taskDetails: taskDetails,
         workEligible: !!timestamp(user.enrolledAt) && !completedAt && !!selectedKind &&
+          (!multiPlatform || nativePlatform === 'desktop') &&
           !!timestamp(config.expiresAt) && Date.parse(config.expiresAt) > now,
         enrolledAtMs: timestamp(user.enrolledAt) ? Date.parse(user.enrolledAt) : null,
       };
@@ -414,7 +443,26 @@ const READ_STATE: &str = r#"(function () {
 
 /// Read the quest state out of Discord.
 pub async fn read_state(session: &mut crate::quest::cdp::Session) -> AppResult<QuestList> {
-    let value = session.evaluate(READ_STATE).await?;
+    let expression = match super::enrollment::inspection_expression() {
+        Ok(inspection) => format!(
+            r#"(async function () {{
+      const snapshot = {READ_STATE};
+      try {{
+        const inspection = await {inspection};
+        if (inspection.status === 'inspection' && Array.isArray(inspection.quests)) {{
+          const byId = new Map(inspection.quests.map(q => [q.id, q]));
+          for (const q of [...snapshot.available, ...snapshot.claimed]) {{
+            const metadata = byId.get(q.id);
+            q.desktopSelectionSupported = metadata?.desktopSelectionSupported === true;
+          }}
+        }}
+      }} catch (error) {{ /* selection recovery remains unavailable */ }}
+      return snapshot;
+    }})()"#
+        ),
+        Err(_) => READ_STATE.to_string(),
+    };
+    let value = session.evaluate(&expression).await?;
 
     if let Some(error) = value.get("error").and_then(|error| error.as_str()) {
         return Err(AppError::invalid_payload(format!(
@@ -463,7 +511,7 @@ mod tests {
         let quest = &list.available[0];
         assert_eq!(quest.state, QuestState::Available);
         assert_eq!(quest.target_seconds, 900);
-        assert_eq!(quest.reward_orbs, Some(700));
+        assert_eq!(quest.reward_orbs, Some(700.0));
         assert_eq!(quest.reward_claim_state, "unknown");
         assert!(quest.reward_claimed_at.is_none());
         assert!(!quest.is_running(), "an available quest is not running");
