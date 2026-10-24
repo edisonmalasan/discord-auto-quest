@@ -1,5 +1,5 @@
 {
   "package-lock.json": "be6dc9635bf497857dc449ed92c0cd47fd3ec2e1e1e17fbf56ccea069b7713ff",
   "src-tauri/Cargo.lock": "b74a86ecf82b1f301a5a1058a4a81b6fb7a2619cb08c92696e9c368aeebba31a",
-  "THIRD_PARTY_NOTICES.txt": "e247df837215456d03da8e6eabef8f8d6968b46740332a3dce8ce5815bfb19ed"
+  "THIRD_PARTY_NOTICES.txt": "a99edc95f8f497656c26db1a3414c4985ce8faf102662d6407fed8a42e9286cb"
 }

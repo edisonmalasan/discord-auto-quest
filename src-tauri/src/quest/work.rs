@@ -39,6 +39,7 @@ pub(crate) struct Ledger {
     pub state: WorkState,
     pub enabled: bool,
     observed: HashSet<String>,
+    managed: HashSet<String>,
     completed: HashSet<String>,
 }
 impl Ledger {
@@ -46,7 +47,7 @@ impl Ledger {
         let mut events = Vec::new();
         for quest in &list.claimed {
             if quest.state == QuestState::Completed && quest.completed_at.is_some() {
-                if self.completed.insert(quest.id.clone()) && self.observed.contains(&quest.id) {
+                if self.completed.insert(quest.id.clone()) && self.managed.contains(&quest.id) {
                     events.push(QuestCompleted {
                         quest_id: quest.id.clone(),
                         name: quest.name.clone(),
@@ -60,6 +61,9 @@ impl Ledger {
     }
     pub fn reset_observation(&mut self) {
         self.observed.clear();
+    }
+    pub fn manage(&mut self, id: &str) {
+        self.managed.insert(id.into());
     }
     pub fn queue<'a>(&self, list: &'a QuestList) -> Vec<&'a QuestSummary> {
         if !list.desktop_app {
@@ -133,11 +137,20 @@ mod tests {
         assert!(ledger
             .observe(&list(&[("old", "completed", 0.), ("new", "claimed", 1.)]))
             .is_empty());
+        ledger.manage("new");
         let result = ledger.observe(&list(&[("old", "completed", 0.), ("new", "completed", 1.)]));
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].quest_id, "new");
         assert!(ledger
             .observe(&list(&[("new", "completed", 1.)]))
+            .is_empty());
+    }
+    #[test]
+    fn observing_an_unmanaged_quest_never_announces_its_completion() {
+        let mut ledger = Ledger::default();
+        ledger.observe(&list(&[("manual", "claimed", 1.)]));
+        assert!(ledger
+            .observe(&list(&[("manual", "completed", 1.)]))
             .is_empty());
     }
     #[test]

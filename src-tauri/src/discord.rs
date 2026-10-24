@@ -546,6 +546,7 @@ impl DiscordState {
             if let Some((id,kind,remaining))=next {
                 {let mut work=self.work.lock().await;work.state.phase=WorkPhase::Starting;work.state.active_quest_id=Some(id.clone());work.state.active_task_kind=Some(kind.clone());work.state.queued_count=remaining;}
                 self.emit_state().await;
+                self.work.lock().await.manage(&id);
                 driver::run_quest(session,&id,&kind).await?;
                 let confirmed=driver::status(session).await?;
                 if confirmed.phase!="working" || confirmed.quest_id.as_deref()!=Some(&id) || confirmed.task_kind.as_deref()!=Some(&kind) {
