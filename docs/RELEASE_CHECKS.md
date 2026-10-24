@@ -78,10 +78,12 @@ Clean first installation, normal cross-version upgrade, uninstall, live recovery
 
 ## 1.1.0 preparation — 2026-10-24
 
-Source preparation is in progress. Current local verification: 175 frontend/tooling tests passed across 23 files; 41 backend tests passed in an isolated harness importing the actual runtime/controller modules and download-deadline helper. The updater verifier also accepted an actual installed Tauri CLI signature generated with a disposable test key and rejected version relabeling. These synthetic tests perform no Discord account actions.
+Source preparation is in progress. Current local verification: 175 frontend/tooling tests passed across 23 files; 43 backend tests passed in an isolated harness importing the actual runtime/controller modules and download-deadline helper. The updater verifier also accepted an actual installed Tauri CLI signature generated with a disposable test key and rejected version relabeling. These synthetic tests perform no Discord account actions.
 
 The full production dependency build exhausted local memory while compiling Windows notification dependencies. The isolated harness does not establish full application compilation, updater integration, or packaged acceptance. Windows CI must verify the full crate, Clippy, frontend bundle, artifact checks, and installer packaging before merge.
 
 The 1.1.0 installer, installed update flow between signed local candidates, notification delivery/identity, normal close cleanup, and live continuous Work remain unverified. Clean-environment WebView2 provisioning remains unavailable. The new setup EXE's icon must be verified independently of installed shortcuts. No earlier artifact hashes above establish acceptance for 1.1.0.
 
 The production signing identity is stored outside the repository, and signing secrets are configured in GitHub Actions. A same-host backup exists; independent recoverable backup remains unverified and blocks publication. Only the public key is embedded. Keep the release draft until the exact five assets and every required result in the evidence template pass.
+
+Isolated browser UI verification at 880, 1200, and 1600 CSS pixels confirmed the waiting/Stop controls, accepted 0% ring, removal of the preview overlay, About/version/update controls, and confirmed download progress inside the modal. The wide viewport had no horizontal page overflow. This used mock IPC and sample data; no installer, notification delivery, update installation, or Discord behavior was exercised. Production frontend build, type checking, formatting, terminology/version/notices checks, and bundle acceptance passed locally. Backend harness Clippy passed with the declared Rust 1.90 minimum.

@@ -45,13 +45,15 @@ impl Ledger {
     pub fn observe(&mut self, list: &QuestList) -> Vec<QuestCompleted> {
         let mut events = Vec::new();
         for quest in &list.claimed {
-            if quest.state == QuestState::Completed && quest.completed_at.is_some() {
-                if self.completed.insert(quest.id.clone()) && self.managed.contains(&quest.id) {
-                    events.push(QuestCompleted {
-                        quest_id: quest.id.clone(),
-                        name: quest.name.clone(),
-                    });
-                }
+            if quest.state == QuestState::Completed
+                && quest.completed_at.is_some()
+                && self.completed.insert(quest.id.clone())
+                && self.managed.contains(&quest.id)
+            {
+                events.push(QuestCompleted {
+                    quest_id: quest.id.clone(),
+                    name: quest.name.clone(),
+                });
             }
         }
         events
