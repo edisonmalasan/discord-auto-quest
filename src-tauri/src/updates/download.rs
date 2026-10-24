@@ -15,7 +15,7 @@ pub(super) async fn bounded_download<T>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::io::AsyncWriteExt;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
     #[tokio::test]
     async fn a_stalled_response_body_times_out_releases_its_gate_and_can_retry() {
@@ -23,6 +23,11 @@ mod tests {
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            while !request.ends_with(b"\r\n\r\n") {
+                request.push(socket.read_u8().await.unwrap());
+                assert!(request.len() < 8192);
+            }
             socket
                 .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 100000\r\n\r\n")
                 .await
@@ -30,7 +35,15 @@ mod tests {
             std::future::pending::<()>().await;
             drop(socket);
         });
-        let response = reqwest::get(format!("http://{address}")).await.unwrap();
+        let response = reqwest::Client::builder()
+            .no_proxy()
+            .http1_only()
+            .build()
+            .unwrap()
+            .get(format!("http://{address}"))
+            .send()
+            .await
+            .unwrap();
         let gate = tokio::sync::Mutex::new(());
         let result = tokio::time::timeout(
             Duration::from_millis(250),
