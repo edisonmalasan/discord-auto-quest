@@ -4,6 +4,12 @@ import { buildQuestViews, searchQuests } from './quest-view';
 
 const now = Date.parse('2026-10-23T00:00:00Z');
 describe('quest views', () => {
+  it('filters Available before search and counts while keeping non-Orb accepted and completed quests',()=>{
+    const views=buildQuestViews(makeFeed({available:[makeQuest({id:'orbs',rewardOrbs:37}),makeQuest({id:'other',hasOrbReward:false,rewardOrbs:null,rewardName:'Arbitrary game item'}),makeQuest({id:'misleading',hasOrbReward:false,rewardName:'700 Orbs'})],claimed:[makeQuest({id:'accepted',state:'claimed',hasOrbReward:false}),makeQuest({id:'completed',state:'completed',hasOrbReward:false})]}),now);
+    expect(views.available.map(c=>c.quest.id)).toEqual(['orbs']);
+    expect(searchQuests(views.available,'Arbitrary')).toHaveLength(0);
+    expect(views.ongoing[0].quest.id).toBe('accepted');expect(views.completed[0].quest.id).toBe('completed');
+  });
   it('partitions accepted, expired, offered and completed without duplicates', () => {
     const active = makeQuest({ id: 'active', state: 'claimed' });
     const views = buildQuestViews(makeFeed({ available: [makeQuest({ id: 'offered' }), active,

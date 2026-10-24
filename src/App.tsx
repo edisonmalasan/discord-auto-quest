@@ -16,7 +16,7 @@ function Workspace({discord}: {discord: ReturnType<typeof useDiscord>}) {
   const {completion, closeError, dismissCompletion} = useCompletions();
   const views = discord.feed ? buildQuestViews(discord.feed, Date.now()) : { ongoing: [], available: [], completed: [] };
   const acceptanceBlocked = ['starting', 'stopping', 'paused'].includes(discord.workState.phase);
-  return <EnrollmentProvider run={discord.enrollment} refresh={discord.refresh} continuousWork={discord.working} disabled={discord.busy || updates?.installing || discord.stale || discord.connectionState !== 'connected' || acceptanceBlocked} onActiveChange={setReviewing}><QuestWorkspace views={views} loading={!discord.feed} stale={discord.stale} notices={<UpdateCenter/>} completion={completion} onDismissCompletion={dismissCompletion}
+  return <EnrollmentProvider run={discord.enrollment} refresh={discord.refresh} continuousWork={discord.working} selectDesktop={discord.selectDesktop} activeQuestId={discord.workState.activeQuestId} disabled={discord.busy || updates?.installing || discord.stale || discord.connectionState !== 'connected' || acceptanceBlocked} onActiveChange={setReviewing}><QuestWorkspace views={views} loading={!discord.feed} stale={discord.stale} notices={<UpdateCenter/>} completion={completion} onDismissCompletion={dismissCompletion}
     controls={<div className="global-controls">{discord.operationError && <p role="alert">{discord.operationError.message}</p>}
       {closeError && discord.working && <p role="alert">{closeError}</p>}
       {discord.feed?.desktopApp === false && <p className="desktop-notice">Working quests requires the Discord desktop client.</p>}

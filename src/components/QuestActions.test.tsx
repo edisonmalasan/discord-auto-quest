@@ -4,11 +4,36 @@ import { describe, expect, it, vi } from 'vitest';
 import { QuestWorkspace } from './QuestWorkspace';
 import { makeQuest, makeFeed } from '../test/fixtures/quests';
 import { buildQuestViews } from '../lib/quest-view';
+import { EnrollmentProvider } from './Enrollment';
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn().mockResolvedValue(undefined) }));
 const q1=makeQuest({id:'111',state:'claimed',name:'First Quest'});
 const q2=makeQuest({id:'222',state:'claimed',name:'Second Quest'});
 function tree(quests=[q1,q2]) { return <QuestWorkspace views={buildQuestViews(makeFeed({claimed:quests}),Date.now())} loading={false} stale={false} controls={null} connection={null}/>; }
 describe('quest menus',()=>{
+ it('offers Desktop selection separately from enrollment and warns when continuous Work is on',async()=>{
+  const select=vi.fn().mockResolvedValue({status:'selected',id:'111',platform:'desktop'}),run=vi.fn();
+  const q=makeQuest({id:'111',state:'claimed',tasks:['PLAY_ON_DESKTOP','PLAY_ON_XBOX'],nativePlatform:null,desktopSelectionSupported:true,selectedTaskKind:'PLAY_ON_DESKTOP'});
+  render(<EnrollmentProvider run={run} selectDesktop={select} refresh={()=>{}} disabled={false} continuousWork onActiveChange={()=>{}}>{tree([q])}</EnrollmentProvider>);
+  expect(screen.getByText(/Choosing Desktop adds this quest to the queue/)).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button',{name:'Use Desktop'}));
+  expect(select).toHaveBeenCalledExactlyOnceWith('111');expect(run).not.toHaveBeenCalled();
+  expect(await screen.findByText(/Desktop selected\. Work starts only/)).toBeInTheDocument();
+  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','0');
+ });
+ it('does not change the active job or override a console-selected quest',()=>{
+  const select=vi.fn();const q=makeQuest({id:'111',state:'claimed',tasks:['PLAY_ON_DESKTOP','PLAY_ON_XBOX'],desktopSelectionSupported:true});
+  const content=(quest= q)=><EnrollmentProvider run={vi.fn()} selectDesktop={select} activeQuestId="111" refresh={()=>{}} disabled={false} onActiveChange={()=>{}}>{tree([quest])}</EnrollmentProvider>;
+  const view=render(content());expect(screen.getByRole('button',{name:'Use Desktop'})).toBeDisabled();
+  view.rerender(content({...q,nativePlatform:'console'}));expect(screen.queryByRole('button',{name:'Use Desktop'})).not.toBeInTheDocument();
+  expect(screen.getByText(/Console is selected/)).toBeInTheDocument();expect(select).not.toHaveBeenCalled();
+ });
+ it('shows an Orbs-only Available count and empty state without dropping accepted rewards',async()=>{
+  const views=buildQuestViews(makeFeed({available:[makeQuest({id:'hidden',hasOrbReward:false,rewardName:'Any other game reward'})],claimed:[makeQuest({id:'kept',state:'claimed',hasOrbReward:false})]}),Date.now());
+  render(<QuestWorkspace views={views} loading={false} stale={false} controls={null} connection={null}/>);
+  expect(screen.getByRole('button',{name:'Ongoing1'})).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button',{name:'Available0'}));
+  expect(screen.getByRole('heading',{name:'No available Orbs quests'})).toBeInTheDocument();expect(screen.queryByText('Any other game reward')).not.toBeInTheDocument();
+ });
  it('keeps the video footer handoff without a second preview play control',()=>{
   render(tree([makeQuest({id:'111',name:'Video Quest',state:'claimed',heroVideo:'https://example.com/preview.mp4',tasks:['WATCH_VIDEO'],ctaLink:null,taskDetails:[{kind:'WATCH_VIDEO',value:0,target:60,unit:'seconds',platform:null}]})]));
   expect(screen.getByRole('button',{name:'Watch 60s in Discord'})).toBeInTheDocument();

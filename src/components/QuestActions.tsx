@@ -41,6 +41,16 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
     } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); }
     finally { busy.current = false; setPending(false); }
   }
+  async function useDesktop() {
+    if (busy.current || !enrollment?.selectDesktop || enrollment.disabled || enrollment.activeQuestId === quest.id || stale) return;
+    busy.current = true; setPending(true); setError(null); setNotice(null);
+    try {
+      const result = await enrollment.selectDesktop(quest.id);
+      if (result.status === 'selected') setNotice('Desktop selected. Work starts only when Work my quests is enabled.');
+      else setError(result.message);
+    } catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); }
+    finally { busy.current = false; setPending(false); }
+  }
   function navigateMenu(event: KeyboardEvent) {
     const items = [...(menu.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])];
     const index = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -55,6 +65,8 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
   const taskKinds = quest.selectedTaskKind ? [quest.selectedTaskKind] : quest.tasks;
   const video = taskKinds.length > 0 && taskKinds.every(t => t.startsWith('WATCH_VIDEO'));
   const alternatives = !video && new Set(quest.taskDetails.map(task => task.platform).filter(Boolean)).size > 1;
+  const desktopAlternatives = card.view === 'ongoing' && quest.tasks.includes('PLAY_ON_DESKTOP') && quest.tasks.some(t => t === 'PLAY_ON_XBOX' || t === 'PLAY_ON_PLAYSTATION');
+  const canSelectDesktop = desktopAlternatives && quest.desktopSelectionSupported && quest.nativePlatform === null && !!enrollment?.selectDesktop;
   const seconds = videoRemaining(card);
   const label = card.view === 'available' ? enrollment ? 'Accept quest' : 'Accept in Discord' : card.rewardState === 'claimable' ? 'Claim in Discord'
     : card.rewardState === 'claimed' ? 'View reward in Discord' : card.view === 'completed' ? 'Check in Discord'
@@ -71,10 +83,19 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
       <button role="menuitem" tabIndex={-1} disabled={pending || stale} onClick={() => { close(); void perform('discord'); }}>Open in Discord</button>
     </div>}
     {card.expired && card.view === 'ongoing' ? <footer className="quest-footer"><button className="button secondary" disabled>Quest expired</button></footer> : <footer className="quest-footer">
-    {quest.ctaLink && !(alternatives && card.view === 'ongoing') && <button className="button secondary" disabled={stale || pending} onClick={() => void perform('external')}>{quest.ctaLabel ?? 'Get Game'}</button>}
-    {alternatives && card.view === 'ongoing' && <button className="button secondary" disabled>Quest accepted</button>}
-    {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired' || card.view === 'available' && enrollment?.disabled} onClick={() => card.view === 'available' && enrollment ? enrollment.review(quest.id) : void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
+    {desktopAlternatives ? <><button className="button secondary" disabled>Quest accepted</button>
+      {quest.nativePlatform === 'desktop' ? <button className="button secondary" disabled>Desktop</button>
+        : canSelectDesktop ? <button className="button secondary" disabled={stale || pending || enrollment?.disabled || enrollment?.activeQuestId === quest.id} aria-describedby={enrollment?.continuousWork ? `desktop-note-${quest.id}` : undefined} onClick={() => void useDesktop()}>{pending ? 'Selecting Desktop…' : 'Use Desktop'}</button>
+          : <button className="button secondary" disabled={stale || pending} onClick={() => void perform('discord')}>Platforms in Discord</button>}
+    </> : <>
+      {quest.ctaLink && !(alternatives && card.view === 'ongoing') && <button className="button secondary" disabled={stale || pending} onClick={() => void perform('external')}>{quest.ctaLabel ?? 'Get Game'}</button>}
+      {alternatives && card.view === 'ongoing' && <button className="button secondary" disabled>Quest accepted</button>}
+      {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired' || card.view === 'available' && enrollment?.disabled} onClick={() => card.view === 'available' && enrollment ? enrollment.review(quest.id) : void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
+    </>}
     </footer>}
+    {canSelectDesktop && enrollment?.continuousWork && <p className="card-feedback" id={`desktop-note-${quest.id}`}>Continuous Work is on. Choosing Desktop adds this quest to the queue.</p>}
+    {desktopAlternatives && quest.nativePlatform === 'console' && <p className="card-feedback">Console is selected. Change the platform in Discord to use Desktop.</p>}
+    {desktopAlternatives && quest.nativePlatform === null && !canSelectDesktop && <p className="card-feedback">Select Desktop in Discord before working this quest.</p>}
     {error && <p className="card-feedback error" role="alert">{error}</p>}
     {notice && <p className="card-feedback" role="status">{notice}</p>}
   </div>;

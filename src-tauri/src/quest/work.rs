@@ -68,6 +68,7 @@ impl Ledger {
                 quest.state == QuestState::Claimed
                     && quest.completed_at.is_none()
                     && (!quest.work_eligible
+                        || !quest.desktop_ready()
                         || quest.selected_task_kind.is_none()
                         || !quest.enrolled_at_ms.is_some_and(f64::is_finite))
             })
@@ -87,6 +88,7 @@ impl Ledger {
                 quest.state == QuestState::Claimed
                     && quest.completed_at.is_none()
                     && quest.work_eligible
+                    && quest.desktop_ready()
                     && quest.selected_task_kind.is_some()
                     && quest.enrolled_at_ms.is_some_and(f64::is_finite)
                     && self.state.active_quest_id.as_deref() != Some(&quest.id)
@@ -109,6 +111,18 @@ mod tests {
         serde_json::from_value(serde_json::json!({"available":[],"expired":0,"desktopApp":true,"runningGames":[],"claimed":rows.iter().map(|(id,state,accepted)|serde_json::json!({
      "id":id,"name":id,"tasks":["WATCH_VIDEO"],"state":state,"progressSeconds":0,"targetSeconds":100,"selectedTaskKind":"WATCH_VIDEO","workEligible":*state=="claimed","enrolledAtMs":accepted,"completedAt":if *state=="completed"{Some("2026-10-24")}else{None},"taskDetails":[]
    })).collect::<Vec<_>>()})).unwrap()
+    }
+    #[test]
+    fn multi_platform_quests_wait_for_confirmed_desktop_even_if_other_metadata_says_eligible() {
+        let ledger = Ledger::default();
+        let mut feed = list(&[("multi", "claimed", 1.)]);
+        feed.claimed[0].tasks = vec!["PLAY_ON_DESKTOP".into(), "PLAY_ON_XBOX".into()];
+        assert!(ledger.queue(&feed).is_empty());
+        assert_eq!(ledger.skipped_count(&feed), 1);
+        feed.claimed[0].native_platform = Some("console".into());
+        assert!(ledger.queue(&feed).is_empty());
+        feed.claimed[0].native_platform = Some("desktop".into());
+        assert_eq!(ledger.queue(&feed).len(), 1);
     }
     #[test]
     fn queue_is_oldest_acceptance_first_and_excludes_active_and_completed() {

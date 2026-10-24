@@ -33,6 +33,8 @@ export const PAYLOAD_MARKS = [
   'DAQ enrollment boundary v1',
   'QUESTS_ENROLL_BEGIN',
   '__daqEnrollmentPending',
+  'QUESTS_SELECT_TASK_PLATFORM',
+  '__daqDesktopPending',
   'RUNNING_GAMES_CHANGE',
   'QUESTS_SEND_HEARTBEAT_SUCCESS',
   'video-progress',

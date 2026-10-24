@@ -2,11 +2,14 @@ import { invoke } from '@tauri-apps/api/core';
 
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
-import type { EnrollmentResult } from '../types/enrollment';
+import type { EnrollmentResult, DesktopSelectionResult } from '../types/enrollment';
 import type { WorkState } from '../types/work';
 
 export async function questEnrollment(id: string, revision?: string): Promise<EnrollmentResult> {
   return revision === undefined ? invoke('review_quest_offer', { id }) : invoke('confirm_quest_acceptance', { id, revision });
+}
+export async function selectQuestDesktop(id: string): Promise<DesktopSelectionResult> {
+  return invoke('select_quest_desktop', {id});
 }
 
 /**

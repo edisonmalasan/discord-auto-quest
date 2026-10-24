@@ -46,7 +46,7 @@ export function buildQuestViews(feed: QuestFeed, now: number): QuestViews {
     const end = time(quest.expiresAt);
     const expired = end !== null && end <= now;
     const view = quest.state === 'completed' ? 'completed' : quest.state === 'claimed' ? 'ongoing' : 'available';
-    if (view === 'available' && expired) continue;
+    if (view === 'available' && (expired || quest.hasOrbReward !== true)) continue;
     views[view].push({ quest, view, expired, rewardState: rewardState(quest, now), progress: progress(quest) });
   }
   const endOrder = (a: QuestCardModel, b: QuestCardModel) =>

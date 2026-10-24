@@ -22,8 +22,68 @@ function client(overrides={}) {
  const modules={one:{exports:{store}},two:{exports:{renamed:enroll}},three:{exports:{enum:{THIRD_PARTY_APP:14}}}};
  const world=vm.createContext({Date,Map,Set,Promise,DiscordNative:{},window:{},webpackChunkdiscord_app:{push:a=>a[2]({c:modules}),pop(){}}});
  const execute=(mode,revision)=>vm.runInContext(`(${bridge()})(${JSON.stringify({id:'123',mode,revision})})`,world);
- return {q,store,modules,execute,get calls(){return calls},get context(){return context}};
+ return {q,store,modules,execute,world,get calls(){return calls},get context(){return context}};
 }
+function multiPlatform(c,initial=null) {
+ let selected=initial,calls=0;
+ c.q.config.taskConfigV2.tasks.PLAY_ON_XBOX={type:'PLAY_ON_XBOX',target:900,applications:[],externalIds:[]};
+ c.q.config.taskConfigV2.tasks.PLAY_ON_PLAYSTATION={type:'PLAY_ON_PLAYSTATION',target:900,applications:[],externalIds:[]};
+ c.store.selectedTaskPlatform=()=>selected;
+ function select(id,platform) { const marker='QUESTS_SELECT_TASK_PLATFORM'; if(marker&&id==='123'){calls++;selected=platform;} }
+ c.modules.platform={exports:{select,platforms:{DESKTOP:'DESKTOP',CONSOLE:'CONSOLE'}}};
+ return {get calls(){return calls},get selected(){return selected},set selected(value){selected=value}};
+}
+it('reviews multi-platform Orbs offers as Desktop without enrollment or selection',async()=>{
+ const c=client(),p=multiPlatform(c);c.q.config.rewardsConfig.rewards[0].orbQuantity=731;
+ const review=await c.execute('prepare');
+ expect(review).toMatchObject({status:'review',platform:'desktop',requiresDesktopSelection:true,reward:'731 Orbs',requirements:[{kind:'PLAY_ON_DESKTOP',target:900}]});
+ expect(c.calls).toBe(0);expect(p.calls).toBe(0);
+ const result=await c.execute('confirm',review.revision);
+ expect(result).toMatchObject({status:'accepted',desktopSelection:'selected'});
+ expect(c.calls).toBe(1);expect(p.calls).toBe(1);expect(p.selected).toBe('DESKTOP');
+ await c.execute('confirm',review.revision);expect(c.calls).toBe(1);expect(p.calls).toBe(1);
+});
+it('selects Desktop only on an accepted eligible quest without enrolling',async()=>{
+ const c=client(),p=multiPlatform(c);
+ expect((await c.execute('select-desktop')).status).toBe('blocked');expect(p.calls).toBe(0);
+ c.q.userStatus={questId:'123',enrolledAt:'2026-10-23T00:00:00Z'};
+ expect((await c.execute('select-desktop')).status).toBe('selected');expect(c.calls).toBe(0);expect(p.calls).toBe(1);
+ expect((await c.execute('select-desktop')).status).toBe('selected');expect(p.calls).toBe(1);
+ p.selected='CONSOLE';expect((await c.execute('select-desktop')).status).toBe('blocked');expect(p.selected).toBe('CONSOLE');
+});
+it('reports confirmed acceptance separately from failed Desktop selection',async()=>{
+ const c=client();multiPlatform(c);
+ c.modules.platform.exports.select=function(id,platform){const marker='QUESTS_SELECT_TASK_PLATFORM';if(marker&&id&&platform)throw Error('selection failed')};
+ const review=await c.execute('prepare');const result=await c.execute('confirm',review.revision);
+ expect(result).toMatchObject({status:'accepted',desktopSelection:'unconfirmed'});expect(result.message).toMatch(/accepted/i);
+ await c.execute('confirm',review.revision);expect(c.calls).toBe(1);
+});
+it('keeps selection inspection read-only and rejects unknown console schema',async()=>{
+ const c=client(),p=multiPlatform(c);
+ const inspection=await c.execute('inspect');
+ expect(inspection.quests[0]).toMatchObject({id:'123',nativePlatform:null,desktopSelectionSupported:true});expect(c.calls+p.calls).toBe(0);
+ c.q.config.taskConfigV2.tasks.PLAY_ON_XBOX.futureRequirement=true;
+ expect((await c.execute('prepare')).status).toBe('unsupported');expect(c.calls+p.calls).toBe(0);
+});
+it.each(['missing-action','ambiguous-action','missing-reader'])('requires unambiguous native selection before offering acceptance: %s',async(kind)=>{
+ const c=client(),p=multiPlatform(c);
+ if(kind==='missing-action')delete c.modules.platform.exports.select;
+ if(kind==='ambiguous-action')c.modules.duplicate={exports:{second:function(id,platform){const marker='QUESTS_SELECT_TASK_PLATFORM';return [marker,id,platform]}}};
+ if(kind==='missing-reader')delete c.store.selectedTaskPlatform;
+ expect((await c.execute('prepare')).status).toBe('unsupported');expect(c.calls+p.calls).toBe(0);
+});
+it('does not change an actively worked platform or infer success without native readback',async()=>{
+ const c=client(),p=multiPlatform(c);c.q.userStatus={questId:'123',enrolledAt:'2026-10-23T00:00:00Z'};
+ vm.runInContext('window.__daq={phase:"working",questId:"123"}',c.world);
+ expect((await c.execute('select-desktop')).status).toBe('blocked');expect(p.calls).toBe(0);
+ vm.runInContext('window.__daq=null',c.world);
+ c.modules.platform.exports.select=function(id,platform){const marker='QUESTS_SELECT_TASK_PLATFORM';return [marker,id,platform]};
+ expect((await c.execute('select-desktop')).status).toBe('uncertain');expect(c.calls).toBe(0);
+});
+it('keeps mixed Orbs rewards visible to the reader but outside standard acceptance',async()=>{
+ const c=client();c.q.config.rewardsConfig.rewards.push({type:3,name:'Other item'});
+ expect((await c.execute('prepare')).message).toMatch(/standard Orbs rewards/);expect(c.calls).toBe(0);
+});
 it('prepares without accepting and confirms only a live enrolled record',async()=>{
  const c=client(), offer=await c.execute('prepare'); expect(offer.status).toBe('review'); expect(c.calls).toBe(0);
  expect(offer.requirements).toEqual([{kind:'PLAY_ON_DESKTOP',target:900}]);
@@ -90,4 +150,18 @@ it('requires valid matching enrollment evidence after dispatch',async()=>{
   c.q.userStatus={questId:'123',enrolledAt:{pending:!!markers.length}};return {type:'success'};
  };
  const offer=await c.execute('prepare'); expect((await c.execute('confirm',offer.revision)).status).toBe('uncertain');
+});
+
+it.each(['unexpected','unreadable'])('does not change an unknown native platform: %s',async(kind)=>{
+ const c=client(),p=multiPlatform(c);c.q.userStatus={questId:'123',enrolledAt:'2026-10-23T00:00:00Z'};
+ c.store.selectedTaskPlatform=()=>{if(kind==='unreadable')throw Error('unreadable');return 'FUTURE_PLATFORM'};
+ expect((await c.execute('inspect')).quests[0].desktopSelectionSupported).toBe(false);
+ expect((await c.execute('select-desktop')).status).toBe('unsupported');expect(c.calls+p.calls).toBe(0);
+});
+
+it('retains accepted-state diagnostics without inventing Desktop selection for an expired video',async()=>{
+ const c=client();c.q.config.taskConfigV2.tasks={WATCH_VIDEO:{type:'WATCH_VIDEO',target:9}};
+ c.q.config.expiresAt='2000-01-01';c.q.userStatus={questId:'123',enrolledAt:'2026-10-23T00:00:00Z'};
+ const result=await c.execute('prepare');expect(result).toMatchObject({status:'accepted',desktopSelection:'not-required'});
+ expect(result.message).toMatch(/already accepted.*ended/i);expect(c.calls).toBe(0);
 });
