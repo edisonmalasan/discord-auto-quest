@@ -84,10 +84,30 @@ GitHub records 1.0.0 and 1.0.1 as published on 2026-10-24 in Asia/Manila (2026-1
 
 Source implementation is prepared; release acceptance is pending. Local verification passed 176 frontend/tooling tests across 23 files and 44 backend harness tests importing the actual runtime/controller modules and download-deadline helper. The new card regression verifies that descriptions/actions follow the selected task alongside its percentage. Harness Clippy passed with the declared Rust 1.90 minimum. These synthetic tests perform no Discord account actions.
 
-Windows CI run 40091308269 at 7648618 passed full-crate Clippy, all 50 backend tests, frontend/tooling tests, production frontend build, and version/terminology/notices/bundle acceptance checks. Three browser integration tests remained ignored. Its Windows packaging job built and verified a validation setup EXE and portable archive, including the executable-content check. The downloaded setup EXE independently yielded the custom blue application badge. These unsigned validation assets have a validation marker and cannot be promoted; they do not establish signed production-candidate acceptance. Final branch CI remains required after subsequent UI/documentation edits.
+Final branch CI run 40092228452 passed checks and Windows validation packaging. The production tag run 40092834693 at f297ac1b308932439f7dccfd6a8c675540f2043a then passed full-crate Clippy, all 50 backend tests, 176 frontend/tooling tests, production frontend build, and version/terminology/notices/bundle acceptance checks. Three browser integration tests remained ignored. Unsigned validation builds cannot be promoted. The trusted tag build produced the signed five-file candidate, verified its contents and executable, and created a stable draft.
 
 Isolated browser verification at 880, 1200, and 1600 CSS pixels confirmed waiting/Stop controls, an accepted 0% ring, removal of the preview overlay, About/version/update controls, and confirmed download progress inside the modal. The wide viewport had no horizontal page overflow. This used mock IPC and sample data; no installer, notification delivery, update installation, or Discord behavior was exercised.
 
 The full local production dependency build exhausted memory while compiling Windows notification dependencies; CI supplied full-crate verification. Exact 1.1.0 production installer/portable acceptance, installed updates between signed test candidates, notification delivery/identity, normal close cleanup, and live continuous Work remain unverified. Clean-environment WebView2 provisioning remains unavailable. No earlier artifact hashes above establish acceptance for 1.1.0.
 
 The production signing identity is stored outside the repository, and signing secrets are configured in GitHub Actions. A same-host backup exists; an independent recoverable backup remains unverified and blocks publication. Only the public key is embedded. Keep the release draft until its exact five assets and every required result in the evidence template pass.
+
+## 1.1.0 exact draft read-only verification
+
+On 2026-10-24 (Asia/Manila), all five downloaded draft files matched the production CI artifact byte for byte. Asset names, checksums, updater signature, signed version, manifest URL, and portable archive contents passed verification. The setup EXE independently yielded the custom blue application icon. The exact portable executable passed the executable-content check.
+
+After explicit installation and read-only authorization, the installer completed successfully in the test host's private app-data location. This observed a 1.0.0 to 1.1.0 upgrade there, but does not establish an ordinary desktop cross-version upgrade. The same setup was then opened through ordinary Windows Explorer; user input advanced it to the completion page. The desktop app launched from the user's chosen installation folder and showed version 1.1.0, MIT, the independence notice, and the installed-only Windows notification option, disabled by default. Its executable differed from the exact portable executable only in the three package-marker bytes. Installed license and notice files were present.
+
+Environment: non-elevated Windows 11 IoT Enterprise, build 26200 / 25H2, stable Discord 1.0.9265, with WebView2 already installed. Ongoing, Available, and Completed navigation opened. Quest data remained blocked by Discord's restart requirement, so live views are not verified. No quest acceptance, Work, reward claim, or Discord restart was performed. Manual update checking displayed a recoverable error while the public latest release lacked the new update feed; successful update delivery remains unverified.
+
+These observations apply to commit f297ac1b308932439f7dccfd6a8c675540f2043a and the following immutable draft files:
+
+```text
+dce4a5f2068ecbf9f0015544e397daa3bb953fe50a47d5fd953d59295ff5f1a8  Discord-Auto-Quest-1.1.0-windows-x64-setup.exe
+06a4dd586e4d451551f00e81ca3b4aa8c7d16c43584b3c29535d2f9dfa716865  Discord-Auto-Quest-1.1.0-windows-x64-portable.zip
+4b252731cf92b8b6684d2402612e86cb26505fc331e8e9d5dcbec46b28df1e40  Discord-Auto-Quest-1.1.0-windows-x64-setup.exe.sig
+8e3b68a8853e3df51f3f239ade0b074294b2ee36431dfad1e21b38097ad7539a  latest.json
+99670ff88e530c934102747b4e136f4aac89d9e762d3172b9bbe1121c7b2ee29  SHA256SUMS
+```
+
+Clean installation, ordinary cross-version upgrade, uninstall, portable execution, clean WebView2 provisioning, live recovery and quest workflows, completion delivery, signed update installation and failure recovery, and independent signing-key backup remain unverified. The release remains a draft.
