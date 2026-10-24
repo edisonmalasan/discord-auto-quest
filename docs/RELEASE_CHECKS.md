@@ -127,3 +127,21 @@ Local verification: 201 frontend/tooling tests across 23 files, 47 backend harne
 The isolated browser fixture verified Use Desktop, native-confirmed Desktop display with 0%, review/Cancel with Desktop intent and the continuous-Work warning, and Orbs-only counts. It uses synthetic IPC and makes no Discord calls. No live acceptance, platform change, Work/Stop, installation, or Discord restart was performed during this task. The user separately reported Resident Evil Sale progressing after selecting Desktop in Discord and enabling Work; this is user-reported evidence, not independent 1.2.0 verification.
 
 Keep 1.2.0 assets in draft until exact packaged checks pass, including native Desktop selection/partial recovery, Orbs-only views, the existing installation/upgrade/uninstall/portable and clean WebView2 gates, live continuous Work, completion delivery, signed updates/failure recovery, and independent key-backup recovery. Earlier releases and historical observations do not satisfy these checks.
+
+## 1.2.0 exact draft artifact verification
+
+[PR 42](https://github.com/edisonmalasan/discord-auto-quest/pull/42) merged at e867a3e57367b1a20d41b8d57cecd05067ed0e96 after branch CI 40117747099 passed. The unchanged v1.2.0 tag points to that commit. [Production run 40118449668](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40118449668) passed checks, Windows packaging, and draft creation: 201 frontend/tooling tests, 53 full-crate backend tests, Clippy, formatting, version, terminology, notices, bundle acceptance, and executable-content checks. Three browser integration tests remain ignored. Linux is excluded and macOS was skipped.
+
+All five files downloaded separately from the CI artifact and [stable 1.2.0 draft](https://github.com/edisonmalasan/discord-auto-quest/releases/tag/untagged-71862ffd2f5559a92e2f) matched byte for byte. Asset names, updater signature and signed version, manifest HTTPS URLs, checksums, and portable archive contents passed local verification. The exact portable executable passed the content scan and reports FileVersion/ProductVersion 1.2.0 and ProductName Discord Auto Quest. The downloaded setup EXE independently yielded the custom blue badge. It has an updater signature and remains unsigned for Windows publisher identity.
+
+```text
+73906e8dfaa8b8dd2ae02af40ce21dff4e1465de8b381c579120091c7840e663  Discord-Auto-Quest-1.2.0-windows-x64-portable.zip
+b2e0d6b61fe471b2b7dec7a2d46dbb00e2dc3f9675332b22eed9047ee11fb1bb  Discord-Auto-Quest-1.2.0-windows-x64-setup.exe
+8e55678c6b4fc05406449d3bddafca24ee0f09a0d45d5e32b0d88b9f7aa7e762  Discord-Auto-Quest-1.2.0-windows-x64-setup.exe.sig
+fb37d12398a5cbef23fae4965199a8607a6b9145f75048d261142530d1dcfdb2  latest.json
+998a5972f16742f656211d6f288b992796868872bd0c0ba83589d70a1c3aa3ce  SHA256SUMS
+```
+
+A separate read-only evaluation of the current source expressions through the existing Discord connection returned 13 raw Available offers and 11 confirmed Orbs offers, with 0 Ongoing and 13 Completed. The native record for Resident Evil Sale was already completed at 900/900 and selected Desktop. No acceptance, platform selection, Work/Stop, installation, or restart was performed. These observations verify read-only compatibility with the current client; they do not establish acceptance or selection performed by the exact packaged 1.2.0 app. The user's earlier report that selecting Desktop then enabling Work increased progress remains user-reported evidence.
+
+GitHub currently lists 1.1.1 as the published Latest release. Its publication does not resolve unverified historical acceptance gates. Preserve that release and older tags/assets. The 1.2.0 release remains a draft: exact native acceptance/selection and partial recovery, Orbs-only UI views, installation/upgrade/uninstall/portable operation, clean WebView2 provisioning, continuous Work, completion notifications, signed installed updates and recovery, and independent signing-key backup remain unverified.
