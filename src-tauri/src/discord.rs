@@ -352,6 +352,16 @@ impl DiscordState {
     ) -> AppResult<serde_json::Value> {
         let expression = crate::quest::enrollment::expression(id, revision)?;
         let _operation = self.operation.lock().await;
+        if revision.is_some()
+            && matches!(
+                self.work.lock().await.state.phase,
+                WorkPhase::Starting | WorkPhase::Stopping | WorkPhase::Paused
+            )
+        {
+            return Err(AppError::not_supported(
+                "Resolve or stop the Work session before accepting this quest.",
+            ));
+        }
         self.enrollment_locked(id, &expression).await
     }
     pub async fn select_desktop(&self, id: &str) -> AppResult<serde_json::Value> {
@@ -735,6 +745,15 @@ mod continuous_tests {
             dispatches,
             server,
         )
+    }
+    #[tokio::test]
+    async fn uncertain_work_blocks_acceptance_and_platform_changes_before_client_dispatch() {
+        let state = DiscordState::default();
+        state.work.lock().await.state.phase = WorkPhase::Paused;
+        let acceptance = state.enrollment("123", Some("reviewed")).await.unwrap_err();
+        assert!(acceptance.message.contains("Work session"));
+        let selection = state.select_desktop("123").await.unwrap_err();
+        assert!(selection.message.contains("Work job"));
     }
     #[tokio::test]
     async fn starting_with_zero_quests_stays_waiting_until_explicit_stop() {

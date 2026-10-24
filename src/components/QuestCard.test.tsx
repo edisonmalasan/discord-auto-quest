@@ -10,6 +10,11 @@ function show(overrides: Partial<QuestSummary>) {
  return render(<QuestCard card={card} stale={false} menuOpen={false} onMenuChange={()=>{}}/>);
 }
 describe('native quest card variants',()=>{
+ it('uses the confirmed Orb amount in task copy even when the reward name differs',()=>{
+  show({state:'claimed',rewardOrbs:731,rewardName:'Other game item'});
+  expect(screen.getByText(/to earn 731 Orbs/)).toBeInTheDocument();
+  expect(screen.queryByText(/Other game item/)).not.toBeInTheDocument();
+ });
  it('uses the selected desktop task for its copy and actions when video alternatives exist',()=>{
   show({state:'claimed',selectedTaskKind:'PLAY_ON_DESKTOP',tasks:['WATCH_VIDEO','PLAY_ON_DESKTOP','STREAM_ON_DESKTOP'],taskDetails:[
    {kind:'WATCH_VIDEO',value:0,target:60,unit:'seconds',platform:null},

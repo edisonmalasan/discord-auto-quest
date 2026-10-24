@@ -158,3 +158,10 @@ it.each(['unexpected','unreadable'])('does not change an unknown native platform
  expect((await c.execute('inspect')).quests[0].desktopSelectionSupported).toBe(false);
  expect((await c.execute('select-desktop')).status).toBe('unsupported');expect(c.calls+p.calls).toBe(0);
 });
+
+it('retains accepted-state diagnostics without inventing Desktop selection for an expired video',async()=>{
+ const c=client();c.q.config.taskConfigV2.tasks={WATCH_VIDEO:{type:'WATCH_VIDEO',target:9}};
+ c.q.config.expiresAt='2000-01-01';c.q.userStatus={questId:'123',enrolledAt:'2026-10-23T00:00:00Z'};
+ const result=await c.execute('prepare');expect(result).toMatchObject({status:'accepted',desktopSelection:'not-required'});
+ expect(result.message).toMatch(/already accepted.*ended/i);expect(c.calls).toBe(0);
+});

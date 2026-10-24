@@ -10,7 +10,7 @@ export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children
  const [id,setId]=useState<string|null>(null),[offer,setOffer]=useState<OfferReview|null>(null);
  const [pending,setPending]=useState(false),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState('');
  const busy=useRef(false), dialog=useRef<HTMLDialogElement>(null), cancel=useRef<HTMLButtonElement>(null), origin=useRef<HTMLElement|null>(null);
- function acceptedNotice(result: Extract<EnrollmentResult,{status:'accepted'}>) { return result.desktopSelection==='unconfirmed' ? (result.message ?? 'Quest accepted, but Desktop selection is unconfirmed. Find it in Ongoing to choose Desktop or continue in Discord.') : 'Discord confirmed acceptance. Find the quest in Ongoing.'; }
+ function acceptedNotice(result: Extract<EnrollmentResult,{status:'accepted'}>) { return result.message ?? (result.desktopSelection==='unconfirmed' ? 'Quest accepted, but Desktop selection is unconfirmed. Find it in Ongoing to choose Desktop or continue in Discord.' : 'Discord confirmed acceptance. Find the quest in Ongoing.'); }
  useEffect(()=>{const element=dialog.current;if(id&&element){if(!element.open){if(element.showModal)element.showModal();else element.setAttribute('open','');}if(!pending)cancel.current?.focus();}else element?.close?.();},[id,pending]);
  useEffect(()=>{onActiveChange(id!==null);return()=>onActiveChange(false);},[id,onActiveChange]);
  useEffect(()=>{if(!id&&notice)document.getElementById('view-title')?.focus();},[id,notice]);
