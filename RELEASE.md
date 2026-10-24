@@ -2,7 +2,7 @@
 
 ## Target and version
 
-Discord Auto Quest 1.1.0 targets Windows 10/11 x64 and stable Discord. Linux builds are excluded; macOS compilation is paused. A stable version number does not replace packaged acceptance evidence. Keep the release draft until every required check passes.
+Discord Auto Quest 1.1.1 targets Windows 10/11 x64 and stable Discord. Linux builds are excluded; macOS compilation is paused. A stable version number does not replace packaged acceptance evidence. Keep the release draft until every required check passes.
 
 `package.json` is authoritative. Change its version, run `npm run version:sync`, then `npm run version:check`. Use complete SemVer: patch for compatible fixes, minor for compatible features, and major for incompatible documented behavior or requirements. Prereleases use suffixes such as `1.2.0-beta.1`; increment the final beta number for another preview. Versions below 1.0 were provisional. A tag must exactly equal `v` plus the version. Preserve published versions, tags, and assets.
 
@@ -23,11 +23,11 @@ PR, main, and manual workflow runs build unsigned validation assets without prod
 
 A trusted version-tag push in this repository, pointing to a commit on main, builds the production candidate with the signing secrets. It builds once, validates the files, and transfers those exact files into a draft. Do not replace a failed candidate with an unrelated local build or rerun a published version to replace assets.
 
-Each production candidate has exactly five assets. For 1.1.0:
+Each production candidate has exactly five assets. For 1.1.1:
 
-- `Discord-Auto-Quest-1.1.0-windows-x64-setup.exe`: current-user installer, including WebView2 provisioning when needed.
-- `Discord-Auto-Quest-1.1.0-windows-x64-portable.zip`: extract the entire archive; WebView2 must already be installed.
-- `Discord-Auto-Quest-1.1.0-windows-x64-setup.exe.sig`: updater signature for that installer and version.
+- `Discord-Auto-Quest-1.1.1-windows-x64-setup.exe`: current-user installer, including WebView2 provisioning when needed.
+- `Discord-Auto-Quest-1.1.1-windows-x64-portable.zip`: extract the entire archive; WebView2 must already be installed.
+- `Discord-Auto-Quest-1.1.1-windows-x64-setup.exe.sig`: updater signature for that installer and version.
 - `latest.json`: HTTPS updater metadata identifying the exact installer URL and signature.
 - `SHA256SUMS`: hashes of the other four assets.
 
@@ -37,18 +37,18 @@ Both app distributions include the MIT license, attribution, third-party notices
 
 1. Complete the changes on a task branch. Update the version, changelog, and curated `tools/release-notes.md`; synchronize and check versions.
 2. Run applicable frontend/backend tests, type checking, formatting, Clippy, terminology/notices checks, acceptance checks, and executable-content checks. Merge only after required CI checks and the Windows validation build pass.
-3. On the verified main commit, create the new tag. Use the following only if `v1.1.0` does not already exist; subsequent releases require a new version.
+3. On the verified main commit, create the new tag. Use the following only if `v1.1.1` does not already exist; subsequent releases require a new version.
 
 ```text
 git switch main
 git pull --ff-only origin main
 npm run version:check
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.1.1
+git push origin v1.1.1
 ```
 
 4. Open Actions → release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, Windows build, and draft release to pass. Missing signing secrets or invalid candidate files fail the production build.
-5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.1.0 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
+5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.1.1 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
 
 ## Test the exact draft and publish
 

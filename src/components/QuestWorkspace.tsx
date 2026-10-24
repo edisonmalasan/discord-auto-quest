@@ -17,15 +17,6 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
   const scroll = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const positions = useRef<Record<QuestView, number>>({ ongoing: 0, available: 0, completed: 0 });
-  const seenCompleted = useRef<Set<string> | null>(null);
-  const [announcement, setAnnouncement] = useState('');
-  useEffect(() => {
-    if (loading) return;
-    const previous = seenCompleted.current;
-    const added = previous ? views.completed.filter(c => !previous.has(c.quest.id)) : [];
-    seenCompleted.current = new Set([...(previous ?? []), ...views.completed.map(c => c.quest.id)]);
-    if (added.length) setAnnouncement(`${added.map(c => c.quest.name).join(', ')} completed. Check Completed for your reward.`);
-  }, [views.completed, loading]);
   const cards = searchQuests(views[view], queries[view]);
   useLayoutEffect(() => { if (scroll.current) scroll.current.scrollTop = positions.current[view]; }, [view]);
   useEffect(() => { if (openMenuQuestId && !cards.some(c => c.quest.id === openMenuQuestId)) { setMenu(null); heading.current?.focus(); } }, [cards, openMenuQuestId]);
@@ -39,7 +30,6 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
       </nav><div className="sidebar-bottom">{connection}<AboutPopover /></div>
     </aside>
     <main className="quest-main">
-      <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
       <header className="workspace-header"><span><NavIcon kind={view} />{labels[view]} quests</span>{controls}</header>
       {notices}
       {completion && <div className="completion-notice" role="status"><span>{completion.name} completed. Claim your reward in Discord.</span><button className="button secondary" onClick={()=>{setView('completed');onDismissCompletion?.();}}>View completed</button><button className="button secondary" aria-label="Dismiss completion notification" onClick={onDismissCompletion}>Dismiss</button></div>}

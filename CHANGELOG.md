@@ -2,6 +2,11 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 1.1.1 — Unreleased
+
+- Announce completion only from backend-confirmed session events. Loading historical completed quests or observing an unrelated completion no longer produces a second announcement.
+- Preserve the 1.1.0 tag and draft; exact 1.1.1 packaged acceptance remains required before publication.
+
 ## 1.1.0 — Unreleased
 
 - Keep explicitly started Work active while waiting for accepted quests, process supported quests sequentially, and pick up new acceptances until Stop.
