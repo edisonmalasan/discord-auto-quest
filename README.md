@@ -105,7 +105,7 @@ The app never accepts quests automatically, claims rewards, or restarts Discord 
 
 ## Known limitations
 
-- Quest availability and eligibility depend on Discord and the publisher. Some tasks still require user participation, such as sharing in a voice channel.
+- Quest availability and eligibility depend on Discord and the publisher.
 - One accepted video quest completed in Windows beta testing. A fresh accept-to-completion cycle and broader quest coverage remain unverified; do not assume every quest type works.
 - In-app acceptance initially supports standard Orbs offers for desktop play and video tasks. Special features, console/activity tasks, and unfamiliar offer configurations require Discord. One desktop-play offer was accepted successfully through the packaged Windows app; other acceptance flows remain unverified.
 - If acceptance cannot be confirmed, refresh or check Discord before trying again. The app does not automatically retry.
