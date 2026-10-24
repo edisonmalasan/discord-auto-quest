@@ -535,11 +535,9 @@ impl DiscordState {
                     return Err(AppError::new(ErrorCode::OperationUncertain,runtime.message.unwrap_or_else(||"The active runtime could not be confirmed. Use Stop before continuing.".into()),false));
                 }
                 let quest=list.claimed.iter().find(|q|q.id==id).ok_or_else(||AppError::new(ErrorCode::OperationUncertain,"The active quest disappeared. Confirm Stop before continuing.",false))?;
-                if quest.state==reader::QuestState::Completed && quest.completed_at.is_some() {
+                if (quest.state==reader::QuestState::Completed && quest.completed_at.is_some()) || !quest.work_eligible {
                     driver::stop(session).await?;
                     let mut work=self.work.lock().await;work.state.active_quest_id=None;work.state.active_task_kind=None;
-                } else if !quest.work_eligible {
-                    return Err(AppError::not_supported("The active quest is no longer eligible. Confirm Stop before continuing."));
                 } else {
                     let mut work=self.work.lock().await;work.state.queued_count=work.queue(&list).len();work.state.message=skip_message(&work,&list,false);
                     return Ok(());
@@ -780,6 +778,21 @@ mod continuous_tests {
         state.quests().await.unwrap();
         state.reconcile_work().await.unwrap();
         assert_eq!(*completions.lock().unwrap(), vec!["old"]);
+        state.stop_work().await.unwrap();
+        server.abort();
+    }
+    #[tokio::test]
+    async fn an_ineligible_active_quest_is_cleaned_up_before_dispatching_the_next() {
+        let (state, snapshot, dispatches, server) =
+            connected(feed(&[("old", "claimed", 1), ("next", "claimed", 2)])).await;
+        state.start_work().await.unwrap();
+        let mut expired = feed(&[("old", "claimed", 1), ("next", "claimed", 2)]);
+        expired["claimed"][0]["workEligible"] = serde_json::json!(false);
+        *snapshot.lock().await = expired;
+        let resumed = state.reconcile_work().await.unwrap();
+        assert_eq!(resumed.active_quest_id.as_deref(), Some("next"));
+        assert!(resumed.message.unwrap().contains("Skipped 1"));
+        assert_eq!(dispatches.load(Ordering::SeqCst), 2);
         state.stop_work().await.unwrap();
         server.abort();
     }
