@@ -279,6 +279,15 @@ pub struct DiscordState {
 pub use crate::quest::work::{QuestCompleted, WorkEvent, WorkPhase, WorkState};
 pub type WorkEventSink = std::sync::Arc<dyn Fn(WorkEvent) + Send + Sync>;
 
+fn skip_message(
+    work: &crate::quest::work::Ledger,
+    list: &QuestList,
+    waiting: bool,
+) -> Option<String> {
+    let skipped = work.skipped_count(list);
+    (skipped > 0).then(|| format!("{}Skipped {skipped} accepted quest(s): expired, unsupported, or missing required task data.", if waiting { "Waiting for eligible accepted quests. " } else { "Working your accepted quests. " }))
+}
+
 impl DiscordState {
     pub fn set_event_sink(&self, sink: WorkEventSink) {
         *self
@@ -309,13 +318,11 @@ impl DiscordState {
         work.enabled = false;
         work.state.phase = WorkPhase::Paused;
         work.state.message = Some(message.into());
-        work.reset_observation();
         drop(work);
         self.emit_state().await;
     }
     async fn lost_connection(&self) {
         let active = self.work.lock().await.state.phase != WorkPhase::Stopped;
-        self.work.lock().await.reset_observation();
         if active {
             self.pause(
                 "Discord disconnected. Reconnect and confirm Stop before starting Work again.",
@@ -331,7 +338,6 @@ impl DiscordState {
             .ok_or_else(|| AppError::not_supported("Discord is not installed on this machine"))?;
         let session = discord::attach_to_discord(&install).await?;
         *self.session.lock().await = Some(session);
-        self.work.lock().await.reset_observation();
         Ok(())
     }
     pub async fn attach(&self) -> AppResult<()> {
@@ -375,7 +381,6 @@ impl DiscordState {
         let install = discord::Install::locate()
             .ok_or_else(|| AppError::not_supported("Discord is not installed on this machine"))?;
         *self.session.lock().await = None;
-        self.work.lock().await.reset_observation();
         install.launch_with_debugger()?;
         *self.session.lock().await = Some(discord::attach_to_discord(&install).await?);
         Ok(())
@@ -536,7 +541,7 @@ impl DiscordState {
                 } else if !quest.work_eligible {
                     return Err(AppError::not_supported("The active quest is no longer eligible. Confirm Stop before continuing."));
                 } else {
-                    let mut work=self.work.lock().await;work.state.queued_count=work.queue(&list).len();
+                    let mut work=self.work.lock().await;work.state.queued_count=work.queue(&list).len();work.state.message=skip_message(&work,&list,false);
                     return Ok(());
                 }
             } else if runtime.phase!="stopped" {
@@ -552,9 +557,9 @@ impl DiscordState {
                 if confirmed.phase!="working" || confirmed.quest_id.as_deref()!=Some(&id) || confirmed.task_kind.as_deref()!=Some(&kind) {
                     return Err(AppError::new(ErrorCode::OperationUncertain,"Discord did not confirm the active Work job.",false));
                 }
-                self.work.lock().await.state.phase=WorkPhase::Working;
+                let mut work=self.work.lock().await;work.state.phase=WorkPhase::Working;work.state.message=skip_message(&work,&list,false);
             } else {
-                let mut work=self.work.lock().await;work.state.phase=WorkPhase::Waiting;work.state.queued_count=0;
+                let mut work=self.work.lock().await;work.state.phase=WorkPhase::Waiting;work.state.queued_count=0;work.state.message=skip_message(&work,&list,true);
             }
             Ok(())
         }).await;

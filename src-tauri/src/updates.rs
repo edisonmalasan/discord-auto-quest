@@ -183,9 +183,12 @@ pub fn update_status(manager: State<'_, UpdateManager>) -> UpdateState {
 }
 
 #[tauri::command]
-pub async fn check_for_updates(app: AppHandle, manager: State<'_, UpdateManager>) -> UpdateState {
+pub async fn check_for_updates(
+    app: AppHandle,
+    manager: State<'_, UpdateManager>,
+) -> AppResult<UpdateState> {
     let Ok(_operation) = manager.operation.try_lock() else {
-        return manager.snapshot();
+        return Ok(manager.snapshot());
     };
     manager.publish(&app, |state| {
         state.status = "checking".into();
@@ -207,7 +210,7 @@ pub async fn check_for_updates(app: AppHandle, manager: State<'_, UpdateManager>
         })
     }
     .await;
-    match result {
+    Ok(match result {
         Ok(update) => {
             // The stable feed is public GitHub latest, which excludes drafts and prereleases.
             // Also bind the manifest URL and version to this project's exact stable asset.
@@ -221,7 +224,7 @@ pub async fn check_for_updates(app: AppHandle, manager: State<'_, UpdateManager>
                     );
                     manager.inner.lock().expect("update state").pending = None;
                     manager.fail(&app, &error);
-                    return manager.snapshot();
+                    return Ok(manager.snapshot());
                 }
             }
             let version = update.as_ref().map(|update| update.version.clone());
@@ -242,7 +245,7 @@ pub async fn check_for_updates(app: AppHandle, manager: State<'_, UpdateManager>
             manager.fail(&app, &error);
             manager.snapshot()
         }
-    }
+    })
 }
 
 #[tauri::command]

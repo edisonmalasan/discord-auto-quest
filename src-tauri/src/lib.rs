@@ -119,8 +119,8 @@ async fn stop_quest_work(state: State<'_, AppState>) -> AppResult<WorkState> {
 }
 
 #[tauri::command]
-async fn work_status(state: State<'_, AppState>) -> WorkState {
-    state.discord.work_status().await
+async fn work_status(state: State<'_, AppState>) -> AppResult<WorkState> {
+    Ok(state.discord.work_status().await)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

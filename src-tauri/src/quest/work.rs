@@ -38,7 +38,6 @@ pub enum WorkEvent {
 pub(crate) struct Ledger {
     pub state: WorkState,
     pub enabled: bool,
-    observed: HashSet<String>,
     managed: HashSet<String>,
     completed: HashSet<String>,
 }
@@ -53,17 +52,26 @@ impl Ledger {
                         name: quest.name.clone(),
                     });
                 }
-            } else if quest.state == QuestState::Claimed {
-                self.observed.insert(quest.id.clone());
             }
         }
         events
     }
-    pub fn reset_observation(&mut self) {
-        self.observed.clear();
-    }
     pub fn manage(&mut self, id: &str) {
         self.managed.insert(id.into());
+    }
+    pub fn skipped_count(&self, list: &QuestList) -> usize {
+        list.claimed
+            .iter()
+            .filter(|quest| {
+                quest.state == QuestState::Claimed
+                    && quest.completed_at.is_none()
+                    && (!quest.work_eligible
+                        || quest.selected_task_kind.is_none()
+                        || !quest.enrolled_at_ms.is_some_and(f64::is_finite))
+            })
+            .map(|quest| &quest.id)
+            .collect::<HashSet<_>>()
+            .len()
     }
     pub fn queue<'a>(&self, list: &'a QuestList) -> Vec<&'a QuestSummary> {
         if !list.desktop_app {
@@ -157,9 +165,20 @@ mod tests {
     fn reconnect_seeds_a_new_baseline_and_preserves_notification_deduplication() {
         let mut ledger = Ledger::default();
         ledger.observe(&list(&[("one", "claimed", 1.)]));
-        ledger.reset_observation();
         assert!(ledger
             .observe(&list(&[("one", "completed", 1.)]))
             .is_empty());
+    }
+    #[test]
+    fn skipped_count_explains_ineligible_accepted_quests_only() {
+        let ledger = Ledger::default();
+        let mut feed = list(&[
+            ("eligible", "claimed", 1.),
+            ("expired", "claimed", 2.),
+            ("done", "completed", 3.),
+        ]);
+        feed.claimed[1].work_eligible = false;
+        assert_eq!(ledger.skipped_count(&feed), 1);
+        assert_eq!(ledger.queue(&feed).len(), 1);
     }
 }
