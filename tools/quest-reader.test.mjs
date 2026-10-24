@@ -77,7 +77,7 @@ describe('the real read-only client expression', () => {
     q.config.taskConfigV2.tasks.ACHIEVEMENT_IN_ACTIVITY = { target: 3 };
     const summary = read([q]).claimed[0];
     expect(summary.taskDetails.map(t => [t.value, t.target, t.unit])).toEqual([[100, 900, 'seconds'], [20, 60, 'seconds'], [0, 3, 'count']]);
-    expect(summary.selectedTaskKind).toBeNull();
+    expect(summary.selectedTaskKind).toBe('WATCH_VIDEO');
   });
   it('does not invent optional observations and handles absent or malformed assets', () => {
     const q = quest();
@@ -94,4 +94,20 @@ describe('the real read-only client expression', () => {
     expect(newer.taskDetails[0].unit).toBe('unknown');
     expect(newer.taskDetails[0].target).toBeNull();
   });
+});
+it('selects the same video task when desktop and mobile alternatives both begin at zero', () => {
+  const q=quest({userStatus:{enrolledAt:'2026-10-01'}});
+  q.config.taskConfigV2.tasks={WATCH_VIDEO_ON_MOBILE:{target:80},WATCH_VIDEO:{target:60}};
+  const summary=read([q]).claimed[0];
+  expect(summary.selectedTaskKind).toBe('WATCH_VIDEO');expect(summary.progressSeconds).toBe(0);expect(summary.targetSeconds).toBe(60);
+});
+it('uses worker priority rather than object insertion order for aggregate progress',()=>{
+ const q=quest({userStatus:{enrolledAt:'2026-10-01',progress:{PLAY_ON_DESKTOP:{value:90},WATCH_VIDEO:{value:12}}}});
+ q.config.taskConfigV2.tasks={PLAY_ON_DESKTOP:{target:900},WATCH_VIDEO:{target:60}};
+ const summary=read([q]).claimed[0];expect(summary.selectedTaskKind).toBe('WATCH_VIDEO');expect(summary.progressSeconds).toBe(12);expect(summary.targetSeconds).toBe(60);
+});
+it('does not aggregate ambiguous unsupported task alternatives',()=>{
+ const q=quest({userStatus:{enrolledAt:'2026-10-01',progress:{PLAY_ON_XBOX:{value:100}}}});
+ q.config.taskConfigV2.tasks={PLAY_ON_XBOX:{target:900},PLAY_ON_PLAYSTATION:{target:600}};
+ const summary=read([q]).claimed[0];expect(summary.selectedTaskKind).toBeNull();expect(summary.progressSeconds).toBe(0);expect(summary.targetSeconds).toBe(0);
 });

@@ -110,6 +110,11 @@ pub struct QuestSummary {
     pub selected_task_kind: Option<String>,
     #[serde(default)]
     pub task_details: Vec<QuestTaskSummary>,
+    /// Queue metadata read from the same client snapshot; never persisted or sent to UI.
+    #[serde(default, skip_serializing)]
+    pub work_eligible: bool,
+    #[serde(default, skip_serializing)]
+    pub enrolled_at_ms: Option<f64>,
 }
 
 impl QuestSummary {
@@ -308,7 +313,15 @@ const READ_STATE: &str = r#"(function () {
           platform: kind.includes('XBOX') ? 'Xbox' : (kind.includes('PLAYSTATION') ? 'PlayStation'
             : (kind.includes('MOBILE') ? 'Mobile' : (kind.includes('DESKTOP') ? 'Desktop' : null))) };
       });
-      const legacyTask = taskDetails.find(function (task) { return task.unit === 'seconds'; });
+      // Match the worker's deterministic supported-task priority, independent of
+      // config object insertion order. An active runtime owner is authoritative.
+      const priority = ['WATCH_VIDEO', 'PLAY_ON_DESKTOP', 'STREAM_ON_DESKTOP', 'PLAY_ACTIVITY', 'WATCH_VIDEO_ON_MOBILE'];
+      const owner = typeof window !== 'undefined' ? window.__daq : null;
+      const ownedKind = owner && owner.phase !== 'stopped' && String(owner.questId) === String(quest.id) ? owner.taskKind : null;
+      const selectedKind = ownedKind && tasks[ownedKind] ? ownedKind : priority.find(function (kind) {
+        return tasks[kind] && number(tasks[kind].target) !== null && tasks[kind].target > 0;
+      }) || null;
+      const legacyTask = taskDetails.find(function (task) { return task.kind === selectedKind && task.unit === 'seconds'; });
       const progress = legacyTask ? Math.floor(legacyTask.value || 0) : 0;
       const target = legacyTask ? Math.floor(legacyTask.target || 0) : 0;
       const completedAt = timestamp(user.completedAt);
@@ -358,8 +371,11 @@ const READ_STATE: &str = r#"(function () {
         rewardType: typeof reward.type === 'number' || typeof reward.type === 'string' ? String(reward.type) : null,
         publisherVerified: null,
         heroVideo: asset('questBarHeroVideo') || asset('heroVideo'),
-        selectedTaskKind: null,
+        selectedTaskKind: selectedKind,
         taskDetails: taskDetails,
+        workEligible: !!timestamp(user.enrolledAt) && !completedAt && !!selectedKind &&
+          !!timestamp(config.expiresAt) && Date.parse(config.expiresAt) > now,
+        enrolledAtMs: timestamp(user.enrolledAt) ? Date.parse(user.enrolledAt) : null,
       };
     };
 

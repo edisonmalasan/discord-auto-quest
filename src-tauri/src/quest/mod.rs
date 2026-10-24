@@ -30,3 +30,4 @@ pub mod driver;
 pub mod enrollment;
 pub mod payload;
 pub mod reader;
+pub mod work;
