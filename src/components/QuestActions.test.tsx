@@ -14,11 +14,23 @@ describe('quest menus',()=>{
   expect(screen.getByRole('button',{name:'Watch 60s in Discord'})).toBeInTheDocument();
   expect(screen.queryByRole('button',{name:/Watch preview/})).not.toBeInTheDocument();
  });
- it('announces newly confirmed completion without announcing initial history',async()=>{
-  const {rerender}=render(tree());
-  expect(screen.queryByText('First Quest completed. Check Completed for your reward.')).not.toBeInTheDocument();
+ it('does not announce historical completions arriving after an initially empty read',()=>{
+  const {rerender}=render(tree([]));
   rerender(tree([{...q1,state:'completed',completedAt:'2026-10-23T00:00:00Z'},q2]));
-  expect(await screen.findByText('First Quest completed. Check Completed for your reward.')).toBeInTheDocument();
+  expect(screen.queryByText(/First Quest completed\./)).not.toBeInTheDocument();
+ });
+ it('does not infer a managed completion from quest list changes',()=>{
+  const {rerender}=render(tree());
+  rerender(tree([{...q1,state:'completed',completedAt:'2026-10-23T00:00:00Z'},q2]));
+  expect(screen.queryByText(/First Quest completed\./)).not.toBeInTheDocument();
+ });
+ it('shows a backend session completion and routes to Completed',async()=>{
+  const dismiss=vi.fn();
+  render(<QuestWorkspace views={buildQuestViews(makeFeed({claimed:[{...q1,state:'completed',completedAt:'2026-10-23T00:00:00Z'}]}),Date.now())} loading={false} stale={false} controls={null} connection={null} completion={{questId:q1.id,name:q1.name}} onDismissCompletion={dismiss}/>);
+  expect(screen.getByText('First Quest completed. Claim your reward in Discord.')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button',{name:'View completed'}));
+  expect(screen.getByRole('heading',{name:'Completed quests'})).toBeInTheDocument();
+  expect(dismiss).toHaveBeenCalledOnce();
  });
  it('opens one menu, supports arrows and Escape, and preserves same-ID refresh',async()=>{
   const user=userEvent.setup(); const {rerender}=render(tree());
