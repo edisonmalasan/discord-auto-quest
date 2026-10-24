@@ -20,6 +20,8 @@ These outcomes refer to the current desktop product. Earlier retired implementat
 
 The merged workspace provides Ongoing, Available, and Completed views; per-view search; native-style cards; explicit Discord handoffs; and restrained, reduced-motion-aware interaction. Failed reads retain marked stale data. Uncertain Work retains Stop and blocks duplicate dispatch. Timeouts release stalled connections without asserting that renderer activity was cancelled.
 
+The README now leads with public Windows downloads, distinguishes setup, portable, and checksum assets, and provides installation, update, usage, troubleshooting, and documentation links. It retains platform limits and unverified acceptance coverage; the latest-release link follows GitHub's published release rather than a hard-coded version.
+
 ## In-app acceptance candidate
 
 First implemented in 0.2.0-beta.2, deliberate acceptance adds deliberate review and confirmation for supported standard Orbs offers. Acceptance is separate from Work and playback; special features and unfamiliar configurations retain a Discord handoff. Fresh offers are checked again at confirmation and unknown outcomes are never retried automatically.
