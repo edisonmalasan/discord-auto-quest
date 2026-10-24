@@ -6,7 +6,7 @@ import type { OfferReview, EnrollmentRun } from '../types/enrollment';
 const Context=createContext<{review: (id: string)=>void; disabled: boolean}|null>(null);
 export const useEnrollment=()=>useContext(Context);
 
-export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children}:{run:EnrollmentRun;refresh:()=>void;disabled:boolean;onActiveChange:(active:boolean)=>void;children:ReactNode}) {
+export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children,continuousWork=false}:{run:EnrollmentRun;refresh:()=>void;disabled:boolean;onActiveChange:(active:boolean)=>void;children:ReactNode;continuousWork?:boolean}) {
  const [id,setId]=useState<string|null>(null),[offer,setOffer]=useState<OfferReview|null>(null);
  const [pending,setPending]=useState(false),[error,setError]=useState<string|null>(null),[notice,setNotice]=useState('');
  const busy=useRef(false), dialog=useRef<HTMLDialogElement>(null), cancel=useRef<HTMLButtonElement>(null), origin=useRef<HTMLElement|null>(null);
@@ -33,7 +33,7 @@ export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children
   {notice&&<p className="acceptance-notice" role="status">{notice}</p>}
   {id&&<dialog ref={dialog} className="acceptance-dialog" aria-modal="true" aria-labelledby="accept-title" aria-describedby="accept-description" onCancel={event=>{event.preventDefault();close();}} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();close();}}}>
    <h2 id="accept-title">{offer?`Accept ${offer.name}?`:'Review quest'}</h2>
-   <p id="accept-description">Acceptance adds this quest to your Discord account. Work starts only when you choose Work my quests.</p>
+   <p id="accept-description">{continuousWork ? 'Continuous Work is on. Accepting this quest adds it to the active queue; it may start automatically when its turn arrives.' : 'Acceptance adds this quest to your Discord account. Work starts only when you choose Work my quests.'}</p>
    {pending&&<p role="status">{offer?'Waiting for Discord to confirm…':'Reading the current offer…'}</p>}
    {offer&&<><p className="acceptance-reward">{offer.reward}</p>{offer.requirements.length>1&&<p>Choose one task:</p>}<ul>{offer.requirements.map(task=><li key={task.kind}>{taskLabel(task.kind)} for {duration(task.target)}</li>)}</ul><p>Ends {new Date(offer.expiresAt).toLocaleString()}</p><p>Only accept if you meet the offer requirements. Review full offer details in Discord if you are unsure.</p></>}
    {error&&<p role="alert">{error}</p>}

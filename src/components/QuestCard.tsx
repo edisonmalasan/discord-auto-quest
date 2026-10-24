@@ -18,6 +18,7 @@ export function QuestCard({ card, stale, menuOpen, onMenuChange }: Props) {
       <div className="quest-reward-line">{card.rewardState !== 'claimed' && card.view !== 'completed' && <span>Claim</span>}{quantity !== null && <OrbIcon/>}<strong>{reward}</strong>
         {boost && <span className="boost-pill">◉ Unlock {boost}x</span>}</div>
       <p className="quest-description">{description(card)}</p>
+      {card.view === 'ongoing' && !card.expired && !card.progress && <p className="quest-description">Progress unavailable.</p>}
     </div></div>
     <QuestActions card={card} stale={stale} menuOpen={menuOpen} onMenuChange={onMenuChange}/>
   </article>;

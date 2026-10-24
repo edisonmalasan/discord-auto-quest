@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { AppErrorShape } from '../types/errors';
 import type { DiscordStatus, QuestFeed } from '../types/quests';
 import type { EnrollmentResult } from '../types/enrollment';
+import type { WorkState } from '../types/work';
 
 export async function questEnrollment(id: string, revision?: string): Promise<EnrollmentResult> {
   return revision === undefined ? invoke('review_quest_offer', { id }) : invoke('confirm_quest_acceptance', { id, revision });
@@ -47,13 +48,17 @@ export async function listDiscordQuests(): Promise<QuestFeed> {
 }
 
 /** Run the quest operation in Discord. */
-export async function startQuestWork(): Promise<boolean> {
-  return invoke<boolean>('start_quest_work');
+export async function startQuestWork(): Promise<WorkState> {
+  return invoke<WorkState>('start_quest_work');
 }
 
 /** Put Discord's own methods back. */
-export async function stopQuestWork(): Promise<void> {
-  await invoke<void>('stop_quest_work');
+export async function stopQuestWork(): Promise<WorkState> {
+  return invoke<WorkState>('stop_quest_work');
+}
+
+export async function questWorkStatus(): Promise<WorkState> {
+  return invoke<WorkState>('work_status');
 }
 
 /**

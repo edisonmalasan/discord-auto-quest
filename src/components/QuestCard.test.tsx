@@ -32,6 +32,11 @@ describe('native quest card variants',()=>{
   expect(screen.getByAltText('700 Orbs')).toHaveAttribute('src','https://cdn.discordapp.com/quests/reward.png');
   expect(document.querySelector('img[src*=game]')).toBeNull();
  });
+ it('names unavailable progress instead of leaving an unexplained empty ring',()=>{
+  show({state:'claimed',taskDetails:[]});
+  expect(screen.getByText('Progress unavailable.')).toBeInTheDocument();
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+ });
  it('shows confirmed claimed reward quantity and date',()=>{
   show({state:'completed',rewardClaimState:'claimed',rewardClaimedAt:'2026-10-22T12:00:00Z',claimedRewardOrbs:840});
   expect(screen.getByText('840 Orbs')).toBeInTheDocument();

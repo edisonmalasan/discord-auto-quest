@@ -64,7 +64,6 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
     <button ref={trigger} className="quest-menu-trigger" aria-label={`Quest actions for ${quest.name}`} aria-haspopup="menu" aria-expanded={menuOpen}
       aria-controls={menuOpen ? `menu-${quest.id}` : undefined} onClick={event => { setKeyboard(event.detail === 0); onMenuChange(menuOpen ? null : quest.id); }}
       onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setKeyboard(true); onMenuChange(quest.id); } }}>•••</button>
-    {quest.heroVideo && video && <button className="media-indicator" aria-label={`Watch preview for ${quest.name} in Discord`} disabled={stale || pending} onClick={() => void perform('discord')}>▶</button>}
     {menuOpen && <div className="quest-menu" id={`menu-${quest.id}`} ref={menu} role="menu" aria-label={`Actions for ${quest.name}`} onKeyDown={navigateMenu}>
       {quest.ctaLink && <button role="menuitem" tabIndex={-1} disabled={pending || stale} onClick={() => { close(); void perform('external'); }}>{quest.ctaLabel ?? 'Get Game'}</button>}
       <button role="menuitem" tabIndex={-1} disabled={pending} onClick={() => { close(); void perform('copy'); }}>Copy quest link</button>

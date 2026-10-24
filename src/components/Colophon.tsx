@@ -1,16 +1,6 @@
 import { useAppVersion } from '../hooks/useAppVersion';
 
-/**
- * The colophon: what this is, what version it is, and who it belongs to.
- *
- * A printed catalogue ends with a colophon — the note that says who set it and
- * under what terms. This one is the application's, and it carries the three
- * facts a person is owed: the version they are running, the licence it is under,
- * and that it is nobody else's project.
- *
- * The version comes from the backend. The interface does not keep a copy of its
- * own, because a number it cannot confirm is a number that can be wrong.
- */
+/** Version and legal information, confirmed by the running backend. */
 export function Colophon({ compact = false }: { compact?: boolean } = {}) {
   const version = useAppVersion();
 
@@ -25,12 +15,11 @@ export function Colophon({ compact = false }: { compact?: boolean } = {}) {
   }
 
   return (
-    <section aria-labelledby="colophon-heading" className="px-4 py-5">
+    <section aria-labelledby="about-heading" className="about-details">
       <h2
-        id="colophon-heading"
-        className="text-[10px] font-medium uppercase tracking-[0.11em] text-ink-3"
+        id="about-heading"
       >
-        Colophon
+        About Discord Auto Quest
       </h2>
 
       <dl className="mt-3 space-y-1.5 text-[12px]">

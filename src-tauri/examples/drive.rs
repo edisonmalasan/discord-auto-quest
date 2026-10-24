@@ -67,22 +67,13 @@ async fn main() {
     println!();
     println!("running the quest operation");
     match state.start_work().await {
-        Ok(spoofing) => {
-            if spoofing {
-                println!("  the operation ran, and a game is being spoofed");
-            } else {
-                println!("  the operation ran, and no game is being spoofed");
-                println!(
-                    "  (either there was nothing to work on, or the operation did not attach)"
-                );
-            }
-        }
+        Ok(session) => println!("  Work session: {:?}", session.phase),
         Err(error) => println!("  the operation did not run: {error}"),
     }
 
     println!("putting Discord's own methods back");
     match state.stop_work().await {
-        Ok(()) => println!("  done"),
+        Ok(session) => println!("  Work session: {:?}", session.phase),
         Err(error) => println!("  could not: {error}"),
     }
 }
