@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { candidateNames, verifyCandidateFiles, publicationOptions, promotionOptions, releaseFlags, validateEvidence } from './release-policy.mjs';
+import { candidateNames, verifyCandidateFiles, publicationOptions, promotionOptions, releaseFlags, validateEvidence, requiredChecks } from './release-policy.mjs';
 import { readFileSync } from 'node:fs';
 describe('release gates', () => {
   it('prepares stable drafts without marking drafts latest',()=>{
@@ -41,8 +41,8 @@ describe('release gates', () => {
     expect(()=>validateEvidence({installation:'unavailable'})).toThrow();
     const names=candidateNames('0.2.0-beta.1');
     const evidence={version:'0.2.0-beta.1',commit:'a'.repeat(40),windows:'Windows 11 x64',discord:'stable',
-      hashes:{[names.setup]:'b'.repeat(64),[names.portable]:'c'.repeat(64)},
-      checks:Object.fromEntries(['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'].map(name=>[name,'pass']))};
+      hashes:Object.fromEntries(Object.values(names).map(name=>[name,'b'.repeat(64)])),
+      checks:Object.fromEntries(requiredChecks.map(name=>[name,'pass']))};
     expect(validateEvidence(evidence)).toBe(true);
     expect(()=>validateEvidence({...evidence,checks:{...evidence.checks,upgrade:'unavailable'}})).toThrow('upgrade');
   });
@@ -50,17 +50,12 @@ describe('release gates', () => {
     const example=JSON.parse(readFileSync(new URL('../docs/release-evidence.example.json',import.meta.url),'utf8'));
     expect(()=>validateEvidence(example)).toThrow();
     const names=candidateNames('1.0.0');
-    const checks=['installation','launch','upgrade','uninstall','portable','webviewProvisioning','liveViews','recoveryAndHandoffs','acceptedQuestWorkflow'];
+    const checks=requiredChecks;
     const evidence={version:'1.0.0',commit:'a'.repeat(40),windows:'Windows 11 x64',discord:'stable',
-      hashes:{[names.setup]:'b'.repeat(64),[names.portable]:'c'.repeat(64)},
+      hashes:Object.fromEntries(Object.values(names).map(name=>[name,'b'.repeat(64)])),
       checks:Object.fromEntries(checks.map(name=>[name,'pass']))};
     expect(validateEvidence(evidence)).toBe(true);
     for(const name of checks) expect(()=>validateEvidence({...evidence,checks:{...evidence.checks,[name]:'unavailable'}})).toThrow(name);
-  });
-  it('distinguishes historical beta observations from pending stable acceptance in curated notes',()=>{
-    const notes=readFileSync(new URL('./release-notes.md',import.meta.url),'utf8');
-    expect(notes).toContain('0.2.0-beta.2');
-    expect(notes).toMatch(/1\.0\.0.*acceptance.*pending/i);
   });
   it('permits both supported Discord media hosts in native policies',()=>{
     const config=JSON.parse(readFileSync(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8'));

@@ -2,69 +2,75 @@
 
 ## Target and version
 
-The 1.0 release line targets Windows 10/11 x64 and stable Discord. Checks, packaging, and draft creation run on Windows. Linux build jobs are removed; macOS compilation is paused by default. Only Windows assets are released. A stable version number does not replace the required acceptance evidence: keep the release draft while any required check is unavailable.
+Discord Auto Quest 1.1.0 targets Windows 10/11 x64 and stable Discord. Linux builds are excluded; macOS compilation is paused. A stable version number does not replace packaged acceptance evidence. Keep the release draft until every required check passes.
 
-To resume optional macOS compilation, set the repository Actions variable ENABLE_MACOS_BUILDS to true under Settings → Secrets and variables → Actions → Variables. Leaving it unset or setting it to false skips that job without allocating a Mac runner. This enables compilation only, not macOS releases or support; it does not gate the Windows draft. Existing tags retain their original workflow configuration.
-
-package.json is authoritative. After changing it, run npm run version:sync and npm run version:check. Use complete SemVer: 1.0.1 for compatible fixes, 1.1.0 for compatible features, and 2.0.0 for breaking documented behavior or requirements. Preview builds use suffixes such as 1.1.0-beta.1 or 1.1.0-rc.1. The tag must exactly equal v plus the version. Never overwrite published tags or assets, and never rename an old beta binary into a stable download.
+`package.json` is authoritative. Change its version, run `npm run version:sync`, then `npm run version:check`. Use complete SemVer: patch for compatible fixes, minor for compatible features, and major for incompatible documented behavior or requirements. Prereleases use suffixes such as `1.2.0-beta.1`; increment the final beta number for another preview. Versions below 1.0 were provisional. A tag must exactly equal `v` plus the version. Preserve published versions, tags, and assets.
 
 ## One-time GitHub setup
 
-1. Open the repository's Settings → Actions → General. Ensure Actions is enabled and the actions used by .github/workflows/release.yml are permitted by repository/organization policy.
-2. Keep token permissions restricted. The workflow already grants contents: read generally and contents: write only to its draft-release job. It uses GitHub's built-in token; no personal access token or new repository secret is required for this configured flow. Organization policy may further restrict these permissions.
-3. Ensure your account can push release tags and manage releases. Respect any repository rulesets. Do not bypass protected branches.
-4. Keep release changes in a pull request. Merge only after checks and the Windows build job pass. macOS compilation is optional and paused by default.
+1. Under Settings → Actions → General, enable the actions used in `.github/workflows/release.yml`. Keep the built-in token restricted: the draft job alone receives `contents: write`.
+2. Generate an updater signing key with the installed Tauri CLI: `npx tauri signer generate --help` describes the available options. Store the encrypted private key and password outside the repository. Make an independent, recoverable backup before publication; a second copy on the same disk is insufficient. Never paste private material into chat, logs, issues, or source files.
+3. Add repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` (the encrypted private key content) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (its password). Use GitHub Settings → Secrets and variables → Actions → Secrets. Embed only the matching public key in `src-tauri/tauri.conf.json`. Preserve this identity for future updates; replacing it prevents existing installations from authenticating the replacement key.
+4. Ensure release maintainers can push tags and manage releases. Respect branch protections and repository rulesets. Review changes through a pull request.
 
-Sources: [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token), [managing releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository).
+Updater signatures authenticate packages to an app that already trusts the embedded public key. They are separate from Windows publisher signing. These downloads have no Authenticode publisher signature; do not instruct users to disable Windows security protections. SHA-256 checksums detect changed downloads and do not establish publisher identity.
 
-## Candidate artifacts
+The stable feed is `https://github.com/edisonmalasan/discord-auto-quest/releases/latest/download/latest.json`. GitHub excludes drafts and prereleases from that route. Existing 1.0.1 installations need one manual installation of the first updater-enabled release. Portable copies receive notices and ZIP download links, without in-place installation.
 
-Build with npm run release on Windows x64. The candidate consists of a current-user setup EXE, a portable ZIP, and SHA256SUMS. Both distributions include LICENSE, NOTICE, THIRD_PARTY_NOTICES.txt, and installation guidance. The setup provisions WebView2 when needed; the portable distribution requires it already installed. Builds are unsigned. No automatic updater is included.
+## Verification builds and production candidates
 
-## Gates
+PR, main, and manual workflow runs build unsigned validation assets without production credentials. Local `npm run release` does the same. These live under `target/validation/<version>/`, carry a `VALIDATION-ONLY` marker, and cannot be promoted.
 
-All test, lint, format, version, terminology, acceptance, artifact-content, archive, and checksum checks must pass. Use a standard-user Windows test environment to verify installation, launch, upgrade, uninstall, and portable execution, including WebView2 provisioning. Verify live views, recovery, handoffs, and the documented accepted-quest workflow. Do not perform account-affecting checks without explicit authorization. Record unavailable checks honestly; a missing required result blocks publication.
+A trusted version-tag push in this repository, pointing to a commit on main, builds the production candidate with the signing secrets. It builds once, validates the files, and transfers those exact files into a draft. Do not replace a failed candidate with an unrelated local build or rerun a published version to replace assets.
 
-## Create the draft automatically
+Each production candidate has exactly five assets. For 1.1.0:
 
-After the version change is merged, tag the exact verified commit on main. For 1.0.1, run the following only if v1.0.1 does not already exist; future releases need their own new version and tag.
+- `Discord-Auto-Quest-1.1.0-windows-x64-setup.exe`: current-user installer, including WebView2 provisioning when needed.
+- `Discord-Auto-Quest-1.1.0-windows-x64-portable.zip`: extract the entire archive; WebView2 must already be installed.
+- `Discord-Auto-Quest-1.1.0-windows-x64-setup.exe.sig`: updater signature for that installer and version.
+- `latest.json`: HTTPS updater metadata identifying the exact installer URL and signature.
+- `SHA256SUMS`: hashes of the other four assets.
+
+Both app distributions include the MIT license, attribution, third-party notices, and installation guidance. GitHub's automatic source archives are additional source downloads, not desktop installers.
+
+## Create a new draft
+
+1. Complete the changes on a task branch. Update the version, changelog, and curated `tools/release-notes.md`; synchronize and check versions.
+2. Run applicable frontend/backend tests, type checking, formatting, Clippy, terminology/notices checks, acceptance checks, and executable-content checks. Merge only after required CI checks and the Windows validation build pass.
+3. On the verified main commit, create the new tag. Use the following only if `v1.1.0` does not already exist; subsequent releases require a new version.
 
 ```text
 git switch main
 git pull --ff-only origin main
 npm run version:check
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-Open the repository's Actions tab and select the release run for that tag. It runs checks, builds Windows assets once, verifies them, then creates a draft using those exact files. No public publication occurs automatically. If a job fails, inspect its logs; do not manually upload an unrelated local build as a substitute.
+4. Open Actions → release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, Windows build, and draft release to pass. Missing signing secrets or invalid candidate files fail the production build.
+5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.1.0 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
 
-Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases). Edit the existing draft rather than creating another release for the same tag. Check:
+## Test the exact draft and publish
 
-- Tag: v1.0.1; title: Discord Auto Quest 1.0.1.
-- This is a pre-release: unchecked for 1.0.1; checked for beta/RC versions.
-- The three attached downloads: Discord-Auto-Quest-1.0.1-windows-x64-setup.exe, Discord-Auto-Quest-1.0.1-windows-x64-portable.zip, and SHA256SUMS.
-- Curated notes accurately state supported Windows requirements, unsigned status, and known limitations. GitHub's automatic source archives are not the desktop downloads.
+Download the draft assets. Copy `docs/release-evidence.example.json` to a private local evidence file. Record the exact commit, Windows/Discord environment, five asset hashes, and actual results. The example deliberately contains unavailable checks and cannot authorize publication.
 
-GitHub also offers Releases → Draft a new release for manual setup, with tag, target, title, notes, binaries, prerelease, and latest controls. This repository's automated draft flow already fills these fields. Do not create a duplicate manually. See [GitHub's release interface guide](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository?tool=webui).
+Required acceptance includes standard-user installation, launch, upgrade, uninstall, portable operation, WebView2 provisioning when absent, live views/recovery/handoffs, continuous Work and Stop, completion notifications, update failure recovery, portable update fallback, and confirmed installed updating using signed test candidates. Verify the setup EXE's own icon separately from installed shortcuts. Exercise interrupted downloads, invalid signatures, and unconfirmed cleanup blocking installation. Record independent signing-key backup verification too. Prior-build observations cannot substitute for exact-asset evidence.
 
-## Verify and publish
+Obtain explicit execution-time authorization before live acceptance, Work/Stop, or Discord restart checks. Never accept or claim rewards as an incidental test. Keep unsupported or unverified quest coverage explicit.
 
-Download the draft's exact EXE and ZIP and test them. Copy docs/release-evidence.example.json into a local evidence file, fill in the release commit, Windows and Discord versions, artifact hashes, and actual results. The example intentionally contains unavailable results and cannot authorize publication. Do not mark a check pass merely because it passed on a different build.
-
-With GitHub CLI installed and authenticated, use the project's guarded publication command after every required result passes:
+When every required result passes, authenticate GitHub CLI in your own terminal and run:
 
 ```text
 gh auth status
 npm run release:publish -- C:/path/to/release-evidence.json
 ```
 
-The command verifies the draft channel, exact tag/version, tested commit, required results, downloaded asset contents, and tested hashes before publishing. A full release becomes Latest; a beta/RC remains a prerelease and is not marked Latest. If you need to configure GitHub CLI authentication, use gh auth login in your own terminal; never paste tokens into issues or documentation.
+This command verifies the draft channel, tag/version, tested commit, required results, asset names/contents, update signature/version, checksums, and tested hashes before publication. Stable publication becomes Latest and activates the feed; a preview remains a prerelease. The web interface's Publish release button bypasses these project checks. Do not use it to skip missing evidence.
 
-If a required check is unavailable, stop at the draft. In particular, the earlier beta tests did not establish clean-environment WebView2 provisioning, and they cannot serve as hash-specific evidence for 1.0.1. See docs/RELEASE_CHECKS.md. The web interface's Publish release button does not enforce this project's evidence checks; use the guarded command.
+If any required check is failed or unavailable, retain the draft and record the gap in `docs/RELEASE_CHECKS.md`. Never claim unavailable signing, installation, or live testing passed.
 
-## Artifact preservation
+## Optional macOS compilation
 
-CI creates verified candidate artifacts once. Draft creation and publication reuse those exact artifacts with explicit channel metadata. Never mark a beta as the latest stable release. If a version already exists, choose a new version; never use replacement uploads.
+Set the Actions variable `ENABLE_MACOS_BUILDS` to `true` to resume compilation only. Unset or `false` skips that job without allocating a Mac runner. It does not enable macOS releases/support or gate Windows draft creation. Existing tags retain their original workflow configuration.
 
-Release evidence must identify the tested commit, Windows/Discord versions, artifact hashes, and pass/fail/unavailable results. Do not publish sensitive diagnostics or private maintenance references.
+References: [GitHub releases](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository), [Tauri updater](https://v2.tauri.app/plugin/updater/), [Windows notifications](https://v2.tauri.app/plugin/notification/).

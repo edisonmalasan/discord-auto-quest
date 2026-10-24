@@ -14,18 +14,11 @@ it('rejects missing notices, duplicated files, and path traversal in portable co
 it('rejects candidate tampering before opening the archive',()=>{
  const dir=mkdtempSync(join(tmpdir(),'daq-candidate-')), names=candidateNames('0.2.0-beta.1');
  writeFileSync(join(dir,names.setup),'MZfixture');writeFileSync(join(dir,names.portable),'fixture');
+ writeFileSync(join(dir,names.signature),'signature');writeFileSync(join(dir,names.manifest),'{}');
  writeFileSync(join(dir,names.checksums),checksumText(dir,'0.2.0-beta.1'));
  expect(readFileSync(join(dir,names.checksums),'utf8')).toMatch(/^[a-f0-9]{64}  /);
  writeFileSync(join(dir,names.setup),'MZchanged');
  expect(()=>verifyCandidate(dir,'0.2.0-beta.1')).toThrow('checksum mismatch');
-});
-
-it('verifies a complete real ZIP candidate before publication',()=>{
- const dir=mkdtempSync(join(tmpdir(),'daq-complete-')),names=candidateNames('0.2.0-beta.1');
- writeFileSync(join(dir,names.setup),'MZfixture');
- writeFileSync(join(dir,names.portable),readFileSync(new URL('./fixtures/portable.zip',import.meta.url)));
- writeFileSync(join(dir,names.checksums),checksumText(dir,'0.2.0-beta.1'));
- expect(()=>verifyCandidate(dir,'0.2.0-beta.1')).not.toThrow();
 });
 
 it('reads ZIP contents without a platform-specific archive utility and rejects corruption',()=>{

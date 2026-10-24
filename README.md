@@ -25,7 +25,7 @@
 
 ---
 
-Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord.
+Keep track of Ongoing, Available, and Completed quests, review supported offers before accepting them, and follow progress reported by your Discord desktop client. Reward claims stay in Discord. The 1.1 features described here require a 1.1.x build; users of 1.0.1 need one manual upgrade.
 
 ## Downloads
 
@@ -35,6 +35,7 @@ Get the app from [GitHub Releases](https://github.com/edisonmalasan/discord-auto
 | --- | --- |
 | `Discord-Auto-Quest-<version>-windows-x64-setup.exe` | You want a current-user installation and Start-menu shortcut. Setup provisions Microsoft WebView2 if needed. |
 | `Discord-Auto-Quest-<version>-windows-x64-portable.zip` | You want to run the app from an extracted folder. Microsoft Edge WebView2 Runtime must already be installed. |
+| `latest.json` and `*-setup.exe.sig` | Metadata and signatures for the installed app updater; these are not standalone apps. |
 | `SHA256SUMS` | You want to compare a download's SHA-256 checksum with the value supplied for that release. |
 
 GitHub's **Source code** archives contain the project source, not the ready-to-run app.
@@ -46,10 +47,12 @@ Windows builds are **unsigned**. Windows may display an unknown-publisher warnin
 | Feature | What it does |
 | --- | --- |
 | Quest workspace | Switch between Ongoing, Available, and Completed quests, with search to find a quest. |
-| In-app acceptance | Review and confirm one supported offer at a time. Acceptance never starts Work or video playback. |
-| Work and Stop | Start Work on accepted quests and request cleanup with Stop. |
+| In-app acceptance | Review and confirm one supported offer at a time. While Work is off, acceptance leaves the quest idle. An active continuous session queues it after confirmation. |
+| Work and Stop | Start a continuous session, work accepted quests sequentially, and wait for new acceptances until Stop. |
 | Progress updates | Refresh percentages from Discord about every four seconds, including during Work. Completion requires Discord's confirmation. |
 | Connection recovery | Show connection errors, mark retained cards as stale, and offer Retry when Discord is ready. |
+| Confirmed updates | Installed copies offer signed stable updates after confirmation; portable copies link to the newer ZIP. |
+| Completion notifications | In-app completion feedback, with optional Windows notifications for installed copies. |
 | Discord handoffs | Open Discord for unsupported acceptance flows and reward claims. |
 
 Quest availability, eligibility, and progress come from Discord. Some tasks still require your participation; support varies by quest type. See [known limitations](#known-limitations) before using Work.
@@ -80,7 +83,9 @@ Linux is not supported and has no build job. macOS support is deferred and its o
 
 ### Updating
 
-There is no automatic updater. Download the newer release and run its setup to update an installed copy. For portable use, extract the new release into a separate folder and launch that copy. Check the release notes for changes and known issues.
+For 1.0.1 or earlier, download and run the newer setup once. Starting with 1.1, installed copies check for stable updates on launch and every twelve hours; **About Discord Auto Quest / Check for updates** checks manually. Review the offered version and release notes, then confirm **Update now**, or **Stop Work and update** if Work is active. Installation waits for confirmed cleanup and closes/restarts the app.
+
+Portable copies offer a download link instead. Extract the newer ZIP into a separate folder, close the old copy, then launch the new one. Failed checks do not prevent normal use. Update signatures verify the update package; Windows publisher signing remains separate, and builds remain unsigned by a Windows publisher.
 
 ### Checking a download
 
@@ -96,10 +101,10 @@ Compare the result with the entry for that exact filename in `SHA256SUMS`. Lette
 
 1. Open the stable Discord desktop client and sign in there.
 2. Open Discord Auto Quest. If it requests a Discord restart, review the interruption warning and choose whether to restart.
-3. Browse Available quests and choose **Accept quest**. Review the current requirements, then confirm acceptance. Unsupported offers use **Open in Discord** instead. Acceptance does not start Work or video playback.
-4. Return to Ongoing and choose **Work my quests**. Percentages refresh from Discord about every four seconds, including during Work. Progress moves when Discord provides an update; completion requires Discord's confirmation.
-5. Use **Stop** to request cleanup. An unconfirmed operation remains visible and may require reconnecting and retrying Stop.
-6. Claim rewards yourself in Discord. Completed and reward-claimed are distinct states.
+3. Browse Available quests and choose **Accept quest**. Review the current requirements, then confirm acceptance. Unsupported offers use **Open in Discord** instead. When continuous Work is already on, the dialog explains that an accepted supported quest joins its queue; otherwise it remains idle.
+4. Choose **Work my quests** to enable continuous Work, including when Ongoing is empty. Supported accepted quests run one at a time; the session waits for new accepted quests until Stop. Percentages refresh from Discord about every four seconds, including during Work. Progress moves when Discord provides an update; completion requires Discord's confirmation.
+5. Use **Stop** to request cleanup. An unconfirmed cleanup pauses dispatch and blocks another run or update. Reconnect and retry Stop. Closing the app requests cleanup; minimizing keeps the session running.
+6. Completion feedback links to Completed. Optionally enable **Windows notifications** in About on an installed copy; portable copies show in-app feedback only. Claim rewards yourself in Discord. Completed and reward-claimed are distinct states.
 
 The app never accepts quests automatically, claims rewards, or restarts Discord automatically. Restarting Discord interrupts calls and other Discord activity.
 
@@ -111,7 +116,7 @@ The app never accepts quests automatically, claims rewards, or restarts Discord 
 - If acceptance cannot be confirmed, refresh or check Discord before trying again. The app does not automatically retry.
 - Claim, reward, and fallback controls open Discord's Quests page and identify the quest to select.
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.
-- Stop and connection timeouts do not guarantee cancellation of every activity already started in Discord.
+- Stop cannot undo progress already reported to Discord. An uncertain cleanup remains visible and blocks further dispatch or update installation.
 
 For the verification record and outstanding release checks, see [release checks](https://github.com/edisonmalasan/discord-auto-quest/blob/main/docs/RELEASE_CHECKS.md). A stable version number does not establish that every installation path or quest type has been tested.
 

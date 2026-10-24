@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { verifyCandidateFiles, candidateNames } from './release-policy.mjs';
+import { productionPublicKey, verifyUpdaterManifest, verifyUpdaterSignature } from './updater-release.mjs';
 export const distributionFiles=['discord-auto-quest.exe','LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','README.md','RELEASE.txt'];
 export function verifyArchiveEntries(entries) {
   const remaining=new Set(distributionFiles), files=entries.filter(entry=>!entry.endsWith('/'));
@@ -33,14 +34,17 @@ export function zipEntries(bytes) {
 }
 export function checksumText(directory,version) {
   const names=candidateNames(version);
-  return [names.setup,names.portable].map(name=>`${fileHash(join(directory,name))}  ${name}`).join('\n')+'\n';
+  return [names.setup,names.portable,names.signature,names.manifest].map(name=>`${fileHash(join(directory,name))}  ${name}`).join('\n')+'\n';
 }
-export function verifyCandidate(directory,version) {
+export function verifyCandidate(directory,version,{pubkey=productionPublicKey()}={}) {
   verifyCandidateFiles(readdirSync(directory),version);
   const names=candidateNames(version);
   if(readFileSync(join(directory,names.checksums),'utf8')!==checksumText(directory,version)) throw new Error('Candidate checksum mismatch');
   const entries=zipEntries(readFileSync(join(directory,names.portable)));
   verifyArchiveEntries(entries);
   if(readFileSync(join(directory,names.setup)).subarray(0,2).toString()!=='MZ') throw new Error('Installer is not a Windows executable');
-  console.log('Candidate names, checksums, and portable contents verified');
+  const signature=readFileSync(join(directory,names.signature),'utf8').trim();
+  verifyUpdaterManifest(JSON.parse(readFileSync(join(directory,names.manifest),'utf8')),version,signature);
+  verifyUpdaterSignature(readFileSync(join(directory,names.setup)),signature,pubkey,version);
+  console.log('Candidate names, checksums, updater signature/manifest, and portable contents verified');
 }

@@ -38,7 +38,7 @@ Ongoing opens first. Each view retains its search and scroll position during the
 The main header owns one global Work my quests / Stop control; cards do not imply a per-quest runner.
 Connection and recovery controls live in the sidebar footer. Operation errors stay beside Work/Stop.
 
-Available cards can open a native modal to review a fresh supported offer and confirm acceptance. Cancel receives initial focus. Confirmation disables repeat submission, and success waits for Discord's enrolled record. Unsupported offers retain a Discord handoff. Acceptance does not start Work or playback.
+Available cards can open a native modal to review a fresh supported offer and confirm acceptance. Cancel receives initial focus. Confirmation disables repeat submission, and success waits for Discord's enrolled record. Unsupported offers retain a Discord handoff. Acceptance while Work is stopped does not start activity. During an explicitly enabled continuous session, the confirmation explains that a supported accepted quest joins the active queue.
 
 The grid shows one, two, and three columns at 880, 1200, and 1600 px respectively. A lone card
 stays compact and left-aligned. Content and footers grow for longer labels and text scaling;
@@ -100,3 +100,9 @@ menus and navigation are immediate. Reduced motion removes transforms/transition
 no card hover lifts, looping decorations, interpolated progress, or poll-driven entrance effects.
 
 The [roadmap](docs/ROADMAP.md) records verified progress.
+
+## Continuous sessions and updates
+
+The global Work control starts a continuous session, including with an empty queue. Status distinguishes working, waiting, stopping, and paused. Stop remains visible while the session is enabled. Connection recovery never silently resumes an uncertain job. Confirmed completion feedback provides View completed and Dismiss.
+
+Application updates use an inline banner with version and release notes, then a confirmation dialog. Download progress is exposed inside the modal as well as visually in the banner. Installed copies expose optional Windows notifications in About; portable copies expose a release download link. No native permission prompt appears until an explicit opt-in.

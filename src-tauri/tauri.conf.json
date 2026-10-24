@@ -48,10 +48,25 @@
     },
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico"
       },
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "requireSignedVersion": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIzRUU4OTRCNUY1MUJCMDkKUldRSnUxRmZTNG51czloUWp3THQrbWxSeVJBUTdTczloQlFYWmUzUXo0ek5KWGQ1VVcwQm1QS3oK",
+      "endpoints": [
+        "https://github.com/edisonmalasan/discord-auto-quest/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }
