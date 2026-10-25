@@ -19,11 +19,12 @@ pub fn desktop_expression(id: &str) -> AppResult<String> {
 }
 
 pub fn inspection_expression() -> AppResult<String> {
-    let content = super::payload::decode(include_bytes!("../../payload/enrollment.bin"))?;
+    let content = super::payload::enrollment()?;
     Ok(format!("({content})({})", json!({"mode":"inspect"})))
 }
 
 fn request(id: &str, mode: &str, revision: Option<&str>) -> AppResult<String> {
+    super::payload::require_available()?;
     if id.is_empty() || id.len() > 20 || !id.bytes().all(|b| b.is_ascii_digit()) {
         return Err(AppError::not_supported(
             "Invalid quest identifier. Refresh your quests.",
@@ -34,7 +35,7 @@ fn request(id: &str, mode: &str, revision: Option<&str>) -> AppResult<String> {
             "Review this offer again before accepting.",
         ));
     }
-    let content = super::payload::decode(include_bytes!("../../payload/enrollment.bin"))?;
+    let content = super::payload::enrollment()?;
     let input = json!({"id":id,"mode":mode,"revision":revision});
     Ok(format!("({content})({input})"))
 }

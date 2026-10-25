@@ -15,4 +15,4 @@ Discord Auto Quest is a React/TS frontend with a Rust/Tauri desktop backend. The
 | UI controller and view model | src/hooks/useDiscord.ts and src/lib/quest-view.ts |
 | Build and release utilities | tools/ |
 
-Read only task-relevant documentation and verify claims against source and tests. Historical investigation and internal maintenance material live only in ignored re/. That folder is absent from a fresh clone and is not needed to build distributed assets.
+Read only task-relevant documentation and verify claims against source and tests. Historical investigation and internal maintenance material live only in ignored re/. That folder is absent from a fresh clone. Public builds use inert validation content; production assets require private maintainer inputs and verification.

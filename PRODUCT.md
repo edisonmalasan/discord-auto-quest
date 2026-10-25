@@ -21,7 +21,7 @@ The 1.2 release line targets Windows 10/11 x64 and stable Discord. Linux and mac
 - Installed copies can check for stable updates and install a signed update after explicit confirmation and confirmed Work cleanup. Portable copies receive download links.
 - Only the user's own Discord desktop client is controlled. No unrelated process is modified.
 - Local connectivity must remain restricted to loopback. No Discord RPC Rich Presence integration is included.
-- Sensitive runtime content ships encrypted and is decrypted only in memory. Existing artifact checks must reject its plaintext markers. This does not guarantee secrecy against determined reverse engineering.
+- Sensitive runtime content is obfuscated before encryption and decrypted only in memory. Public validation builds use inert content and reject protected operations. Production builds require private inputs and exact content/version agreement. Artifact checks reject known plaintext markers, private files, maps, and validation identities; these checks do not guarantee secrecy against determined reverse engineering. Existing publicly distributed content remains recoverable.
 - The reader locates compatible client records by shape so renamed exports do not silently erase the quest list.
 - The app carries an original identity and an independent-project disclaimer.
 

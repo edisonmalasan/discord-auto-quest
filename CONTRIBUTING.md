@@ -4,7 +4,7 @@ Open an issue before a substantial feature. Keep changes focused, preserve exist
 
 ## Setup and checks
 
-Install Node.js 22+, Rust stable, and Tauri's native platform prerequisites. Run npm ci and npm run tauri dev.
+Install Node.js 22+, Rust stable, and Tauri's native platform prerequisites. Run npm ci and npm run tauri dev. Node.js is also required when building through Cargo. Public builds use inert content and reject Work, acceptance, and platform selection; release maintainers privately verify production content. Do not request or supply production credentials in a pull request.
 
 Before a pull request, run:
 
@@ -13,6 +13,7 @@ npm test
 npm run typecheck
 npm run build
 npm run check:acceptance
+npm run check:content
 npm run check:terms
 npm run version:check
 cargo fmt --manifest-path src-tauri/Cargo.toml -- --check

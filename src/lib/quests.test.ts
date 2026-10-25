@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   awaitingClaim,
@@ -40,6 +40,8 @@ function quest(overrides: Partial<QuestSummary> = {}): QuestSummary {
 }
 
 describe('the quest vocabulary', () => {
+  beforeEach(() => { vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T00:00:00Z')); });
+  afterEach(() => { vi.restoreAllMocks(); });
   it('names a task in words, and falls back to Discord’s own name', () => {
     expect(taskLabel('PLAY_ON_DESKTOP')).toBe('Play on desktop');
     expect(taskLabel('WATCH_VIDEO_ON_MOBILE')).toBe('Watch a video on mobile');

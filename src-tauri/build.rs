@@ -11,8 +11,37 @@ use std::path::PathBuf;
 /// see `quest::payload`.
 fn main() {
     inject_version();
+    prepare_content();
 
     tauri_build::build()
+}
+
+fn prepare_content() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+    let output = std::env::var_os("OUT_DIR").expect("Cargo output directory");
+    for name in [
+        "DAQ_CONTENT_MODE",
+        "DAQ_CONTENT_KEY",
+        "DAQ_CONTENT_KEY_FILE",
+    ] {
+        println!("cargo:rerun-if-env-changed={name}");
+    }
+    for path in ["tools/content-build.mjs", "src-tauri/payload"] {
+        println!("cargo:rerun-if-changed={}", root.join(path).display());
+    }
+    if let Some(path) = std::env::var_os("DAQ_CONTENT_KEY_FILE") {
+        println!("cargo:rerun-if-changed={}", PathBuf::from(path).display());
+    }
+    let status = std::process::Command::new("node")
+        .arg(root.join("tools/content-build.mjs"))
+        .arg(output)
+        .stdout(std::process::Stdio::null())
+        .status()
+        .expect("Node.js 22+ is required to prepare build inputs");
+    assert!(
+        status.success(),
+        "Protected content build inputs were rejected"
+    );
 }
 
 /// Read the version from the workspace manifest and hand it to the compiler.

@@ -63,6 +63,11 @@ it('rejects a valid older signature relabeled as a newer manifest release',()=>{
   expect(()=>verifyCandidate(f.directory,'1.3.0',{pubkey:f.pubkey})).toThrow(/signed version/i);
 });
 
+it('rejects validation content even with matching checksums and a valid installer signature',()=>{
+  const f=fixture('1.2.1');
+  expect(()=>verifyCandidate(f.directory,'1.2.1',{pubkey:f.pubkey})).toThrow(/content identity/i);
+});
+
 it('matches Tauri signed-version normalization without confusing build metadata',()=>{
   const f=fixture('1.1.0','v1.1.0');
   expect(()=>verifyUpdaterSignature(f.bytes,f.encoded,f.pubkey,'1.1.0')).not.toThrow();

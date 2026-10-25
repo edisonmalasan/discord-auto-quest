@@ -27,6 +27,7 @@ pub async fn run(session: &mut Session) -> AppResult<()> {
 }
 
 async fn dispatch(session: &mut Session, request: Option<serde_json::Value>) -> AppResult<()> {
+    payload::require_available()?;
     let operation = payload::content()?;
     let expression = format!(
         "(function () {{ window.__daqRequest = {}; try {{ return (function () {{\n{}\n}})(); }} finally {{ delete window.__daqRequest; }} }})()",
@@ -43,6 +44,7 @@ async fn dispatch(session: &mut Session, request: Option<serde_json::Value>) -> 
 
 /// Cancellation only succeeds after all runtime resources and requests settle.
 pub async fn stop(session: &mut Session) -> AppResult<()> {
+    payload::require_available()?;
     let value = session
         .evaluate(
             r#"(async function () {

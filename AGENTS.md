@@ -66,6 +66,7 @@ _These commands exist in this repository. Run them from the repository root._
 | Build frontend       | `npm run build` | Checks the version, then type-checks and writes `dist/`. |
 | Build the app        | `npm run tauri build` | Production desktop bundle. |
 | Verify the mechanism | `npm run verify` | Runs the whole loop against the real client and reports on it. |
+| Check public content inputs | `npm run check:content` | Audits tracked inputs and version-bound encrypted assets. |
 | Check the payload    | `npm run check:payload -- <path>` | Asserts the built binary carries none of the operation's strings. |
 | Check the acceptance cases | `npm run check:acceptance` | Asserts the shipped bundle and notices. |
 | Check the version    | `npm run version:check` | Asserts every manifest agrees with `package.json`. |
@@ -77,6 +78,8 @@ _These commands exist in this repository. Run them from the repository root._
 | Drive Discord by hand | `cargo run --manifest-path src-tauri/Cargo.toml --example drive` | The mechanism, without the window. |
 | Lint / type-check    | `npm run typecheck` | `tsc --noEmit`. |
 | Lint                 | `cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` | What CI runs. |
+
+**Public source builds use inert validation content.** They reject protected operations. Production builds require explicit private content inputs, and production output must never enter a shared build cache. Maintainers run the real behavioral suite privately before approving the production environment.
 
 **The dev server takes whatever port is free.** `npm run tauri dev` chooses a free port, hands it
 to the dev server through `DEV_PORT`, and points the Tauri shell at it through a configuration

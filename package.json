@@ -1,7 +1,7 @@
 {
   "name": "discord-auto-quest",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "type": "module",
   "description": "A desktop app that completes Discord quests for games you do not own.",
   "scripts": {
@@ -22,7 +22,8 @@
     "check:terms": "node tools/terms.mjs",
     "release:draft": "node tools/publish.mjs draft",
     "release:publish": "node tools/publish.mjs promote",
-    "check:notices": "node tools/check-notices.mjs"
+    "check:notices": "node tools/check-notices.mjs",
+    "check:content": "node tools/content-audit.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
@@ -40,6 +41,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "javascript-obfuscator": "5.9.0",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
@@ -48,5 +50,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "zod": "4.6.6"
   }
 }
