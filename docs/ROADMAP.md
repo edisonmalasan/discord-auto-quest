@@ -51,7 +51,7 @@ Windows is the current priority. Non-mutating 1.0.0 UI verification confirmed Ab
 
 The 1.0.1 fix includes Discord's live video playback values and acknowledged video/activity Work progress in the existing four-second refresh. Only Discord's valid completion timestamp moves a quest to Completed. Synthetic operation-to-reader tests cover returned values, invalid and unrelated acknowledgments, and preservation of enrollment/reward metadata; the UI test covers percentage updates during Work. All 137 frontend/tooling tests and 39 backend tests passed; Rust formatting and Clippy also passed. A new live account-affecting Work check and acceptance of the new packaged assets remain unverified; earlier draft results do not establish those outcomes.
 
-## Continuous Work and confirmed updates â€” 1.1.0 preparation
+## Continuous Work and confirmed updates — 1.1.0 preparation
 
 The implementation adds a backend-owned continuous queue, explicit waiting and paused states, confirmed cancellation, task-consistent progress/copy/actions including 0%, completion notices, installed-copy notification preferences, and confirmed signed updater delivery. Expired or ineligible active work is cleaned up before advancing. About and card controls are simplified; setup/uninstall use the application icon. PR/main builds remain unsigned validation builds; trusted tag candidates require five version-matched assets and updater signatures.
 
@@ -61,7 +61,7 @@ The exact five draft assets match CI bytes and pass signature, manifest, checksu
 
 Ordinary cross-version upgrade and clean installation remain unverified, alongside installed updates, native completion notifications, live continuous Work, independent signing-key recovery, and clean-environment WebView2 provisioning. Earlier beta/stable observations are not substitutes for those checks. GitHub lists 1.0.0/1.0.1 as already published; their historical missing checks remain open observations. See [the exact draft acceptance record](RELEASE_CHECKS.md#110-exact-draft-read-only-verification).
 
-## Desktop selection and Orbs-only Available â€” 1.2.0 preparation
+## Desktop selection and Orbs-only Available — 1.2.0 preparation
 
 Implemented guarded Desktop selection after supported multi-platform OR acceptance and a separate Use Desktop recovery action for eligible accepted offers. Native platform and progress task remain separate. Console-selected entries retain a Discord handoff; selection does not enroll, start Work, or execute console activity. The operation lock serializes selection with reconciliation, and multi-platform queue eligibility requires native Desktop confirmation. Partial selection failure preserves acceptance without reenrollment.
 
@@ -73,7 +73,7 @@ Authorized exact-asset 1.1.1-to-1.2.0 upgrade and read-only verification passed 
 
 A later, separately authorized live test in exact installed 1.2.0 accepted the 700-Orb Call of Duty offer once and confirmed native Desktop selection and 0/900-second progress. Ongoing increased to 1, Available decreased to 10, and Completed stayed 13. Work remained stopped. Independent read-only metadata corroborated the result. This is a scoped acceptance/selection pass; full completion and selection-recovery coverage remain unverified. See [the live record](RELEASE_CHECKS.md#120-authorized-desktop-acceptance--2026-10-25).
 
-## Content protection â€” 1.2.1 preparation
+## Content protection — 1.2.1 preparation
 
 The public repository previously carried the encrypted content and its decryption key. Existing releases and history remain recoverable. This patch separates private production inputs from inert public validation builds, transforms protected content before encryption, and binds production identity to the version and manifest digest. Missing inputs fail closed. Production jobs require environment review and never share Rust output caches; validation artifacts cannot be promoted.
 
@@ -83,7 +83,7 @@ After the user's authorization and passing tag checks, the reviewed production b
 
 GitHub now lists 1.2.0 as published. Its previously recorded unavailable acceptance gates remain unavailable; publication does not establish their success. Future releases retain those gates. Detailed 1.2.1 evidence belongs in the release verification record.
 
-## Shared acceptance fixes â€” 1.2.2 preparation
+## Shared acceptance fixes — 1.2.2 preparation
 
 Regression tests reproduced persistent acceptance feedback and compatible metadata being rejected by the shared acceptance/Desktop-selection boundary. Feedback now expires after five seconds, with timer replacement and keyboard-focus coverage; unresolved errors remain visible. Compatible metadata is recognized through the client's semantic feature values, independently of quest names, identifiers, or Orb amounts. Explicit review/confirmation remains required. Supported Desktop/console OR acceptance selects Desktop and verifies native readback; enrollment arriving during review completes selection without enrolling again. Stale reviews, unknown requirements, active jobs, uncertain selection, and Console-selected quests retain their existing guards and recovery.
 

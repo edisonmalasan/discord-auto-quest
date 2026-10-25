@@ -8,9 +8,9 @@ Discord Auto Quest 1.3.0 targets Windows 10/11 x64 and stable Discord. Linux bui
 
 ## One-time GitHub setup
 
-1. Under Settings â†’ Actions â†’ General, enable the actions used in `.github/workflows/release.yml`. Keep the built-in token restricted: the draft job alone receives `contents: write`.
+1. Under Settings → Actions → General, enable the actions used in `.github/workflows/release.yml`. Keep the built-in token restricted: the draft job alone receives `contents: write`.
 2. Generate an updater signing key with the installed Tauri CLI: `npx tauri signer generate --help` describes the available options. Store the encrypted private key and password outside the repository. Make an independent, recoverable backup before publication; a second copy on the same disk is insufficient. Never paste private material into chat, logs, issues, or source files.
-3. Add repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` (the encrypted private key content) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (its password). Use GitHub Settings â†’ Secrets and variables â†’ Actions â†’ Secrets. Embed only the matching public key in `src-tauri/tauri.conf.json`. Preserve this identity for future updates; replacing it prevents existing installations from authenticating the replacement key.
+3. Add repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` (the encrypted private key content) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (its password). Use GitHub Settings → Secrets and variables → Actions → Secrets. Embed only the matching public key in `src-tauri/tauri.conf.json`. Preserve this identity for future updates; replacing it prevents existing installations from authenticating the replacement key.
 4. Create the `production-content` Actions environment with a required maintainer reviewer and a tag-only `v*` deployment policy. Add environment secrets `DAQ_CONTENT_KEY` and `DAQ_CONTENT_VERIFIED_MANIFEST` through the private maintenance process. The latter must match the digest of the exact content manifest that passed the private behavioral suite. Keep these separate from updater signing credentials. Never place production keys in repository files or public CI inputs.
 5. Ensure release maintainers can push tags and manage releases. Respect branch protections and repository rulesets. Review changes through a pull request.
 
@@ -48,7 +48,7 @@ git tag v1.3.0
 git push origin v1.3.0
 ```
 
-4. Open Actions â†’ release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, open Review deployments to approve `production-content` after the private suite passes for the exact manifest, then wait for Windows release build and draft release to pass. Missing private inputs, private-verification digest, signing secrets, or invalid candidate files fail the production build. A rotated content key does not preserve the ability to rebuild old tags; published assets are immutable and must not be regenerated.
+4. Open Actions → release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, open Review deployments to approve `production-content` after the private suite passes for the exact manifest, then wait for Windows release build and draft release to pass. Missing private inputs, private-verification digest, signing secrets, or invalid candidate files fail the production build. A rotated content key does not preserve the ability to rebuild old tags; published assets are immutable and must not be regenerated.
 5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.3.0 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
 
 ## Test the exact draft and publish

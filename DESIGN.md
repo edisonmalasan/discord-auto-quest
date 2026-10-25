@@ -38,7 +38,7 @@ layout:
   sidebar: "224px"
   content-inset: "24px"
   card-gap: "16px"
-  card-width: "360â€“440px at supported desktop sizes"
+  card-width: "360–440px at supported desktop sizes"
 rounded:
   card: "10px"
   control: "8px"

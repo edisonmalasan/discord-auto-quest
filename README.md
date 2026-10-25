@@ -17,9 +17,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest">Download</a> Â·
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases">Releases</a> Â·
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose">Report a problem</a> Â·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest">Download</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases">Releases</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose">Report a problem</a> ·
   <a href="https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md">Contribute</a>
 </p>
 
@@ -31,7 +31,7 @@ Keep track of Ongoing, Available, and Completed quests, review supported offers 
 
 Get the app from [GitHub Releases](https://github.com/edisonmalasan/discord-auto-quest/releases/latest). Open **Assets** and choose a Windows x64 download:
 
-| Download | Choose this whenâ€¦ |
+| Download | Choose this when… |
 | --- | --- |
 | `Discord-Auto-Quest-<version>-windows-x64-setup.exe` | You want a current-user installation and Start-menu shortcut. Setup provisions Microsoft WebView2 if needed. |
 | `Discord-Auto-Quest-<version>-windows-x64-portable.zip` | You want to run the app from an extracted folder. Microsoft Edge WebView2 Runtime must already be installed. |
