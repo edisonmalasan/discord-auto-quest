@@ -113,7 +113,7 @@ The app never accepts quests automatically, claims rewards, or restarts Discord 
 
 - Quest availability and eligibility depend on Discord and the publisher.
 - One accepted video quest completed in Windows beta testing. A fresh accept-to-completion cycle and broader quest coverage remain unverified; do not assume every quest type works.
-- In-app acceptance supports standard Orbs offers for video and Desktop play, including known Desktop/Xbox/PlayStation alternatives joined by OR. Console execution, special features, mixed-reward acceptance, activity tasks, and unfamiliar configurations continue in Discord. Earlier Windows testing accepted one desktop-play offer; exact 1.2.0 live acceptance and Desktop selection remain unverified.
+- In-app acceptance supports standard Orbs offers for video and Desktop play, including known Desktop/Xbox/PlayStation alternatives joined by OR. Compatible client metadata does not require a Discord handoff. Console execution, unsupported features, additional consent, mixed-reward acceptance, activity tasks, and unfamiliar configurations continue in Discord. See [verified scenarios and remaining release checks](docs/RELEASE_CHECKS.md).
 - If acceptance cannot be confirmed, refresh or check Discord before trying again. The app does not automatically retry.
 - Claim, reward, and fallback controls open Discord's Quests page and identify the quest to select.
 - Discord updates can interrupt compatibility. Stale data and operation failures are shown explicitly.

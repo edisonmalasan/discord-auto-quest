@@ -2,6 +2,12 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
+## 1.2.2 — Unreleased
+
+- Dismiss acceptance feedback after five seconds without hiding unresolved errors or changing keyboard focus.
+- Accept supported Orbs offers with compatible client metadata and automatically confirm Desktop for supported Desktop/console alternatives.
+- Preserve one-time acceptance when enrollment arrives during review; recover Desktop selection without enrolling again. Unknown requirements and Console-selected quests retain a Discord handoff.
+
 ## 1.2.1 — Unreleased
 
 - Strengthen content protection and release verification while preserving existing quest workflows.
