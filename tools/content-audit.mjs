@@ -28,7 +28,7 @@ export function auditFile(path, { privateInputs = [], privateContents = [] } = {
 
 export function auditDistribution(directory, options = {}) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isSymbolicLink() || /(?:^re$|^protected\.rs$|\.(?:map|pdb|key|pem|pfx|p12)$)/i.test(entry.name)) throw new Error('Private or debug file found in distribution');
+    if (entry.isSymbolicLink() || /(?:^(?:re|fixtures|tests?|graphify-out|node_modules|\.agents|\.git)$|^\.env(?:\.|$)|\.(?:map|pdb|key|pem|pfx|p12|rs|mjs|cjs|js|jsx|ts|tsx)$)/i.test(entry.name)) throw new Error('Private or debug file found in distribution');
     const path = join(directory, entry.name);
     if (entry.isDirectory()) auditDistribution(path, options);
     else if (entry.isFile()) auditFile(path, options);
@@ -37,7 +37,7 @@ export function auditDistribution(directory, options = {}) {
 
 export function auditTrackedInputs(root, env = process.env) {
   const paths = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
-  if (paths.some(path => /\.(?:key|pem|pfx|p12)$/i.test(path) || path.startsWith('re/') || path.endsWith('/protected.rs'))) {
+  if (paths.some(path => /\.(?:key|pem|pfx|p12)$/i.test(path) || /(?:^|\/)\.env(?:\.|$)/i.test(path) || path.startsWith('re/') || path.endsWith('/protected.rs'))) {
     throw new Error('Private build input is tracked');
   }
   // Audited dependency metadata is permitted; generated maps are not.

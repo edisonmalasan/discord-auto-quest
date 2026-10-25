@@ -16,8 +16,8 @@ re/
 
 # Private build inputs are configured explicitly, never loaded by public CI.
 *.key
-.env.local
-.env.production.local
+.env
+.env.*
 
 # The knowledge graph is derived from the code, and is rebuilt from it.
 graphify-out/

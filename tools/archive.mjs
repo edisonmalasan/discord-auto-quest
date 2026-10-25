@@ -59,7 +59,7 @@ export function verifyCandidate(directory,version,{pubkey=productionPublicKey(),
   console.log('Candidate names, checksums, updater signature/manifest, and portable contents verified');
 }
 
-export function verifyInstallerContent(path, version, auditOptions = {}) {
+export function verifyInstallerContent(path, version, auditOptions = {}, production = true) {
   const directory=mkdtempSync(join(tmpdir(),'daq-installer-audit-'));
   try {
     try {execFileSync('7z',['x','-y',`-o${directory}`,path],{stdio:'pipe'});}
@@ -75,7 +75,7 @@ export function verifyInstallerContent(path, version, auditOptions = {}) {
     walk(directory);
     if(applications.length!==1) throw new Error('Installer must contain exactly one application');
     auditDistribution(directory, auditOptions);
-    verifyContentIdentity(readFileSync(applications[0]),root,version);
+    verifyContentIdentity(readFileSync(applications[0]),root,version,production);
   } finally {
     if(dirname(directory)===tmpdir() && basename(directory).startsWith('daq-installer-audit-')) rmSync(directory,{recursive:true,force:true});
   }

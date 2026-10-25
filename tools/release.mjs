@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { root, readVersion, checkVersion } from './version.mjs';
 import { checkPayload } from './check-payload.mjs';
 import { candidateNames } from './release-policy.mjs';
-import { distributionFiles, checksumText, verifyCandidate, verifyArchiveEntries, zipEntries, fileHash } from './archive.mjs';
+import { distributionFiles, checksumText, verifyCandidate, verifyArchiveEntries, zipEntries, fileHash, verifyInstallerContent } from './archive.mjs';
 import { checkTerms } from './terms.mjs';
 import { readFileSync } from 'node:fs';
 import { releaseBuildMode, updaterManifest } from './updater-release.mjs';
@@ -47,6 +47,7 @@ auditDistribution(stage,auditOptions);
 mkdirSync(directory,{recursive:true});
 cpSync(join(build,'bundle/nsis',installers[0]),join(directory,names.setup));
 auditFile(join(directory,names.setup));
+if(!production) verifyInstallerContent(join(directory,names.setup),version,auditOptions,false);
 execFileSync('tar',['-a','-cf',join(directory,names.portable),'-C',stage,...distributionFiles],{stdio:'inherit'});
 if(production) {
  cpSync(join(build,'bundle/nsis',installers[0]+'.sig'),join(directory,names.signature));
