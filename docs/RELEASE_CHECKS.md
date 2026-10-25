@@ -203,3 +203,21 @@ Type checking, frontend production build, version, terminology, notices, content
 Computer-use verification in an isolated browser fixture confirmed in-app review with Desktop intent, confirmation feedback appearing, its later disappearance, and an accepted Desktop card retaining valid 0%. It used synthetic responses and made no Discord calls. Separately, read-only comparison of the old and new operations against the existing live client changed one offer from unsupported to review and recovered one accepted quest's Desktop-selection capability; unknown activity flows remained unsupported. These are read-only capability observations, not independent live acceptance or selection results.
 
 No live acceptance, platform change, Work/Stop, installation, reward action, or Discord restart was performed for 1.2.2. Exact packaged and native release checks remain pending and require execution-time authorization where specified. Preserve older tags/assets and keep any new candidate in draft until all required release gates pass.
+
+## 1.2.2 exact draft artifact verification — 2026-10-25
+
+[PR 48](https://github.com/edisonmalasan/discord-auto-quest/pull/48) merged at `595d5c55fd1e0a4c5ea8125f625638b57dab7de7` after final branch CI 40157640078 passed checks and Windows validation packaging. The immutable v1.2.2 tag points to that merge. The user authorized the protected production build and draft verification, excluding installation, account actions, and publication. After confirming the exact tag/commit and successful tag checks, the production-content environment was approved. [Production run 40158598227](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40158598227) passed checks, production backend tests, Clippy, packaging/signing, and draft creation. Linux remained excluded and macOS was skipped.
+
+The five files were independently downloaded from the CI artifact and the [1.2.2 draft](https://github.com/edisonmalasan/discord-auto-quest/releases/tag/untagged-d70b44ace1cc34713958). All bytes matched. Asset names, updater signature and signed version, manifest HTTPS URLs, checksums, portable archive bounds/contents, and exact version-bound production identity passed verification. Both distributions were unpacked and scanned for original/transformed protected content, textual key encodings, private inputs, fixtures, source maps, and debug output; those leak checks passed. They do not establish resistance to reverse engineering.
+
+```text
+d81ade471a3511682123e07094627dc55d1e7f2c942511b91695c2d1f95923d6  Discord-Auto-Quest-1.2.2-windows-x64-portable.zip
+68cace3a123c7e3152166b71e59b300f66c4a2326ad79f608e3fab2e4791f38a  Discord-Auto-Quest-1.2.2-windows-x64-setup.exe
+7f52b2bd31ff584caff4b3d09eb5d64350e492f4a7bc494380e8324886abbfa3  Discord-Auto-Quest-1.2.2-windows-x64-setup.exe.sig
+d389213c3ccaf3b2fccf1a22cb5a65a6a7c0b753305e4e2ef8a429fabab97070  latest.json
+2fa5cfde4370dc49cbe369054013f5784623a49b8b0005f4595e3d789c10cae7  SHA256SUMS
+```
+
+Static inspection of the downloaded setup and portable executable confirmed FileVersion 1.2.2 and ProductName Discord Auto Quest. Both embedded icons were extracted and visually checked; each displayed the custom blue badge. Both executables remain unsigned for Windows publisher identity. The valid detached updater signature does not replace publisher signing. Neither executable was launched.
+
+GitHub metadata confirmed a stable draft, not a prerelease, targeting the exact tag commit above. The release remains unpublished. Exact native installation/upgrade/uninstall, portable execution, clean WebView2 provisioning, live acceptance and automatic Desktop selection/recovery, continuous Work/cancellation, completion notifications, signed update installation/failure recovery, and independent signing-key backup recovery remain unverified. No live acceptance, platform change, Work/Stop, installation, reward claim, or Discord restart was performed under this approval. Earlier versions' observations and synthetic tests do not satisfy these native gates.
