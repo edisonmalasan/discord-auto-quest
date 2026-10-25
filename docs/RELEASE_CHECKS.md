@@ -224,6 +224,6 @@ GitHub metadata confirmed a stable draft, not a prerelease, targeting the exact 
 
 ## 1.3.0 preparation — 2026-10-26
 
-Local automated verification passed: 177 public tests, 67 private behavioral cases per source/transformed form, 54 backend unit tests and the validation-only guard, type checking, formatting, Clippy, version/content/terminology/notices checks, frontend build and bundle acceptance. Three browser integration cases remain ignored. Notification expiry/unread handling, grouped search, backend ordering, achievement-only skipping, timed activity eligibility, and continued dispatch have regression coverage.
+Local automated verification passed: 178 public tests, 67 private behavioral cases per source/transformed form, 54 backend unit tests and the validation-only guard, type checking, formatting, Clippy, version/content/terminology/notices checks, frontend build and bundle acceptance. Three browser integration cases remain ignored. Notification expiry/unread handling, grouped search, backend ordering, achievement-only skipping, timed activity eligibility, and continued dispatch have regression coverage.
 
 No live acceptance, platform changes, Work/Stop, installation, or Discord restart was performed. The reported second-account stall remains unreproduced. CI/merge, exact production artifacts, signatures/checksums, setup/portable leak checks, and the existing exact-native gates remain pending. Keep any new candidate draft; published releases and tags remain unchanged.

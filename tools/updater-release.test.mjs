@@ -100,3 +100,9 @@ it('requires acceptance evidence to bind all five exact assets and updater scena
   delete evidence.hashes[names.manifest];
   expect(()=>validateEvidence(evidence)).toThrow(/hash/);
 });
+it('keeps GitHub draft lifecycle fields out of stable update notes',()=>{
+ const notes='## Overview\nA new workspace.\n**Status:** Draft\n**Release Date:** TBD\n## New Features\n- Pending cards.';
+ const manifest=updaterManifest('1.3.0','signature',notes);
+ expect(manifest.notes).toContain('Pending cards.');expect(manifest.notes).toContain('A new workspace.');
+ expect(manifest.notes).not.toContain('Draft');expect(manifest.notes).not.toContain('TBD');
+});

@@ -6,7 +6,9 @@ import { candidateNames } from './release-policy.mjs';
 export const releaseBase='https://github.com/edisonmalasan/discord-auto-quest/releases';
 export function updaterManifest(version,signature,notes,pub_date=new Date().toISOString()) {
   if(!validVersion(version)) throw new Error('Invalid updater version');
-  return {version,notes,pub_date,platforms:{'windows-x86_64':{signature:signature.trim(),url:`${releaseBase}/download/v${version}/${candidateNames(version).setup}`}}};
+  // GitHub draft lifecycle fields must not appear in the published update feed.
+  const updateNotes=typeof notes==='string' ? notes.replace(/^\*\*(?:Status|Release Date):\*\*[^\r\n]*(?:\r?\n|$)/gm,'').trim() : notes;
+  return {version,notes:updateNotes,pub_date,platforms:{'windows-x86_64':{signature:signature.trim(),url:`${releaseBase}/download/v${version}/${candidateNames(version).setup}`}}};
 }
 export function productionPublicKey() {
   return JSON.parse(readFileSync(new URL('../src-tauri/tauri.conf.json',import.meta.url),'utf8')).plugins.updater.pubkey;

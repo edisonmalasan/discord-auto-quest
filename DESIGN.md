@@ -32,6 +32,7 @@ colors:
   recovery-ink: "#f2bdc6"
   queue-label-fill: "#18181fed"
   queue-label-rule: "#5a5a66"
+  overlay-shadow: "#0009"
 typography:
   sans: "'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 layout:
@@ -42,6 +43,9 @@ layout:
 rounded:
   card: "10px"
   control: "8px"
+  badge: "5px"
+  compact-control: "7px"
+  notification: "9px"
 ---
 
 # Discord Auto Quest design system

@@ -8,7 +8,7 @@
 
 ## Overview
 
-A clearer Ongoing workspace and compact notifications for Windows 10/11 x64 and stable Discord desktop. This draft awaits the exact packaged-app release checks.
+A clearer Ongoing workspace and compact notifications for Windows 10/11 x64 and stable Discord desktop.
 
 ## New Features
 
