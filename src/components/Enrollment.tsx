@@ -14,6 +14,7 @@ export function EnrollmentProvider({run,refresh,disabled,onActiveChange,children
  useEffect(()=>{const element=dialog.current;if(id&&element){if(!element.open){if(element.showModal)element.showModal();else element.setAttribute('open','');}if(!pending)cancel.current?.focus();}else element?.close?.();},[id,pending]);
  useEffect(()=>{onActiveChange(id!==null);return()=>onActiveChange(false);},[id,onActiveChange]);
  useEffect(()=>{if(!id&&notice)document.getElementById('view-title')?.focus();},[id,notice]);
+ useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),5000);return()=>window.clearTimeout(timer);},[notice]);
  function close(){if(busy.current)return;dialog.current?.close?.();setId(null);setOffer(null);setError(null);if(origin.current?.isConnected)origin.current.focus();else document.getElementById('view-title')?.focus();}
  async function review(questId:string){
   if(disabled||busy.current||id)return;

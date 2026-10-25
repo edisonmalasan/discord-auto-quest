@@ -1,19 +1,19 @@
 {
   "schema": 1,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "algorithm": "AES-256-GCM",
   "format": "nonce12-ciphertext-tag16",
   "transformation": "obfuscated-v1",
   "assets": {
     "work": {
       "file": "auto-quest.bin",
-      "sha256": "214ad9b585d6a23d2e2b4cf8d53db66147421a542990679cc4821bbfbd37607e",
+      "sha256": "a54fdda48b21ee61bf4bc78df49527757859fc6b3a0e9bd153e34d0928821fc3",
       "contentSha256": "65a61792c6b777e6bc8e2bdccc0dd6b4b5d0aa6ce804371d8607eec352d334d0"
     },
     "enrollment": {
       "file": "enrollment.bin",
-      "sha256": "540d6549aeff6f379be6b11661f7133f9f3f6888222b8fe6738846f87afdc2ec",
-      "contentSha256": "e57b2b8abdf29a288767c8243a6fcec4f4e9fb7f79807b3d4f306547e09c18d3"
+      "sha256": "f9f570076804ddde820ef8531d76f5713907f901244ae0373dd801c330be6df4",
+      "contentSha256": "cb1e0f229e27a9a61e4fea21eaf747fcedd22cd4735ee4e377eec4e2bcb7407b"
     }
   }
 }

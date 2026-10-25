@@ -79,6 +79,8 @@ Available membership and counts include only confirmed positive Orbs rewards, be
 
 Accept quest opens deliberate review showing reward, expiry, Desktop requirements and platform intent. Known Desktop/console alternatives select Desktop only after confirmed acceptance. Accepted but unconfirmed selection is recoverable with Use Desktop; Console-selected quests use a Discord handoff. Desktop is shown only after native confirmation, separately from the task chosen for progress. Active jobs and conflicting actions block selection.
 
+Acceptance feedback disappears after five seconds. A later acceptance gets its own full feedback interval; dismissal never moves keyboard focus. Unresolved errors remain available with their recovery actions.
+
 Watch in Discord, Claim in Discord, and View reward in Discord are explicit handoffs. The verified desktop route opens Quests and a visible instruction names the quest to
 select; a direct desktop quest route was not supported in the inspected client. External CTA
 buttons open supported HTTPS destinations and report failures. External links never accept or claim a reward.

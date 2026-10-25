@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { EnrollmentProvider, useEnrollment } from './Enrollment';
 const offer={status:'review' as const,id:'123',name:'Example',reward:'200 Orbs',expiresAt:'2099-01-01',requirements:[{kind:'PLAY_ON_DESKTOP',target:900}],revision:'revision'};
@@ -54,4 +54,46 @@ it('shows Desktop intent and keeps accepted-but-unconfirmed selection recoverabl
  fireEvent.click(screen.getByText('Confirm acceptance'));
  expect(await screen.findByText(/Quest accepted, but Desktop selection is unconfirmed/)).toBeInTheDocument();
  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();expect(run).toHaveBeenCalledTimes(2);
+});
+
+it('dismisses acceptance feedback after five seconds without moving focus',async()=>{
+ const run=vi.fn().mockResolvedValueOnce(offer).mockResolvedValueOnce({status:'accepted',id:'123'});
+ show(run);fireEvent.click(screen.getByText('Review offer'));
+ const confirm=await screen.findByRole('button',{name:'Confirm acceptance'});
+ vi.useFakeTimers();
+ try {
+  await act(async()=>{fireEvent.click(confirm);});
+  expect(screen.getByText(/confirmed acceptance/)).toBeInTheDocument();
+  const trigger=screen.getByText('Review offer');trigger.focus();
+  act(()=>{vi.advanceTimersByTime(4999);});expect(screen.getByText(/confirmed acceptance/)).toBeInTheDocument();
+  act(()=>{vi.advanceTimersByTime(1);});expect(screen.queryByText(/confirmed acceptance/)).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();expect(run).toHaveBeenCalledTimes(2);
+ } finally {vi.useRealTimers();}
+});
+
+it('gives a later acceptance its own full feedback lifetime',async()=>{
+ const run=vi.fn().mockResolvedValueOnce(offer).mockResolvedValueOnce({status:'accepted',id:'123'})
+  .mockResolvedValueOnce(offer).mockResolvedValueOnce({status:'accepted',id:'123'});
+ show(run);fireEvent.click(screen.getByText('Review offer'));
+ const confirm=await screen.findByRole('button',{name:'Confirm acceptance'});
+ vi.useFakeTimers();
+ try {
+  await act(async()=>{fireEvent.click(confirm);});act(()=>{vi.advanceTimersByTime(4000);});
+  await act(async()=>{fireEvent.click(screen.getByText('Review offer'));});
+  await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'Confirm acceptance'}));});
+  act(()=>{vi.advanceTimersByTime(1000);});expect(screen.getByText(/confirmed acceptance/)).toBeInTheDocument();
+  act(()=>{vi.advanceTimersByTime(4000);});expect(screen.queryByText(/confirmed acceptance/)).not.toBeInTheDocument();
+ } finally {vi.useRealTimers();}
+});
+
+it('keeps uncertain acceptance errors available after success feedback would expire',async()=>{
+ const run=vi.fn().mockResolvedValueOnce(offer).mockResolvedValueOnce({status:'uncertain',message:'Check Discord before retrying.'});
+ show(run);fireEvent.click(screen.getByText('Review offer'));
+ const confirm=await screen.findByRole('button',{name:'Confirm acceptance'});
+ vi.useFakeTimers();
+ try {
+  await act(async()=>{fireEvent.click(confirm);});act(()=>{vi.advanceTimersByTime(10000);});
+  expect(screen.getByRole('alert')).toHaveTextContent('Check Discord before retrying.');
+  expect(screen.getByRole('button',{name:'Open in Discord'})).toBeInTheDocument();expect(run).toHaveBeenCalledTimes(2);
+ } finally {vi.useRealTimers();}
 });

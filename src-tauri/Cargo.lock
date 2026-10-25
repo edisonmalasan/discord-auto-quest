@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "discord-auto-quest"
-version = "1.2.1"
+version = "1.2.2"
 dependencies = [
  "aes-gcm",
  "dirs 6.0.0",
