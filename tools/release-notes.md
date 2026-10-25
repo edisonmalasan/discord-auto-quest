@@ -1,4 +1,4 @@
-# Release Notes â€” Discord Auto Quest
+# Release Notes — Discord Auto Quest
 
 **Version:** v1.3.0
 
@@ -13,7 +13,7 @@ A clearer Ongoing workspace and compact notifications for Windows 10/11 x64 and 
 ## New Features
 
 - See the current quest under **Active now**, using the regular quest card and its Discord-confirmed progress.
-- Browse **Pending** in Workâ€™s execution order, with **Up next** on the first card and **Queued** on the remaining cards.
+- Browse **Pending** in Work’s execution order, with **Up next** on the first card and **Queued** on the remaining cards.
 - Find recent instructions in a bell notification dropdown with unread indicators, expandable details, and **Mark all read**.
 
 ## Improvements
