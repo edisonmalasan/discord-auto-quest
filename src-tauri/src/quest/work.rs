@@ -21,7 +21,51 @@ pub struct WorkState {
     pub active_quest_id: Option<String>,
     pub active_task_kind: Option<String>,
     pub queued_count: usize,
+    pub pending_quest_ids: Vec<String>,
+    pub skipped_quests: Vec<SkippedQuest>,
     pub message: Option<String>,
+}
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedQuest {
+    pub quest_id: String,
+    pub reason: &'static str,
+}
+
+fn supported_task(kind: &str) -> bool {
+    matches!(
+        kind,
+        "WATCH_VIDEO"
+            | "WATCH_VIDEO_ON_MOBILE"
+            | "PLAY_ON_DESKTOP"
+            | "STREAM_ON_DESKTOP"
+            | "PLAY_ACTIVITY"
+    )
+}
+
+fn skip_reason(quest: &QuestSummary) -> Option<&'static str> {
+    if !quest.desktop_ready() {
+        return Some("desktop_required");
+    }
+    if !quest
+        .selected_task_kind
+        .as_deref()
+        .is_some_and(supported_task)
+    {
+        if quest
+            .tasks
+            .iter()
+            .any(|kind| kind == "ACHIEVEMENT_IN_ACTIVITY")
+            && !quest.tasks.iter().any(|kind| supported_task(kind))
+        {
+            return Some("manual_play");
+        }
+        return Some("unsupported");
+    }
+    if !quest.work_eligible || !quest.enrolled_at_ms.is_some_and(f64::is_finite) {
+        return Some("unavailable");
+    }
+    None
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,6 +86,27 @@ pub(crate) struct Ledger {
     completed: HashSet<String>,
 }
 impl Ledger {
+    pub fn update_overview(&mut self, list: &QuestList) {
+        self.state.pending_quest_ids = self.queue(list).iter().map(|q| q.id.clone()).collect();
+        self.state.queued_count = self.state.pending_quest_ids.len();
+        let mut seen = HashSet::new();
+        self.state.skipped_quests = list
+            .claimed
+            .iter()
+            .filter(|q| {
+                q.state == QuestState::Claimed
+                    && q.completed_at.is_none()
+                    && self.state.active_quest_id.as_deref() != Some(&q.id)
+                    && seen.insert(q.id.clone())
+            })
+            .filter_map(|q| {
+                skip_reason(q).map(|reason| SkippedQuest {
+                    quest_id: q.id.clone(),
+                    reason,
+                })
+            })
+            .collect();
+    }
     pub fn observe(&mut self, list: &QuestList) -> Vec<QuestCompleted> {
         let mut events = Vec::new();
         for quest in &list.claimed {
@@ -67,10 +132,7 @@ impl Ledger {
             .filter(|quest| {
                 quest.state == QuestState::Claimed
                     && quest.completed_at.is_none()
-                    && (!quest.work_eligible
-                        || !quest.desktop_ready()
-                        || quest.selected_task_kind.is_none()
-                        || !quest.enrolled_at_ms.is_some_and(f64::is_finite))
+                    && skip_reason(quest).is_some()
             })
             .map(|quest| &quest.id)
             .collect::<HashSet<_>>()
@@ -87,10 +149,7 @@ impl Ledger {
             .filter(|quest| {
                 quest.state == QuestState::Claimed
                     && quest.completed_at.is_none()
-                    && quest.work_eligible
-                    && quest.desktop_ready()
-                    && quest.selected_task_kind.is_some()
-                    && quest.enrolled_at_ms.is_some_and(f64::is_finite)
+                    && skip_reason(quest).is_none()
                     && self.state.active_quest_id.as_deref() != Some(&quest.id)
                     && seen.insert(quest.id.clone())
             })
@@ -111,6 +170,27 @@ mod tests {
         serde_json::from_value(serde_json::json!({"available":[],"expired":0,"desktopApp":true,"runningGames":[],"claimed":rows.iter().map(|(id,state,accepted)|serde_json::json!({
      "id":id,"name":id,"tasks":["WATCH_VIDEO"],"state":state,"progressSeconds":0,"targetSeconds":100,"selectedTaskKind":"WATCH_VIDEO","workEligible":*state=="claimed","enrolledAtMs":accepted,"completedAt":if *state=="completed"{Some("2026-10-24")}else{None},"taskDetails":[]
    })).collect::<Vec<_>>()})).unwrap()
+    }
+    #[test]
+    fn achievement_only_is_skipped_but_timed_activity_and_supported_alternatives_remain_eligible() {
+        let mut ledger = Ledger::default();
+        let mut feed = list(&[
+            ("manual", "claimed", 0.),
+            ("timed", "claimed", 1.),
+            ("alternative", "claimed", 2.),
+        ]);
+        feed.claimed[0].tasks = vec!["ACHIEVEMENT_IN_ACTIVITY".into()];
+        feed.claimed[0].selected_task_kind = Some("ACHIEVEMENT_IN_ACTIVITY".into());
+        feed.claimed[1].tasks = vec!["PLAY_ACTIVITY".into()];
+        feed.claimed[1].selected_task_kind = Some("PLAY_ACTIVITY".into());
+        feed.claimed[2].tasks.push("ACHIEVEMENT_IN_ACTIVITY".into());
+        ledger.update_overview(&feed);
+        assert_eq!(ledger.state.pending_quest_ids, vec!["timed", "alternative"]);
+        assert_eq!(ledger.state.skipped_quests.len(), 1);
+        assert_eq!(ledger.state.skipped_quests[0].reason, "manual_play");
+        ledger.state.active_quest_id = Some("timed".into());
+        ledger.update_overview(&feed);
+        assert_eq!(ledger.state.pending_quest_ids, vec!["alternative"]);
     }
     #[test]
     fn multi_platform_quests_wait_for_confirmed_desktop_even_if_other_metadata_says_eligible() {

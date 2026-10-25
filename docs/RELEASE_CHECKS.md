@@ -80,7 +80,7 @@ Clean first installation, normal cross-version upgrade, uninstall, live recovery
 
 GitHub records 1.0.0 and 1.0.1 as published on 2026-10-24 in Asia/Manila (2026-10-23 21:49:58 and 22:46:46 UTC). Their earlier unverified acceptance results remain unverified; publication does not establish that those checks passed.
 
-## 1.1.0 preparation — 2026-10-24
+## 1.1.0 preparation â€” 2026-10-24
 
 Source implementation is prepared; release acceptance is pending. Local verification passed 176 frontend/tooling tests across 23 files and 44 backend harness tests importing the actual runtime/controller modules and download-deadline helper. The new card regression verifies that descriptions/actions follow the selected task alongside its percentage. Harness Clippy passed with the declared Rust 1.90 minimum. These synthetic tests perform no Discord account actions.
 
@@ -118,7 +118,7 @@ Clean installation, ordinary cross-version upgrade, uninstall, portable executio
 
 The completion-announcement correction passes all 178 frontend/tooling tests across 23 files, including regression cases that failed against 1.1.0. Type checking, production frontend build, version agreement, terminology, notices, bundle acceptance, whitespace, and the changed-component design detector passed locally. Dependency versions and required notices are unchanged; only project-version lockfile metadata and its audited hashes changed. Graphify was refreshed. Full Windows CI, signed 1.1.1 packaging, and exact native acceptance remain required; the 1.1.0 observations above do not establish them.
 
-## 1.2.0 Desktop selection and Orbs-only preparation — 2026-10-25
+## 1.2.0 Desktop selection and Orbs-only preparation â€” 2026-10-25
 
 Synthetic checks cover standard Desktop and video acceptance, Desktop/Xbox/PlayStation OR offers, arbitrary positive Orb quantities, review without mutation, duplicate/stale confirmation, unknown schemas/capabilities, native selection readback, active-job and Console guards, and accepted-but-selection-unconfirmed recovery without reenrollment. Queue tests require native Desktop confirmation even when other metadata says eligible; a controller concurrency case serializes explicit selection with reconciliation before dispatch. Structured reward tests cover non-Orb and misleading names, invalid amounts, mixed rewards, and ambiguous quantities without summing. View tests retain accepted/completed rewards and filter before Available counts, search, sorting, and empty state.
 
@@ -146,7 +146,7 @@ A separate read-only evaluation of the current source expressions through the ex
 
 GitHub currently lists 1.1.1 as the published Latest release. Its publication does not resolve unverified historical acceptance gates. Preserve that release and older tags/assets. The 1.2.0 release remains a draft: exact native acceptance/selection and partial recovery, Orbs-only UI views, installation/upgrade/uninstall/portable operation, clean WebView2 provisioning, continuous Work, completion notifications, signed installed updates and recovery, and independent signing-key backup remain unverified.
 
-## 1.2.0 installed upgrade and read-only verification — 2026-10-25
+## 1.2.0 installed upgrade and read-only verification â€” 2026-10-25
 
 The user separately authorized installation/read-only checks and Stop of the existing waiting Work session. In the installed 1.1.1 app, Stop settled to Work my quests before the app was closed. The exact previously hashed 1.2.0 draft setup was launched through ordinary Windows Explorer. Setup recognized the older version; Do not uninstall and the existing D:/Apps/Discord Auto Quest destination were retained. Installation completed successfully and the upgraded desktop app launched. User input also advanced the installer; automation refreshed its observations before continuing. This verifies that upgrade path with WebView2 already installed, not a clean installation or fresh WebView2 provisioning.
 
@@ -156,13 +156,13 @@ All three views loaded without restarting Discord: 0 Ongoing, 11 Available, and 
 
 The exact-asset ledger records upgrade, launch, live views, and the current Orbs-only membership/search scenario as passed. Clean installation, uninstall, portable execution, clean WebView2 provisioning, native acceptance/selection and partial recovery, live continuous Work and task cancellation, completion notification delivery, signed installed updates/recovery, and independent signing-key backup remain unverified. Keep the release draft.
 
-## 1.2.0 authorized Desktop acceptance — 2026-10-25
+## 1.2.0 authorized Desktop acceptance â€” 2026-10-25
 
 After separate execution-time authorization, the exact installed 1.2.0 draft accepted the 700-Orb Call of Duty: Modern Warfare 4 offer once. Work was confirmed stopped before review. The dialog showed Desktop intent, the 700-Orb reward, desktop play for 15 minutes, and expiry. Confirm acceptance was clicked once; Discord confirmed acceptance without an uncertain or partial-selection response. Available changed from 11 to 10, Ongoing from 0 to 1, and Completed stayed 13. The Ongoing card showed Quest accepted, Desktop, and a valid 0% ring.
 
 An independent read-only client read corroborated the enrolled record, native Desktop selection, desktop task, 0 of 900 seconds, and Work eligibility. The app retained Work my quests throughout the settled result; acceptance did not enable Work. No Work, playback, game download, reward claim, console action, or Discord restart was invoked. This verifies one standard Desktop/console OR acceptance and automatic Desktop readback in the exact packaged app. It does not verify a fresh acceptance-to-completion cycle, selection failure or Use Desktop recovery, console-selected handoffs, or broader quest coverage. Existing native publication gates remain open and the release stays draft.
 
-## 1.2.1 content-protection preparation — 2026-10-25
+## 1.2.1 content-protection preparation â€” 2026-10-25
 
 The 1.2.1 patch preserves existing releases and Git history. Previously exposed content remains recoverable. The public tree no longer carries a production content key; a fresh key and a verification digest are scoped to the reviewed, tag-only production-content Actions environment. Updater signing identity is unchanged.
 
@@ -172,7 +172,7 @@ Public CI uses inert content and tests build/authentication/interface failures. 
 
 Local production-mode backend checks passed all 52 unit cases, and Clippy passed with warnings denied. Validation-mode tests also passed the non-test operation guard; three browser-starting integration tests were not rerun. All 169 public frontend/tooling cases passed, alongside type checking, frontend build, bundle acceptance, wording, notices, and version checks. The production debug executable passed exact content identity and original/transformed plaintext scans; this alone is not exact release-asset acceptance. [PR 46](https://github.com/edisonmalasan/discord-auto-quest/pull/46) merged after final branch CI 40150528408 passed. Merged-main validation run 40151246386 also passed. Exact production artifact verification is recorded below; native checks remain separate.
 
-## 1.2.1 exact draft artifact verification — 2026-10-25
+## 1.2.1 exact draft artifact verification â€” 2026-10-25
 
 The immutable v1.2.1 tag points to merge commit `0bdf340818376c64ad5b1a5a8d433742e134191d`. After tag checks passed, the user authorized approval of this exact production build and draft verification. The protected production-content environment was approved for that commit. [Production run 40151256908](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40151256908) passed checks, production backend tests, Clippy, Windows packaging, and draft creation. Linux remains excluded; macOS and public validation packaging were intentionally skipped for this production tag run.
 
@@ -190,7 +190,7 @@ Static inspection of the downloaded setup and portable executable confirmed File
 
 No live acceptance, platform change, Work/Stop, reward action, installation, or Discord restart was performed for 1.2.1. Exact native installation/upgrade/uninstall, portable execution, clean WebView2 provisioning, live quest workflows and cancellation, completion notifications, signed update installation/failure recovery, and independent signing-key backup recovery remain unverified. Earlier versions' observations do not satisfy these gates. The five assets remain in an unpublished stable draft until the required exact-asset checks pass.
 
-## 1.2.2 shared acceptance fix verification — 2026-10-25
+## 1.2.2 shared acceptance fix verification â€” 2026-10-25
 
 The reported acceptance feedback had no expiry timer. Two new UI regressions failed before the fix: ordinary dismissal and a later acceptance receiving its own full lifetime. Both pass after the five-second cleanup was added. A third case verifies that uncertain acceptance errors remain visible with recovery controls. Dismissal does not move keyboard focus, and replacing feedback cancels the old timer.
 
@@ -204,7 +204,7 @@ Computer-use verification in an isolated browser fixture confirmed in-app review
 
 No live acceptance, platform change, Work/Stop, installation, reward action, or Discord restart was performed for 1.2.2. Exact packaged and native release checks remain pending and require execution-time authorization where specified. Preserve older tags/assets and keep any new candidate in draft until all required release gates pass.
 
-## 1.2.2 exact draft artifact verification — 2026-10-25
+## 1.2.2 exact draft artifact verification â€” 2026-10-25
 
 [PR 48](https://github.com/edisonmalasan/discord-auto-quest/pull/48) merged at `595d5c55fd1e0a4c5ea8125f625638b57dab7de7` after final branch CI 40157640078 passed checks and Windows validation packaging. The immutable v1.2.2 tag points to that merge. The user authorized the protected production build and draft verification, excluding installation, account actions, and publication. After confirming the exact tag/commit and successful tag checks, the production-content environment was approved. [Production run 40158598227](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40158598227) passed checks, production backend tests, Clippy, packaging/signing, and draft creation. Linux remained excluded and macOS was skipped.
 
@@ -221,3 +221,9 @@ d389213c3ccaf3b2fccf1a22cb5a65a6a7c0b753305e4e2ef8a429fabab97070  latest.json
 Static inspection of the downloaded setup and portable executable confirmed FileVersion 1.2.2 and ProductName Discord Auto Quest. Both embedded icons were extracted and visually checked; each displayed the custom blue badge. Both executables remain unsigned for Windows publisher identity. The valid detached updater signature does not replace publisher signing. Neither executable was launched.
 
 GitHub metadata confirmed a stable draft, not a prerelease, targeting the exact tag commit above. The release remains unpublished. Exact native installation/upgrade/uninstall, portable execution, clean WebView2 provisioning, live acceptance and automatic Desktop selection/recovery, continuous Work/cancellation, completion notifications, signed update installation/failure recovery, and independent signing-key backup recovery remain unverified. No live acceptance, platform change, Work/Stop, installation, reward claim, or Discord restart was performed under this approval. Earlier versions' observations and synthetic tests do not satisfy these native gates.
+
+## 1.3.0 preparation — 2026-10-26
+
+Local automated verification passed: 177 public tests, 67 private behavioral cases per source/transformed form, 54 backend unit tests and the validation-only guard, type checking, formatting, Clippy, version/content/terminology/notices checks, frontend build and bundle acceptance. Three browser integration cases remain ignored. Notification expiry/unread handling, grouped search, backend ordering, achievement-only skipping, timed activity eligibility, and continued dispatch have regression coverage.
+
+No live acceptance, platform changes, Work/Stop, installation, or Discord restart was performed. The reported second-account stall remains unreproduced. CI/merge, exact production artifacts, signatures/checksums, setup/portable leak checks, and the existing exact-native gates remain pending. Keep any new candidate draft; published releases and tags remain unchanged.

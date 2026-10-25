@@ -469,7 +469,11 @@ impl DiscordState {
         match result {
             Ok(list) => {
                 drop(guard);
-                let events = self.work.lock().await.observe(&list);
+                let events = {
+                    let mut work = self.work.lock().await;
+                    work.update_overview(&list);
+                    work.observe(&list)
+                };
                 for event in events {
                     self.emit(WorkEvent::Completed(event));
                 }
@@ -571,7 +575,7 @@ impl DiscordState {
                     driver::stop(session).await?;
                     let mut work=self.work.lock().await;work.state.active_quest_id=None;work.state.active_task_kind=None;
                 } else {
-                    let mut work=self.work.lock().await;work.state.queued_count=work.queue(&list).len();work.state.message=skip_message(&work,&list,false);
+                    let mut work=self.work.lock().await;work.update_overview(&list);work.state.message=skip_message(&work,&list,false);
                     return Ok(());
                 }
             } else if runtime.phase!="stopped" {
@@ -579,7 +583,7 @@ impl DiscordState {
             }
             let next={let work=self.work.lock().await;let queue=work.queue(&list);queue.first().map(|q|(q.id.clone(),q.selected_task_kind.clone().unwrap(),queue.len()-1))};
             if let Some((id,kind,remaining))=next {
-                {let mut work=self.work.lock().await;work.state.phase=WorkPhase::Starting;work.state.active_quest_id=Some(id.clone());work.state.active_task_kind=Some(kind.clone());work.state.queued_count=remaining;}
+                {let mut work=self.work.lock().await;work.state.phase=WorkPhase::Starting;work.state.active_quest_id=Some(id.clone());work.state.active_task_kind=Some(kind.clone());work.update_overview(&list);work.state.queued_count=remaining;}
                 self.emit_state().await;
                 self.work.lock().await.manage(&id);
                 driver::run_quest(session,&id,&kind).await?;
@@ -589,7 +593,7 @@ impl DiscordState {
                 }
                 let mut work=self.work.lock().await;work.state.phase=WorkPhase::Working;work.state.message=skip_message(&work,&list,false);
             } else {
-                let mut work=self.work.lock().await;work.state.phase=WorkPhase::Waiting;work.state.queued_count=0;work.state.message=skip_message(&work,&list,true);
+                let mut work=self.work.lock().await;work.state.phase=WorkPhase::Waiting;work.update_overview(&list);work.state.message=skip_message(&work,&list,true);
             }
             Ok(())
         }).await;
@@ -755,6 +759,20 @@ mod continuous_tests {
         assert!(acceptance.message.contains("Work session"));
         let selection = state.select_desktop("123").await.unwrap_err();
         assert!(selection.message.contains("Work job"));
+    }
+    #[tokio::test]
+    async fn achievement_objectives_never_block_later_eligible_dispatch() {
+        let mut data = feed(&[("manual", "claimed", 1), ("next", "claimed", 2)]);
+        data["claimed"][0]["tasks"] = serde_json::json!(["ACHIEVEMENT_IN_ACTIVITY"]);
+        data["claimed"][0]["selectedTaskKind"] = serde_json::json!("ACHIEVEMENT_IN_ACTIVITY");
+        let (state, _, dispatches, server) = connected(data).await;
+        let work = state.start_work().await.unwrap();
+        assert_eq!(work.active_quest_id.as_deref(), Some("next"));
+        assert!(work.pending_quest_ids.is_empty());
+        assert_eq!(work.skipped_quests[0].quest_id, "manual");
+        assert_eq!(dispatches.load(Ordering::SeqCst), 1);
+        state.stop_work().await.unwrap();
+        server.abort();
     }
     #[tokio::test]
     async fn starting_with_zero_quests_stays_waiting_until_explicit_stop() {

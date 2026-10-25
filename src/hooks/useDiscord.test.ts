@@ -74,7 +74,7 @@ describe('useDiscord', () => {
   });
 
   it('restores an active backend session after a webview reload', async () => {
-    questWorkStatus.mockResolvedValue({phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:'Waiting for accepted quests'});
+    questWorkStatus.mockResolvedValue({...stoppedWork(),phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:'Waiting for accepted quests'});
     const {result}=renderHook(()=>useDiscord());
     await waitFor(()=>expect(result.current.connectionState).toBe('connected'));
     expect(result.current.working).toBe(true);
@@ -82,7 +82,7 @@ describe('useDiscord', () => {
     expect(startQuestWork).not.toHaveBeenCalled();
   });
   it('allows deliberate acceptance while an established continuous session waits', async () => {
-    questWorkStatus.mockResolvedValue({phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:null});
+    questWorkStatus.mockResolvedValue({...stoppedWork(),phase:'waiting',activeQuestId:null,activeTaskKind:null,queuedCount:0,message:null});
     questEnrollment.mockResolvedValue({status:'accepted',id:'123'});
     const {result}=renderHook(()=>useDiscord());
     await waitFor(()=>expect(result.current.connectionState).toBe('connected'));

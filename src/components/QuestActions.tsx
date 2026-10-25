@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { QuestCardModel } from '../lib/quest-view';
 import { copyQuestLink, openQuestExternal, openQuestInDiscord } from '../lib/quest-actions';
 import { useEnrollment } from './Enrollment';
+import { useNotifications } from './Notifications';
 interface Props { card: QuestCardModel; stale: boolean; menuOpen: boolean; onMenuChange: (id: string | null) => void;
   onDiscord?: () => Promise<{ instruction: string | null }>; onExternal?: () => Promise<void>; onCopy?: () => Promise<void> }
 export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, onExternal, onCopy }: Props) {
   const { quest } = card;
   const enrollment = useEnrollment();
+  const notifications = useNotifications();
   const root = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -15,6 +17,11 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [keyboard, setKeyboard] = useState(false);
+  useEffect(() => {
+    if (!notifications) return;
+    if (notice) { notifications.notify({title: 'Quest message', message: notice}); setNotice(null); }
+    if (error) { notifications.notify({title: 'Quest action failed', message: error, kind: 'error'}); setError(null); }
+  }, [notice, error, notifications?.notify]);
   useEffect(() => {
     if (!menuOpen) return;
     menu.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
@@ -93,11 +100,11 @@ export function QuestActions({ card, stale, menuOpen, onMenuChange, onDiscord, o
       {!gameCtaOnly && <button className={`button ${card.view === 'ongoing' && !video ? 'secondary' : 'primary'}`} disabled={stale || pending || card.rewardState === 'expired' || card.view === 'available' && enrollment?.disabled} onClick={() => card.view === 'available' && enrollment ? enrollment.review(quest.id) : void perform('discord')}>{card.rewardState === 'expired' ? 'Reward expired' : label}</button>}
     </>}
     </footer>}
-    {canSelectDesktop && enrollment?.continuousWork && <p className="card-feedback" id={`desktop-note-${quest.id}`}>Continuous Work is on. Choosing Desktop adds this quest to the queue.</p>}
-    {desktopAlternatives && quest.nativePlatform === 'console' && <p className="card-feedback">Console is selected. Change the platform in Discord to use Desktop.</p>}
-    {desktopAlternatives && quest.nativePlatform === null && !canSelectDesktop && <p className="card-feedback">Select Desktop in Discord before working this quest.</p>}
-    {error && <p className="card-feedback error" role="alert">{error}</p>}
-    {notice && <p className="card-feedback" role="status">{notice}</p>}
+    {canSelectDesktop && enrollment?.continuousWork && <p className={notifications ? 'sr-only' : 'card-feedback'} id={`desktop-note-${quest.id}`}>Continuous Work is on. Choosing Desktop adds this quest to the queue.</p>}
+    {desktopAlternatives && quest.nativePlatform === 'console' && !notifications && <p className="card-feedback">Console is selected. Change the platform in Discord to use Desktop.</p>}
+    {desktopAlternatives && quest.nativePlatform === null && !canSelectDesktop && !notifications && <p className="card-feedback">Select Desktop in Discord before working this quest.</p>}
+    {error && !notifications && <p className="card-feedback error" role="alert">{error}</p>}
+    {notice && !notifications && <p className="card-feedback" role="status">{notice}</p>}
   </div>;
 }
 

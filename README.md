@@ -17,9 +17,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest">Download</a> ·
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases">Releases</a> ·
-  <a href="https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose">Report a problem</a> ·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases/latest">Download</a> Â·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/releases">Releases</a> Â·
+  <a href="https://github.com/edisonmalasan/discord-auto-quest/issues/new/choose">Report a problem</a> Â·
   <a href="https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md">Contribute</a>
 </p>
 
@@ -31,7 +31,7 @@ Keep track of Ongoing, Available, and Completed quests, review supported offers 
 
 Get the app from [GitHub Releases](https://github.com/edisonmalasan/discord-auto-quest/releases/latest). Open **Assets** and choose a Windows x64 download:
 
-| Download | Choose this when… |
+| Download | Choose this whenâ€¦ |
 | --- | --- |
 | `Discord-Auto-Quest-<version>-windows-x64-setup.exe` | You want a current-user installation and Start-menu shortcut. Setup provisions Microsoft WebView2 if needed. |
 | `Discord-Auto-Quest-<version>-windows-x64-portable.zip` | You want to run the app from an extracted folder. Microsoft Edge WebView2 Runtime must already be installed. |
@@ -48,11 +48,11 @@ Windows builds are **unsigned**. Windows may display an unknown-publisher warnin
 | --- | --- |
 | Quest workspace | Switch between Ongoing, Available, and Completed quests, with search. Available shows only confirmed positive Orbs rewards; accepted and completed quests retain every reward type. |
 | In-app acceptance | Review and confirm one supported offer at a time. While Work is off, acceptance leaves the quest idle. Desktop/console alternatives use Desktop after acceptance and confirmed selection. An active continuous session queues it only when Desktop is confirmed. |
-| Work and Stop | Start a continuous session, work accepted quests sequentially, and wait for new acceptances until Stop. |
+| Work and Stop | Start a continuous session, work accepted quests sequentially, and wait for new acceptances until Stop. Active now identifies the current quest; Pending follows the backend order. Achievement-only objectives are automatically skipped and labeled Needs manual play. |
 | Progress updates | Refresh percentages from Discord about every four seconds, including during Work. Completion requires Discord's confirmation. |
 | Connection recovery | Show connection errors, mark retained cards as stale, and offer Retry when Discord is ready. |
 | Confirmed updates | Installed copies offer signed stable updates after confirmation; portable copies link to the newer ZIP. |
-| Completion notifications | In-app completion feedback, with optional Windows notifications for installed copies. |
+| Notifications | Five-second floating feedback, retained instructions in the bell dropdown, and completion navigation. Optional Windows completion notifications are available for installed copies. |
 | Discord handoffs | Open Discord for unsupported acceptance flows and reward claims. |
 
 Quest availability, eligibility, and progress come from Discord. Some tasks still require your participation; support varies by quest type. See [known limitations](#known-limitations) before using Work.

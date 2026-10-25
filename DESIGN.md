@@ -12,13 +12,33 @@ colors:
   spot: "#5865f2"
   success: "#43b581"
   danger: "#fa777c"
+  notification-surface: "#25252c"
+  notification-toast: "#2a2a32"
+  notification-hover: "#32323b"
+  notification-rule: "#3c3c46"
+  notification-ink: "#bdc4ff"
+  notification-secondary: "#bfc0cc"
+  notification-time: "#afb0bd"
+  notification-unread: "#a6b1ff"
+  notification-info-ink: "#b7c0ff"
+  notification-info-fill: "#383d58"
+  notification-success-ink: "#78d5aa"
+  notification-success-fill: "#244738"
+  notification-error-ink: "#f2aeb8"
+  notification-error-fill: "#58333e"
+  notification-detail: "#d0d1dc"
+  notification-body: "#c9cad4"
+  recovery-fill: "#2b2027"
+  recovery-ink: "#f2bdc6"
+  queue-label-fill: "#18181fed"
+  queue-label-rule: "#5a5a66"
 typography:
   sans: "'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 layout:
   sidebar: "224px"
   content-inset: "24px"
   card-gap: "16px"
-  card-width: "360–440px at supported desktop sizes"
+  card-width: "360â€“440px at supported desktop sizes"
 rounded:
   card: "10px"
   control: "8px"
@@ -36,7 +56,7 @@ This system replaces the earlier teal/Archivo interface.
 Ongoing, Available, and Completed are separate views with live, search-independent counts.
 Ongoing opens first. Each view retains its search and scroll position during the session.
 The main header owns one global Work my quests / Stop control; cards do not imply a per-quest runner.
-Connection and recovery controls live in the sidebar footer. Operation errors stay beside Work/Stop.
+Connection and recovery controls live in the sidebar footer. Operation and recovery errors remain visible beneath the main header. Routine Work text does not occupy a separate status strip.
 
 Available cards can open a native modal to review a fresh supported offer and confirm acceptance. Cancel receives initial focus. Confirmation disables repeat submission, and success waits for Discord's enrolled record. Unsupported offers retain a Discord handoff. Acceptance while Work is stopped does not start activity. During an explicitly enabled continuous session, the confirmation explains that a supported accepted quest joins the active queue.
 
@@ -111,3 +131,9 @@ The [roadmap](docs/ROADMAP.md) records verified progress.
 The global Work control starts a continuous session, including with an empty queue. Status distinguishes working, waiting, stopping, and paused. Stop remains visible while the session is enabled. Connection recovery never silently resumes an uncertain job. Confirmed completion feedback provides View completed and Dismiss.
 
 Application updates use an inline banner with version and release notes, then a confirmation dialog. Download progress is exposed inside the modal as well as visually in the banner. Installed copies expose optional Windows notifications in About; portable copies expose a release download link. No native permission prompt appears until an explicit opt-in.
+
+## Ongoing overview and notifications — 1.3
+
+Search precedes the quest groups. Active now uses the existing quest card and backend active ID; it remains in search results. Pending follows backend order, labeled Up next and Queued without numbers. Work-stopped cards say Pending. Achievement-only entries use Needs manual play; unavailable entries use Needs attention. These groups do not change Ongoing membership or invent completion.
+
+A bell dropdown contains up to 50 recent app-session messages, unread indicators, expandable full instructions, Mark all read, outside dismissal and Escape focus restoration. Short corner feedback expires after five seconds and pauses while hovered or focused. Critical Work recovery remains visible outside the transient message. No message history is persisted.
