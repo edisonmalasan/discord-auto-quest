@@ -86,6 +86,7 @@ jobs:
         shell: pwsh
         run: |
           git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify the release ancestry' }
           git merge-base --is-ancestor HEAD origin/main
           if ($LASTEXITCODE -ne 0) { throw 'Release tag is not on main' }
       - name: Candidate version
@@ -96,9 +97,12 @@ jobs:
         env:
           DAQ_CONTENT_MODE: production
           DAQ_CONTENT_KEY: ${{ secrets.DAQ_CONTENT_KEY }}
-        run: |
-          cargo test --manifest-path src-tauri/Cargo.toml
-          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+      - name: Production backend lint
+        env:
+          DAQ_CONTENT_MODE: production
+          DAQ_CONTENT_KEY: ${{ secrets.DAQ_CONTENT_KEY }}
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
       - name: Signed release assets
         env:
           DAQ_CONTENT_MODE: production
