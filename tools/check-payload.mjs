@@ -1,17 +1,9 @@
 /**
- * N2: the quest operation is not readable in the application.
- *
- * The operation is the one piece of this project that must not be handed over
- * with the application. It is encrypted when the payload is built and
- * embedded as ciphertext, and this checks the artefact rather than the source:
- * a check against the source cannot see what the compiler produced.
+ * Regression checks for selected protected-content plaintext markers.
+ * Production packaging also checks the transformed content and build identity.
+ * Passing this check does not establish resistance to reverse engineering.
  *
  *   node tools/check-payload.mjs <path to the built application>
- *
- * The markers are strings that appear in the operation and nowhere else — the
- * application never needs to know the name of Discord's module registry, or
- * the names of the events the operation listens for. If one of them turns up in
- * the binary, the payload is not encrypted.
  */
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
@@ -87,7 +79,7 @@ export function checkPayload(path) {
   }
 
   console.log(
-    `N2: ${basename(path)} carries none of the quest operation's strings`,
+    `N2: ${basename(path)} contains none of the selected protected-content markers; recovery resistance is not established`,
   );
 }
 

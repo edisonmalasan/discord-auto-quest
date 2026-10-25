@@ -29,6 +29,7 @@ jobs:
           workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run version:check
+      - run: npm run check:content
       - run: npm run check:terms
       - run: npm run check:notices
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
@@ -39,6 +40,7 @@ jobs:
       - run: npm run check:acceptance
   build:
     name: windows build
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
     needs: check
     runs-on: windows-latest
     steps:
@@ -56,31 +58,56 @@ jobs:
         id: version
         shell: bash
         run: node --input-type=module -e "import {readVersion} from './tools/version.mjs'; console.log('version='+readVersion())" >> "$GITHUB_OUTPUT"
-      - name: Verify release tag ancestry
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          if ('${{ github.event_name }}' -ne 'push' -or '${{ github.repository }}' -ne 'edisonmalasan/discord-auto-quest') { throw 'A production release requires a trusted tag push' }
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-          if ($LASTEXITCODE -ne 0) { throw 'Release tag is not on main' }
       - name: Unsigned validation assets
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-        run: npm run release
-      - name: Signed release assets
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'edisonmalasan/discord-auto-quest'
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run release
       - uses: actions/upload-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           name: windows-validation-not-for-publication
           path: target/validation/${{ steps.version.outputs.version }}/*
           if-no-files-found: error
+  production:
+    name: windows release build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'edisonmalasan/discord-auto-quest'
+    needs: check
+    runs-on: windows-latest
+    environment: production-content
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # Never restore or save Rust output from a job containing private inputs.
+      - run: npm ci
+      - name: Verify release ancestry
+        shell: pwsh
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          if ($LASTEXITCODE -ne 0) { throw 'Release tag is not on main' }
+      - name: Candidate version
+        id: version
+        shell: bash
+        run: node --input-type=module -e "import {readVersion} from './tools/version.mjs'; console.log('version='+readVersion())" >> "$GITHUB_OUTPUT"
+      - name: Authenticate production inputs and run backend tests
+        env:
+          DAQ_CONTENT_MODE: production
+          DAQ_CONTENT_KEY: ${{ secrets.DAQ_CONTENT_KEY }}
+        run: |
+          cargo test --manifest-path src-tauri/Cargo.toml
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+      - name: Signed release assets
+        env:
+          DAQ_CONTENT_MODE: production
+          DAQ_CONTENT_KEY: ${{ secrets.DAQ_CONTENT_KEY }}
+          DAQ_CONTENT_VERIFIED_MANIFEST: ${{ secrets.DAQ_CONTENT_VERIFIED_MANIFEST }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run release
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'edisonmalasan/discord-auto-quest'
         with:
           name: windows-candidate
           path: target/release/${{ steps.version.outputs.version }}/*
@@ -108,7 +135,7 @@ jobs:
           node tools/check-payload.mjs src-tauri/target/release/discord-auto-quest
   draft:
     name: draft release
-    needs: build
+    needs: production
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'edisonmalasan/discord-auto-quest'
     runs-on: windows-latest
     permissions:

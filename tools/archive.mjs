@@ -1,8 +1,13 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { verifyCandidateFiles, candidateNames } from './release-policy.mjs';
 import { productionPublicKey, verifyUpdaterManifest, verifyUpdaterSignature } from './updater-release.mjs';
+import { inflateRawSync } from 'node:zlib';
+import { verifyContentIdentity, auditDistribution } from './content-audit.mjs';
+import { root, compareVersions } from './version.mjs';
 export const distributionFiles=['discord-auto-quest.exe','LICENSE','NOTICE','THIRD_PARTY_NOTICES.txt','README.md','RELEASE.txt'];
 export function verifyArchiveEntries(entries) {
   const remaining=new Set(distributionFiles), files=entries.filter(entry=>!entry.endsWith('/'));
@@ -36,7 +41,7 @@ export function checksumText(directory,version) {
   const names=candidateNames(version);
   return [names.setup,names.portable,names.signature,names.manifest].map(name=>`${fileHash(join(directory,name))}  ${name}`).join('\n')+'\n';
 }
-export function verifyCandidate(directory,version,{pubkey=productionPublicKey()}={}) {
+export function verifyCandidate(directory,version,{pubkey=productionPublicKey(),auditOptions={}}={}) {
   verifyCandidateFiles(readdirSync(directory),version);
   const names=candidateNames(version);
   if(readFileSync(join(directory,names.checksums),'utf8')!==checksumText(directory,version)) throw new Error('Candidate checksum mismatch');
@@ -46,5 +51,51 @@ export function verifyCandidate(directory,version,{pubkey=productionPublicKey()}
   const signature=readFileSync(join(directory,names.signature),'utf8').trim();
   verifyUpdaterManifest(JSON.parse(readFileSync(join(directory,names.manifest),'utf8')),version,signature);
   verifyUpdaterSignature(readFileSync(join(directory,names.setup)),signature,pubkey,version);
+  if(compareVersions(version,'1.2.1')>=0) {
+    const files=portableFiles(readFileSync(join(directory,names.portable)));
+    verifyContentIdentity(files.get('discord-auto-quest.exe'),root,version);
+    verifyInstallerContent(join(directory,names.setup),version,auditOptions);
+  }
   console.log('Candidate names, checksums, updater signature/manifest, and portable contents verified');
+}
+
+export function verifyInstallerContent(path, version, auditOptions = {}) {
+  const directory=mkdtempSync(join(tmpdir(),'daq-installer-audit-'));
+  try {
+    try {execFileSync('7z',['x','-y',`-o${directory}`,path],{stdio:'pipe'});}
+    catch {throw new Error('Installer inspection requires 7-Zip and a valid NSIS candidate');}
+    const applications=[];
+    function walk(folder) {
+      for(const entry of readdirSync(folder,{withFileTypes:true})) {
+        const file=join(folder,entry.name);
+        if(entry.isDirectory()) walk(file);
+        else if(entry.name==='discord-auto-quest.exe') applications.push(file);
+      }
+    }
+    walk(directory);
+    if(applications.length!==1) throw new Error('Installer must contain exactly one application');
+    auditDistribution(directory, auditOptions);
+    verifyContentIdentity(readFileSync(applications[0]),root,version);
+  } finally {
+    if(dirname(directory)===tmpdir() && basename(directory).startsWith('daq-installer-audit-')) rmSync(directory,{recursive:true,force:true});
+  }
+}
+
+export function portableFiles(bytes) {
+  // Validate central-directory bounds/names before reading compressed data.
+  const entries=zipEntries(bytes);
+  let end=bytes.length-22;
+  while(bytes.readUInt32LE(end)!==0x06054b50 || end+22+bytes.readUInt16LE(end+20)!==bytes.length) end--;
+  let offset=bytes.readUInt32LE(end+16);
+  const files=new Map();
+  for(const name of entries) {
+    const method=bytes.readUInt16LE(offset+10),size=bytes.readUInt32LE(offset+24),length=bytes.readUInt32LE(offset+20);
+    if(size>64*1024*1024 || ![0,8].includes(method)) throw new Error('Unsupported portable content encoding');
+    const local=bytes.readUInt32LE(offset+42),start=local+30+bytes.readUInt16LE(local+26)+bytes.readUInt16LE(local+28);
+    const data=bytes.subarray(start,start+length),content=method===0?data:inflateRawSync(data,{maxOutputLength:64*1024*1024});
+    if(content.length!==size) throw new Error('Portable content length mismatch');
+    files.set(name,content);
+    offset+=46+bytes.readUInt16LE(offset+28)+bytes.readUInt16LE(offset+30)+bytes.readUInt16LE(offset+32);
+  }
+  return files;
 }

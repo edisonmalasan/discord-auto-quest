@@ -2,7 +2,13 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
-## 1.2.0 — Unreleased
+## 1.2.1 — Unreleased
+
+- Strengthen content protection and release verification while preserving existing quest workflows.
+- Separate public validation builds from production credentials and require approved, version-matched production inputs.
+- Keep existing releases unchanged. Packaged verification remains required before publication.
+
+## 1.2.0 — 2026-10-25
 
 - Review and accept supported Desktop/console OR offers with Desktop intent; verify native Desktop selection before Work queue eligibility.
 - Recover selection for eligible accepted quests with Use Desktop, preserving 0% and confirmed acceptance if selection fails. Console-selected quests continue in Discord.
@@ -10,7 +16,7 @@ This project follows Semantic Versioning. Versions below 1.0 are provisional; pr
 - Serialize acceptance and selection with Work reconciliation; uncertain results are never automatically retried.
 - Exact packaged live acceptance, platform selection, installation, and existing updater/notification checks remain release gates.
 
-## 1.1.1 — Unreleased
+## 1.1.1 — 2026-10-24
 
 - Announce completion only from backend-confirmed session events. Loading historical completed quests or observing an unrelated completion no longer produces a second announcement.
 - Preserve the 1.1.0 tag and draft; exact 1.1.1 packaged acceptance remains required before publication.

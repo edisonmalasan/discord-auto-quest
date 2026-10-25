@@ -114,12 +114,112 @@
       "path": "tools/dependency-inventory.json",
       "lineBase64": "ICAgICJuYW1lIjogInNlcmlhbGl6ZS10by1qYXZhc2NyaXB0LWltcGwiLA==",
       "reason": "Required tool or dependency metadata"
+    },
+    {
+      "path": "package.json",
+      "lineBase64": "ICAgICJqYXZhc2NyaXB0LW9iZnVzY2F0b3IiOiAiNS45LjAiLA==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiamF2YXNjcmlwdC1vYmZ1c2NhdG9yIjogIjUuOS4wIiw=",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICJub2RlX21vZHVsZXMvQGphdmFzY3JpcHQtb2JmdXNjYXRvci9lc2NvZGVnZW4iOiB7",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgInJlc29sdmVkIjogImh0dHBzOi8vcmVnaXN0cnkubnBtanMub3JnL0BqYXZhc2NyaXB0LW9iZnVzY2F0b3IvZXNjb2RlZ2VuLy0vZXNjb2RlZ2VuLTIuNC4yLnRneiIs",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiQGphdmFzY3JpcHQtb2JmdXNjYXRvci9lc3RyYXZlcnNlIjogIl41LjMuMCIs",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICJub2RlX21vZHVsZXMvQGphdmFzY3JpcHQtb2JmdXNjYXRvci9lc3RyYXZlcnNlIjogew==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgInJlc29sdmVkIjogImh0dHBzOi8vcmVnaXN0cnkubnBtanMub3JnL0BqYXZhc2NyaXB0LW9iZnVzY2F0b3IvZXN0cmF2ZXJzZS8tL2VzdHJhdmVyc2UtNS40LjAudGd6Iiw=",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiaGFzLXByb3BlcnR5LWRlc2NyaXB0b3JzIjogIl4xLjAuMCIs",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICJub2RlX21vZHVsZXMvaGFzLXByb3BlcnR5LWRlc2NyaXB0b3JzIjogew==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgInJlc29sdmVkIjogImh0dHBzOi8vcmVnaXN0cnkubnBtanMub3JnL2hhcy1wcm9wZXJ0eS1kZXNjcmlwdG9ycy8tL2hhcy1wcm9wZXJ0eS1kZXNjcmlwdG9ycy0xLjAuMi50Z3oiLA==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICJub2RlX21vZHVsZXMvamF2YXNjcmlwdC1vYmZ1c2NhdG9yIjogew==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgInJlc29sdmVkIjogImh0dHBzOi8vcmVnaXN0cnkubnBtanMub3JnL2phdmFzY3JpcHQtb2JmdXNjYXRvci8tL2phdmFzY3JpcHQtb2JmdXNjYXRvci01LjkuMC50Z3oiLA==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiQGphdmFzY3JpcHQtb2JmdXNjYXRvci9lc2NvZGVnZW4iOiAiMi40LjIiLA==",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiQGphdmFzY3JpcHQtb2JmdXNjYXRvci9lc3RyYXZlcnNlIjogIjUuNC4wIiw=",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiamF2YXNjcmlwdC1vYmZ1c2NhdG9yIjogImJpbi9qYXZhc2NyaXB0LW9iZnVzY2F0b3Ii",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "package-lock.json",
+      "lineBase64": "ICAgICAgICAiaGFzLXByb3BlcnR5LWRlc2NyaXB0b3JzIjogIl4xLjAuMiI=",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogImphdmFzY3JpcHQtb2JmdXNjYXRvciIs",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogIkBqYXZhc2NyaXB0LW9iZnVzY2F0b3IvZXNjb2RlZ2VuIiw=",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogIkBqYXZhc2NyaXB0LW9iZnVzY2F0b3IvZXN0cmF2ZXJzZSIs",
+      "reason": "Required dependency or package-manager metadata"
+    },
+    {
+      "path": "tools/dependency-inventory.json",
+      "lineBase64": "ICAgICJuYW1lIjogImhhcy1wcm9wZXJ0eS1kZXNjcmlwdG9ycyIs",
+      "reason": "Required dependency or package-manager metadata"
     }
   ],
   "licensedFiles": [
     {
       "path": "THIRD_PARTY_NOTICES.txt",
-      "sha256": "a99edc95f8f497656c26db1a3414c4985ce8faf102662d6407fed8a42e9286cb",
+      "sha256": "f6a10f762b5c7703d40b3ed7c887a4b8e49812ef7d379cfc8ffd613cb393a8f6",
       "reason": "Verbatim audited third-party license material"
     }
   ]

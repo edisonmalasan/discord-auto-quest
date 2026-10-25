@@ -1870,5 +1870,773 @@
     "name": "scheduler",
     "version": "0.28.0",
     "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "javascript-obfuscator",
+    "version": "5.9.0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@javascript-obfuscator/escodegen",
+    "version": "2.4.2",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@javascript-obfuscator/estraverse",
+    "version": "5.4.0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "esutils",
+    "version": "2.0.3",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "esprima",
+    "version": "4.0.1",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "optionator",
+    "version": "0.8.3",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "prelude-ls",
+    "version": "1.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "deep-is",
+    "version": "0.1.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "word-wrap",
+    "version": "1.2.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "type-check",
+    "version": "0.3.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "levn",
+    "version": "0.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fast-levenshtein",
+    "version": "2.0.6",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@vercel/blob",
+    "version": "2.8.2",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@vercel/oidc",
+    "version": "3.8.10",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "jose",
+    "version": "5.10.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@vercel/cli-config",
+    "version": "0.3.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "zod",
+    "version": "4.6.6",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "xdg-app-paths",
+    "version": "5.5.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "os-paths",
+    "version": "4.4.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "xdg-portable",
+    "version": "7.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@vercel/cli-exec",
+    "version": "1.0.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "execa",
+    "version": "5.1.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "cross-spawn",
+    "version": "7.0.6",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "path-key",
+    "version": "3.1.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "shebang-command",
+    "version": "2.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "shebang-regex",
+    "version": "3.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "which",
+    "version": "2.0.2",
+    "license": "ISC"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "isexe",
+    "version": "2.0.0",
+    "license": "ISC"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "get-stream",
+    "version": "6.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "human-signals",
+    "version": "2.1.0",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-stream",
+    "version": "2.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "merge-stream",
+    "version": "2.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "npm-run-path",
+    "version": "4.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "onetime",
+    "version": "5.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "mimic-fn",
+    "version": "2.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "signal-exit",
+    "version": "3.0.7",
+    "license": "ISC"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "strip-final-newline",
+    "version": "2.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "async-retry",
+    "version": "1.3.3",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "retry",
+    "version": "0.13.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-buffer",
+    "version": "2.0.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-node-process",
+    "version": "1.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "throttleit",
+    "version": "2.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "undici",
+    "version": "6.29.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "acorn",
+    "version": "8.15.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "acorn-import-attributes",
+    "version": "1.9.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "assert",
+    "version": "2.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "call-bind",
+    "version": "1.0.9",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "call-bind-apply-helpers",
+    "version": "1.0.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "es-errors",
+    "version": "1.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "function-bind",
+    "version": "1.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "es-define-property",
+    "version": "1.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "get-intrinsic",
+    "version": "1.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "es-object-atoms",
+    "version": "1.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "get-proto",
+    "version": "1.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "dunder-proto",
+    "version": "1.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "gopd",
+    "version": "1.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "has-symbols",
+    "version": "1.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "hasown",
+    "version": "2.0.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "math-intrinsics",
+    "version": "1.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "set-function-length",
+    "version": "1.2.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "define-data-property",
+    "version": "1.1.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "has-property-descriptors",
+    "version": "1.0.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-nan",
+    "version": "1.3.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "define-properties",
+    "version": "1.2.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "object-keys",
+    "version": "1.1.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "object-is",
+    "version": "1.1.6",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "object.assign",
+    "version": "4.1.7",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "call-bound",
+    "version": "1.0.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "util",
+    "version": "0.12.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "inherits",
+    "version": "2.0.4",
+    "license": "ISC"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-arguments",
+    "version": "1.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "has-tostringtag",
+    "version": "1.0.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-generator-function",
+    "version": "1.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "generator-function",
+    "version": "2.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "safe-regex-test",
+    "version": "1.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-regex",
+    "version": "1.2.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-typed-array",
+    "version": "1.1.15",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "which-typed-array",
+    "version": "1.1.24",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "available-typed-arrays",
+    "version": "1.0.7",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "possible-typed-array-names",
+    "version": "1.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "for-each",
+    "version": "0.3.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-callable",
+    "version": "1.2.7",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "chalk",
+    "version": "4.1.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "ansi-styles",
+    "version": "4.3.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "color-convert",
+    "version": "2.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "color-name",
+    "version": "1.1.4",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "supports-color",
+    "version": "7.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "has-flag",
+    "version": "4.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "chance",
+    "version": "1.1.13",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "class-validator",
+    "version": "0.14.3",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/validator",
+    "version": "13.15.10",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "libphonenumber-js",
+    "version": "1.13.15",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "validator",
+    "version": "13.15.35",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "commander",
+    "version": "12.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "env-paths",
+    "version": "4.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-safe-filename",
+    "version": "0.1.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "eslint-scope",
+    "version": "8.4.0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "esrecurse",
+    "version": "4.3.0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "estraverse",
+    "version": "5.3.0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "eslint-visitor-keys",
+    "version": "4.2.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "fast-deep-equal",
+    "version": "3.1.3",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "inversify",
+    "version": "7.11.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/common",
+    "version": "1.5.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/container",
+    "version": "1.15.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/core",
+    "version": "9.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/prototype-utils",
+    "version": "0.1.3",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/reflect-metadata-utils",
+    "version": "1.4.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@inversifyjs/plugin",
+    "version": "0.2.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "js-string-escape",
+    "version": "1.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "md5",
+    "version": "2.3.0",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "charenc",
+    "version": "0.0.2",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "crypt",
+    "version": "0.0.2",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "is-buffer",
+    "version": "1.1.6",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "multimatch",
+    "version": "5.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "@types/minimatch",
+    "version": "3.0.5",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "array-differ",
+    "version": "3.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "array-union",
+    "version": "2.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "arrify",
+    "version": "2.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "minimatch",
+    "version": "3.1.5",
+    "license": "ISC"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "brace-expansion",
+    "version": "1.1.21",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "balanced-match",
+    "version": "1.0.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "concat-map",
+    "version": "0.0.1",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "process",
+    "version": "0.11.10",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "reflect-metadata",
+    "version": "0.2.2",
+    "license": "Apache-2.0"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "string-template",
+    "version": "1.0.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "stringz",
+    "version": "2.1.0",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "char-regex",
+    "version": "1.0.2",
+    "license": "MIT"
+  },
+  {
+    "ecosystem": "npm",
+    "name": "tslib",
+    "version": "2.8.1",
+    "license": "0BSD"
   }
 ]

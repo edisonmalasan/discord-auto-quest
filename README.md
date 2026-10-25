@@ -152,6 +152,8 @@ npm run build
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
+Source builds use harmless validation content; Work, acceptance, and platform selection require an official production release. Production build inputs are maintained privately.
+
 See [Contributing](https://github.com/edisonmalasan/discord-auto-quest/blob/main/CONTRIBUTING.md) for the complete checks and contribution workflow.
 
 ## Documentation

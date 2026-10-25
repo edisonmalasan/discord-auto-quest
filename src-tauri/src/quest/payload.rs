@@ -1,146 +1,82 @@
-//! The quest operation, as it ships.
-//!
-//! The operation is the heart of the mechanism, and it is the one piece of this
-//! project that must not be readable by anyone who has the application. So it
-//! is not in the application as text: it is encrypted when the payload is
-//! built, embedded as ciphertext, and decrypted into memory when it is needed.
-//!
-//! It is never written to disk. The decrypted operation is handed straight to the
-//! renderer and forgotten.
-//!
-//! **What this is, honestly.** The key is in the application, so this is
-//! *obfuscation* and not secrecy: the operation is not sitting in the executable
-//! as text, but the executable can decrypt it. A determined analyst with the
-//! binary can recover the operation. What it buys is that the operation is not
-//! handed over by `strings`, by a grep, or by anyone who opens the file.
-
+//! Protected content is transformed and encrypted before distribution.
+//! Decryption happens only in memory. A user controlling the execution machine
+//! can still recover it; these measures raise copying effort, not assure secrecy.
 use crate::error::{AppError, AppResult};
-
-use aes_gcm::aead::{Aead, KeyInit, Payload};
+use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::Nonce;
 
-/// The encrypted operation, built by internal maintenance tooling.
-const PAYLOAD: &[u8] = include_bytes!("../../payload/auto-quest.bin");
+include!(concat!(env!("OUT_DIR"), "/protected.rs"));
+const WORK: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/auto-quest.bin"));
+const ENROLLMENT: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/enrollment.bin"));
 
-/// The key it was encrypted with, in hexadecimal.
-const KEY: &str = include_str!("../../payload/secret.key");
+pub fn require_production() -> AppResult<()> {
+    // Keep a verifiable build identity even with release optimization enabled.
+    std::hint::black_box(BUILD_MARKER);
+    if PRODUCTION {
+        Ok(())
+    } else {
+        Err(AppError::not_supported(
+            "Validation build: protected operations are disabled. Install an official release.",
+        ))
+    }
+}
 
-/// How much of the payload is the nonce.
-const NONCE_BYTES: usize = 12;
+pub(crate) fn require_available() -> AppResult<()> {
+    // Unit tests use simulated transports, never a real client.
+    if cfg!(test) {
+        Ok(())
+    } else {
+        require_production()
+    }
+}
 
-/// How much of the payload is the authentication tag.
-const TAG_BYTES: usize = 16;
-
-/// The quest operation, decrypted.
-///
-/// The caller gets a string it can evaluate in Discord's renderer. Nothing is
-/// written anywhere.
 pub fn content() -> AppResult<String> {
-    decode(PAYLOAD)
+    decode(WORK)
 }
 
-pub(crate) fn decode(bytes: &[u8]) -> AppResult<String> {
-    let key = read_key()?;
-    let cipher = aes_gcm::Aes256Gcm::new_from_slice(&key).map_err(|_| {
-        AppError::invalid_payload("the payload's key is the wrong size for the cipher")
-    })?;
+pub(crate) fn enrollment() -> AppResult<String> {
+    decode(ENROLLMENT)
+}
 
-    if bytes.len() < NONCE_BYTES + TAG_BYTES {
-        return Err(AppError::invalid_payload(
-            "the payload is too short to hold a nonce and a tag",
-        ));
+fn decode(bytes: &[u8]) -> AppResult<String> {
+    decode_with_key(bytes, &KEY)
+}
+
+fn decode_with_key(bytes: &[u8], key: &[u8; 32]) -> AppResult<String> {
+    let invalid = || AppError::invalid_payload("Protected content authentication failed.");
+    if bytes.len() < 29 {
+        return Err(invalid());
     }
-
-    let (nonce, rest) = bytes.split_at(NONCE_BYTES);
-
-    // The cipher reads the tag off the end of the message, so the message is
-    // handed over whole.
+    let cipher = aes_gcm::Aes256Gcm::new_from_slice(key).map_err(|_| invalid())?;
     let plaintext = cipher
-        .decrypt(
-            Nonce::from_slice(nonce),
-            Payload {
-                msg: rest,
-                aad: &[],
-            },
-        )
-        .map_err(|_| {
-            AppError::invalid_payload(
-                "the payload could not be decrypted, so it does not match the key it was built with",
-            )
-        })?;
-
-    String::from_utf8(plaintext).map_err(|error| {
-        AppError::invalid_payload(format!("the decrypted payload is not text: {error}"))
-    })
+        .decrypt(Nonce::from_slice(&bytes[..12]), &bytes[12..])
+        .map_err(|_| invalid())?;
+    String::from_utf8(plaintext).map_err(|_| invalid())
 }
-
-/// The key, read from the hexadecimal it is written in.
-fn read_key() -> AppResult<Vec<u8>> {
-    let text: String = KEY.chars().filter(|c| !c.is_whitespace()).collect();
-
-    if !text.len().is_multiple_of(2) {
-        return Err(AppError::invalid_payload(
-            "the payload's key is not a whole number of bytes",
-        ));
-    }
-
-    let mut bytes = Vec::with_capacity(text.len() / 2);
-
-    for pair in text.as_bytes().chunks(2) {
-        let hex = std::str::from_utf8(pair)
-            .map_err(|_| AppError::invalid_payload("the payload's key is not hexadecimal"))?;
-
-        bytes.push(
-            u8::from_str_radix(hex, 16)
-                .map_err(|_| AppError::invalid_payload("the payload's key is not hexadecimal"))?,
-        );
-    }
-
-    Ok(bytes)
-}
-
-/// A phrase from the operation, used to check that it is not readable in the
-/// application.
-///
-/// It is a phrase the operation *prints*, so it is in the plaintext and nowhere
-/// else — if it turns up in the built executable, the payload is not
-/// encrypted.
-pub const MARKER: &str = "Quest progress:";
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn the_payload_decrypts_to_the_work() {
-        let operation = content().expect("the payload decrypts");
-
-        assert!(
-            operation.contains(MARKER),
-            "the decrypted operation is the quest operation"
-        );
-        assert!(
-            operation.contains("webpackChunkdiscord_app"),
-            "it is the operation that reaches into Discord's modules"
+    fn build_inputs_authenticate_and_identity_agrees_with_the_guard() {
+        assert!(!content().unwrap().is_empty());
+        assert!(!enrollment().unwrap().is_empty());
+        assert_eq!(require_production().is_ok(), PRODUCTION);
+        assert_eq!(
+            BUILD_MARKER.starts_with("DAQ-CONTENT-PRODUCTION-v1:"),
+            PRODUCTION
         );
     }
 
     #[test]
-    fn the_payload_does_not_contain_the_operation_in_the_clear() {
-        let payload = String::from_utf8_lossy(PAYLOAD);
-
-        assert!(
-            !payload.contains(MARKER),
-            "the marker must not be readable in the payload"
-        );
-        assert!(
-            !payload.contains("webpackChunkdiscord_app"),
-            "nor the name of Discord's module registry"
-        );
-    }
-
-    #[test]
-    fn the_key_is_thirty_two_bytes() {
-        assert_eq!(read_key().expect("the key reads").len(), 32);
+    fn altered_ciphertext_and_wrong_key_fail_without_returning_content() {
+        let mut altered = WORK.to_vec();
+        altered[12] ^= 1;
+        assert!(decode(&altered).is_err());
+        let mut wrong = KEY;
+        wrong[0] ^= 1;
+        assert!(decode_with_key(WORK, &wrong).is_err());
+        assert!(decode(&[0; 20]).is_err());
     }
 }

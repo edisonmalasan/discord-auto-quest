@@ -1,12 +1,12 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "commit": "",
   "windows": "",
   "discord": "",
   "hashes": {
-    "Discord-Auto-Quest-1.2.0-windows-x64-setup.exe": "",
-    "Discord-Auto-Quest-1.2.0-windows-x64-portable.zip": "",
-    "Discord-Auto-Quest-1.2.0-windows-x64-setup.exe.sig": "",
+    "Discord-Auto-Quest-1.2.1-windows-x64-setup.exe": "",
+    "Discord-Auto-Quest-1.2.1-windows-x64-portable.zip": "",
+    "Discord-Auto-Quest-1.2.1-windows-x64-setup.exe.sig": "",
     "latest.json": "",
     "SHA256SUMS": ""
   },

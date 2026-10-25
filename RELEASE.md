@@ -2,16 +2,17 @@
 
 ## Target and version
 
-Discord Auto Quest 1.2.0 targets Windows 10/11 x64 and stable Discord. Linux builds are excluded; macOS compilation is paused. A stable version number does not replace packaged acceptance evidence. Keep the release draft until every required check passes.
+Discord Auto Quest 1.2.1 targets Windows 10/11 x64 and stable Discord. Linux builds are excluded; macOS compilation is paused. A stable version number does not replace packaged acceptance evidence. Keep the release draft until every required check passes.
 
-`package.json` is authoritative. Change its version, run `npm run version:sync`, then `npm run version:check`. Use complete SemVer: patch for compatible fixes, minor for compatible features, and major for incompatible documented behavior or requirements. Prereleases use suffixes such as `1.2.0-beta.1`; increment the final beta number for another preview. Versions below 1.0 were provisional. A tag must exactly equal `v` plus the version. Preserve published versions, tags, and assets.
+`package.json` is authoritative. Change its version, run `npm run version:sync`, then `npm run version:check`. Use complete SemVer: patch for compatible fixes, minor for compatible features, and major for incompatible documented behavior or requirements. Prereleases use suffixes such as `1.2.1-beta.1`; increment the final beta number for another preview. Versions below 1.0 were provisional. A tag must exactly equal `v` plus the version. Preserve published versions, tags, and assets.
 
 ## One-time GitHub setup
 
 1. Under Settings → Actions → General, enable the actions used in `.github/workflows/release.yml`. Keep the built-in token restricted: the draft job alone receives `contents: write`.
 2. Generate an updater signing key with the installed Tauri CLI: `npx tauri signer generate --help` describes the available options. Store the encrypted private key and password outside the repository. Make an independent, recoverable backup before publication; a second copy on the same disk is insufficient. Never paste private material into chat, logs, issues, or source files.
 3. Add repository Actions secrets `TAURI_SIGNING_PRIVATE_KEY` (the encrypted private key content) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (its password). Use GitHub Settings → Secrets and variables → Actions → Secrets. Embed only the matching public key in `src-tauri/tauri.conf.json`. Preserve this identity for future updates; replacing it prevents existing installations from authenticating the replacement key.
-4. Ensure release maintainers can push tags and manage releases. Respect branch protections and repository rulesets. Review changes through a pull request.
+4. Create the `production-content` Actions environment with a required maintainer reviewer and a tag-only `v*` deployment policy. Add environment secrets `DAQ_CONTENT_KEY` and `DAQ_CONTENT_VERIFIED_MANIFEST` through the private maintenance process. The latter must match the digest of the exact content manifest that passed the private behavioral suite. Keep these separate from updater signing credentials. Never place production keys in repository files or public CI inputs.
+5. Ensure release maintainers can push tags and manage releases. Respect branch protections and repository rulesets. Review changes through a pull request.
 
 Updater signatures authenticate packages to an app that already trusts the embedded public key. They are separate from Windows publisher signing. These downloads have no Authenticode publisher signature; do not instruct users to disable Windows security protections. SHA-256 checksums detect changed downloads and do not establish publisher identity.
 
@@ -19,15 +20,15 @@ The stable feed is `https://github.com/edisonmalasan/discord-auto-quest/releases
 
 ## Verification builds and production candidates
 
-PR, main, and manual workflow runs build unsigned validation assets without production credentials. Local `npm run release` does the same. These live under `target/validation/<version>/`, carry a `VALIDATION-ONLY` marker, and cannot be promoted.
+PR, main, and manual workflow runs build unsigned validation assets without production credentials. Local `npm run release` does the same. These builds contain inert protected-operation fixtures: Work, acceptance, and platform selection are disabled. Public tests cover interfaces and fixtures; maintainers separately test the real protected content in the private suite. These live under `target/validation/<version>/`, carry a `VALIDATION-ONLY` marker, and cannot be promoted.
 
-A trusted version-tag push in this repository, pointing to a commit on main, builds the production candidate with the signing secrets. It builds once, validates the files, and transfers those exact files into a draft. Do not replace a failed candidate with an unrelated local build or rerun a published version to replace assets.
+A trusted version-tag push in this repository, pointing to a commit on main, waits for approval of the production environment, then builds the production candidate with private content inputs and signing credentials. Review the exact commit, workflow changes, and private verification digest before approving. Production jobs neither restore nor upload Rust build caches; only the five approved assets are transferred. It builds once, validates the files, and transfers those exact files into a draft. Do not replace a failed candidate with an unrelated local build or rerun a published version to replace assets.
 
-Each production candidate has exactly five assets. For 1.2.0:
+Each production candidate has exactly five assets. For 1.2.1:
 
-- `Discord-Auto-Quest-1.2.0-windows-x64-setup.exe`: current-user installer, including WebView2 provisioning when needed.
-- `Discord-Auto-Quest-1.2.0-windows-x64-portable.zip`: extract the entire archive; WebView2 must already be installed.
-- `Discord-Auto-Quest-1.2.0-windows-x64-setup.exe.sig`: updater signature for that installer and version.
+- `Discord-Auto-Quest-1.2.1-windows-x64-setup.exe`: current-user installer, including WebView2 provisioning when needed.
+- `Discord-Auto-Quest-1.2.1-windows-x64-portable.zip`: extract the entire archive; WebView2 must already be installed.
+- `Discord-Auto-Quest-1.2.1-windows-x64-setup.exe.sig`: updater signature for that installer and version.
 - `latest.json`: HTTPS updater metadata identifying the exact installer URL and signature.
 - `SHA256SUMS`: hashes of the other four assets.
 
@@ -37,22 +38,24 @@ Both app distributions include the MIT license, attribution, third-party notices
 
 1. Complete the changes on a task branch. Update the version, changelog, and curated `tools/release-notes.md`; synchronize and check versions.
 2. Run applicable frontend/backend tests, type checking, formatting, Clippy, terminology/notices checks, acceptance checks, and executable-content checks. Merge only after required CI checks and the Windows validation build pass.
-3. On the verified main commit, create the new tag. Use the following only if `v1.2.0` does not already exist; subsequent releases require a new version.
+3. On the verified main commit, create the new tag. Use the following only if `v1.2.1` does not already exist; subsequent releases require a new version.
 
 ```text
 git switch main
 git pull --ff-only origin main
 npm run version:check
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.2.1
+git push origin v1.2.1
 ```
 
-4. Open Actions → release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, Windows build, and draft release to pass. Missing signing secrets or invalid candidate files fail the production build.
-5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.2.0 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
+4. Open Actions → release and select the **tag** run. A main-branch run intentionally does not create a draft. Wait for checks, open Review deployments to approve `production-content` after the private suite passes for the exact manifest, then wait for Windows release build and draft release to pass. Missing private inputs, private-verification digest, signing secrets, or invalid candidate files fail the production build. A rotated content key does not preserve the ability to rebuild old tags; published assets are immutable and must not be regenerated.
+5. Open [repository releases](https://github.com/edisonmalasan/discord-auto-quest/releases), then edit the existing draft. Confirm tag/title, all five assets, accurate notes, and the release channel. Stable 1.2.1 is not a prerelease. Generated release notes are a starting point; curate them for users and retain the installation and limitation information. Do not create a duplicate release.
 
 ## Test the exact draft and publish
 
 Download the draft assets. Copy `docs/release-evidence.example.json` to a private local evidence file. Record the exact commit, Windows/Discord environment, five asset hashes, and actual results. The example deliberately contains unavailable checks and cannot authorize publication.
+
+Candidate verification requires 7-Zip on PATH to inspect the application inside the setup EXE. Both installer and portable content must carry the exact production identity and pass leak checks. A marker check does not establish resistance to reverse engineering.
 
 Required acceptance includes standard-user installation, launch, upgrade, uninstall, portable operation, WebView2 provisioning when absent, live views/recovery/handoffs, confirmed multi-platform Desktop selection and partial-selection recovery, Orbs-only Available counts/search with all accepted rewards retained, continuous Work and Stop, completion notifications, update failure recovery, portable update fallback, and confirmed installed updating using signed test candidates. Verify the setup EXE's own icon separately from installed shortcuts. Exercise interrupted downloads, invalid signatures, and unconfirmed cleanup blocking installation. Record independent signing-key backup verification too. Prior-build observations cannot substitute for exact-asset evidence.
 

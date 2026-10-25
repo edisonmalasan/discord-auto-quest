@@ -505,6 +505,7 @@ impl DiscordState {
         .unwrap_or_else(|_| Err(AppError::network("Discord stopped answering.")))
     }
     pub async fn start_work(&self) -> AppResult<WorkState> {
+        crate::quest::payload::require_available()?;
         let _operation = self.operation.lock().await;
         {
             let mut work = self.work.lock().await;
