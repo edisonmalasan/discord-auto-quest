@@ -7,13 +7,13 @@
   "assets": {
     "work": {
       "file": "auto-quest.bin",
-      "sha256": "b394e4527a267f9b57251f5e2b0352c0fe14784077eeaccc6e7382a49a3467b7",
+      "sha256": "a54fdda48b21ee61bf4bc78df49527757859fc6b3a0e9bd153e34d0928821fc3",
       "contentSha256": "65a61792c6b777e6bc8e2bdccc0dd6b4b5d0aa6ce804371d8607eec352d334d0"
     },
     "enrollment": {
       "file": "enrollment.bin",
-      "sha256": "8b5978c6b2607b490775304af60ecb22fd2d095d500b49ca3b2057ef122df041",
-      "contentSha256": "0516e90343a8ae332ebc7e7818aba9990abb42d682fb8f6debb50f9e041a2b30"
+      "sha256": "f9f570076804ddde820ef8531d76f5713907f901244ae0373dd801c330be6df4",
+      "contentSha256": "cb1e0f229e27a9a61e4fea21eaf747fcedd22cd4735ee4e377eec4e2bcb7407b"
     }
   }
 }

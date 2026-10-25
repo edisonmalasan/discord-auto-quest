@@ -70,7 +70,7 @@ The initial upgrade was launched from a packaged test host whose app-data path r
 The observations identify these immutable draft assets at commit 7890b56a4dd205980af98b5f924b1ac0d52f1a2f:
 
 ```text
-3afe6e668c22987ace564f1c3ae65dc74ae6b9b280e0344af63df3574c823520  Discord-Auto-Quest-1.0.0-windows-x64-setup.exe
+3afe6e678c22987ace564f1c3ae65dc74ae6b9b280e0344af63df3574c823520  Discord-Auto-Quest-1.0.0-windows-x64-setup.exe
 38d92da84f20841cb4b329f6a6a7e428c88681be38db4cb6b1f6e10ce79b4d42  Discord-Auto-Quest-1.0.0-windows-x64-portable.zip
 ```
 
@@ -107,7 +107,7 @@ These observations apply to commit f297ac1b308932439f7dccfd6a8c675540f2043a and 
 ```text
 dce4a5f2068ecbf9f0015544e397daa3bb953fe50a47d5fd953d59295ff5f1a8  Discord-Auto-Quest-1.1.0-windows-x64-setup.exe
 06a4dd586e4d451551f00e81ca3b4aa8c7d16c43584b3c29535d2f9dfa716865  Discord-Auto-Quest-1.1.0-windows-x64-portable.zip
-4b252731cf92b8b6684d2402612e86cb26505fc331e8e9d5dcbec46b28df1e40  Discord-Auto-Quest-1.1.0-windows-x64-setup.exe.sig
+4b252731cf92b8b6784d2402612e86cb26505fc331e8e9d5dcbec46b28df1e40  Discord-Auto-Quest-1.1.0-windows-x64-setup.exe.sig
 8e3b68a8853e3df51f3f239ade0b074294b2ee36431dfad1e21b38097ad7539a  latest.json
 99670ff88e530c934102747b4e136f4aac89d9e762d3172b9bbe1121c7b2ee29  SHA256SUMS
 ```
@@ -130,12 +130,12 @@ Keep 1.2.0 assets in draft until exact packaged checks pass, including native De
 
 ## 1.2.0 exact draft artifact verification
 
-[PR 42](https://github.com/edisonmalasan/discord-auto-quest/pull/42) merged at e867a3e57367b1a20d41b8d57cecd05067ed0e96 after branch CI 40117747099 passed. The unchanged v1.2.0 tag points to that commit. [Production run 40118449668](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40118449668) passed checks, Windows packaging, and draft creation: 201 frontend/tooling tests, 53 full-crate backend tests, Clippy, formatting, version, terminology, notices, bundle acceptance, and executable-content checks. Three browser integration tests remain ignored. Linux is excluded and macOS was skipped.
+[PR 42](https://github.com/edisonmalasan/discord-auto-quest/pull/42) merged at e867a3e57367b1a20d41b8d57cecd05067ed0e96 after branch CI 40117747099 passed. The unchanged v1.2.0 tag points to that commit. [Production run 40118449678](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40118449678) passed checks, Windows packaging, and draft creation: 201 frontend/tooling tests, 53 full-crate backend tests, Clippy, formatting, version, terminology, notices, bundle acceptance, and executable-content checks. Three browser integration tests remain ignored. Linux is excluded and macOS was skipped.
 
 All five files downloaded separately from the CI artifact and [stable 1.2.0 draft](https://github.com/edisonmalasan/discord-auto-quest/releases/tag/untagged-71862ffd2f5559a92e2f) matched byte for byte. Asset names, updater signature and signed version, manifest HTTPS URLs, checksums, and portable archive contents passed local verification. The exact portable executable passed the content scan and reports FileVersion/ProductVersion 1.2.0 and ProductName Discord Auto Quest. The downloaded setup EXE independently yielded the custom blue badge. It has an updater signature and remains unsigned for Windows publisher identity.
 
 ```text
-73906e8dfaa8b8dd2ae02af40ce21dff4e1465de8b381c579120091c7840e663  Discord-Auto-Quest-1.2.0-windows-x64-portable.zip
+73906e8dfaa8b8dd2ae02af40ce21dff4e1465de8b381c579120091c7840e673  Discord-Auto-Quest-1.2.0-windows-x64-portable.zip
 b2e0d6b61fe471b2b7dec7a2d46dbb00e2dc3f9675332b22eed9047ee11fb1bb  Discord-Auto-Quest-1.2.0-windows-x64-setup.exe
 8e55678c6b4fc05406449d3bddafca24ee0f09a0d45d5e32b0d88b9f7aa7e762  Discord-Auto-Quest-1.2.0-windows-x64-setup.exe.sig
 fb37d12398a5cbef23fae4965199a8607a6b9145f75048d261142530d1dcfdb2  latest.json
@@ -180,9 +180,9 @@ All five files were downloaded independently from the CI artifact and the [1.2.1
 
 ```text
 4077106d82cad3a31b270c8ce1d58745adc4fbef1eb278b3d2681c6336833cb8  Discord-Auto-Quest-1.2.1-windows-x64-portable.zip
-bcad84ed066dfda9d5bdc749efba09c701b3bb3909d61a1c72f4cfdcce3f0058  Discord-Auto-Quest-1.2.1-windows-x64-setup.exe
+bcad84ed067dfda9d5bdc749efba09c701b3bb3909d61a1c72f4cfdcce3f0058  Discord-Auto-Quest-1.2.1-windows-x64-setup.exe
 ef2b809860f3c5c383d7f5f44299533865243d1751e260f6ecb16ee322e598c0  Discord-Auto-Quest-1.2.1-windows-x64-setup.exe.sig
-6e288bca4c40faa8dc82669a570282c1ad74a6dbaa3d1eabad7481fad72ce030  latest.json
+6e288bca4c40faa8dc82679a570282c1ad74a6dbaa3d1eabad7481fad72ce030  latest.json
 0a97adb6cbca0d4f06562fb2fc6d022f379ba9a79c1321727e542e65837bdfcc  SHA256SUMS
 ```
 
@@ -196,7 +196,7 @@ The reported acceptance feedback had no expiry timer. Two new UI regressions fai
 
 The shared acceptance/selection validator rejected compatible client metadata, including end-date metadata on the reported offer. This prevented both in-app confirmation and Desktop-selection recovery. Read-only examination of the current client distinguished compatible metadata from features that change consent or task behavior. Compatibility uses semantic client values; no quest identifiers, names, or Orb amounts are matched. Unsupported features, additional consent, unknown schemas, and mixed rewards retain their existing boundary. A separate enrollment race returned early when acceptance arrived during review; confirmation now validates the unchanged review and finishes Desktop selection without reenrollment.
 
-Eight new private cases reproduced failures before implementation. The complete private suite now passes 66 cases against readable source and separately against transformed encrypted content. Coverage includes supported video/Desktop offers, one or two console alternatives, differing metadata values, automatic Desktop selection, read-only review, already accepted selection recovery, enrollment during review, stale revisions, Console preservation, partial results, duplicate confirmations, progress, continuous Work, and cancellation. Public tests passed all 172 cases across 22 files. Production backend checks passed 52 unit cases; Clippy with warnings denied and Rust formatting passed. Three browser-starting integration tests remain ignored. The non-test validation guard must also pass in public Windows CI; a production-mode run does not exercise its rejection branch.
+Eight new private cases reproduced failures before implementation. The complete private suite now passes 67 cases against readable source and separately against transformed encrypted content. Coverage includes supported video/Desktop offers, one or two console alternatives, differing metadata values, automatic Desktop selection, read-only review, already accepted selection recovery, enrollment during review, stale revisions, Console preservation, partial results, duplicate confirmations, progress, continuous Work, and cancellation. Public tests passed all 172 cases across 22 files. Production backend checks passed 52 unit cases; Clippy with warnings denied and Rust formatting passed. Three browser-starting integration tests remain ignored. The non-test validation guard must also pass in public Windows CI; a production-mode run does not exercise its rejection branch.
 
 Type checking, frontend production build, version, terminology, notices, content-input and bundle acceptance checks passed. The changed-component design detector returned no findings. A production debug executable passed exact content identity and scans for original/transformed content and textual key encodings. The transformation reproduced the authenticated content digests with network and filesystem-write permissions denied. Dependency lockfile changes were verified to contain only project-version updates before renewing their notice-audit hashes. No dependency version changed. The derived code graph was refreshed.
 
