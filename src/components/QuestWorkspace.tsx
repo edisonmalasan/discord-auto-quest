@@ -3,14 +3,18 @@ import { searchQuests, type QuestView, type QuestViews } from '../lib/quest-view
 import { AppMark } from './AppMark';
 import { AboutPopover } from './AboutPopover';
 import { QuestIndex } from './QuestIndex';
-import type { QuestCompletion } from '../types/work';
+import type { QuestCompletion, WorkState } from '../types/work';
+import { NotificationCenter, useNotifications } from './Notifications';
+import { OngoingQuests } from './OngoingQuests';
 
 const labels: Record<QuestView, string> = { ongoing: 'Ongoing', available: 'Available', completed: 'Completed' };
 const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Orbs rewards only. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
 const empty: Record<QuestView, string> = { ongoing: 'Accept a quest from Available or in Discord, then it will appear here.', available: 'There are no available Orbs quests right now. Check back later.', completed: 'Completed quests will appear here when Discord confirms them.' };
-interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode; notices?: ReactNode; completion?: QuestCompletion | null; onDismissCompletion?: () => void }
+interface Props { views: QuestViews; loading: boolean; stale: boolean; controls: ReactNode; connection: ReactNode; notices?: ReactNode; completion?: QuestCompletion | null; onDismissCompletion?: () => void; workState?: WorkState }
 
-export function QuestWorkspace({ views, loading, stale, controls, connection, notices, completion, onDismissCompletion }: Props) {
+export function QuestWorkspace({ views, loading, stale, controls, connection, notices, completion, onDismissCompletion, workState }: Props) {
+  const notifications = useNotifications();
+  const notify = notifications?.notify;
   const [view, setView] = useState<QuestView>('ongoing');
   const [queries, setQueries] = useState<Record<QuestView, string>>({ ongoing: '', available: '', completed: '' });
   const [openMenuQuestId, setMenu] = useState<string | null>(null);
@@ -18,8 +22,21 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
   const heading = useRef<HTMLHeadingElement>(null);
   const positions = useRef<Record<QuestView, number>>({ ongoing: 0, available: 0, completed: 0 });
   const cards = searchQuests(views[view], queries[view]);
+  const visibleIds = new Set(cards.map(card => card.quest.id));
+  if (view === 'ongoing' && workState?.activeQuestId) visibleIds.add(workState.activeQuestId);
+  useEffect(() => {
+    if (completion && notify) { notify({key: `completed-${completion.questId}`, kind: 'completed', title: 'Quest completed', message: `${completion.name} completed. Claim your reward in Discord.`}); onDismissCompletion?.(); }
+  }, [completion, notify, onDismissCompletion]);
+  useEffect(() => {
+    if (!notify || !workState || workState.phase === 'stopped') return;
+    for (const item of workState.skippedQuests ?? []) {
+      if (item.reason !== 'manual_play') continue;
+      const quest = views.ongoing.find(card => card.quest.id === item.questId)?.quest;
+      if (quest) notify({key: `manual-${quest.id}`, title: 'Automatically skipped by Work', message: `${quest.name} needs manual play. Work continues with eligible quests.`});
+    }
+  }, [workState, views.ongoing, notify]);
   useLayoutEffect(() => { if (scroll.current) scroll.current.scrollTop = positions.current[view]; }, [view]);
-  useEffect(() => { if (openMenuQuestId && !cards.some(c => c.quest.id === openMenuQuestId)) { setMenu(null); heading.current?.focus(); } }, [cards, openMenuQuestId]);
+  useEffect(() => { if (openMenuQuestId && !visibleIds.has(openMenuQuestId)) { setMenu(null); heading.current?.focus(); } }, [visibleIds, openMenuQuestId]);
   return <div className="workspace">
     <aside className="sidebar">
       <div className="brand"><AppMark className="brand-mark" /><span>Discord Auto Quest</span></div>
@@ -30,9 +47,9 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
       </nav><div className="sidebar-bottom">{connection}<AboutPopover /></div>
     </aside>
     <main className="quest-main">
-      <header className="workspace-header"><span><NavIcon kind={view} />{labels[view]} quests</span>{controls}</header>
+      <header className="workspace-header"><span><NavIcon kind={view} />{labels[view]} quests</span><div className="workspace-controls"><NotificationCenter onCompleted={() => { setView('completed'); heading.current?.focus(); }}/>{controls}</div></header>
       {notices}
-      {completion && <div className="completion-notice" role="status"><span>{completion.name} completed. Claim your reward in Discord.</span><button className="button secondary" onClick={()=>{setView('completed');onDismissCompletion?.();}}>View completed</button><button className="button secondary" aria-label="Dismiss completion notification" onClick={onDismissCompletion}>Dismiss</button></div>}
+      {completion && !notifications && <div className="completion-notice" role="status"><span>{completion.name} completed. Claim your reward in Discord.</span><button className="button secondary" onClick={()=>{setView('completed');onDismissCompletion?.();}}>View completed</button><button className="button secondary" aria-label="Dismiss completion notification" onClick={onDismissCompletion}>Dismiss</button></div>}
       <div ref={scroll} className="workspace-scroll" onScroll={event => { positions.current[view] = event.currentTarget.scrollTop; }}>
         <section className="quest-content" aria-labelledby="view-title">
           <h1 id="view-title" ref={heading} tabIndex={-1}>{labels[view]} quests</h1><p className="view-description">{descriptions[view]}</p>
@@ -41,7 +58,8 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
             <span className="sr-only">Search {labels[view].toLowerCase()} quests</span><input type="search" value={queries[view]} placeholder="Search quests" onChange={e => setQueries({ ...queries, [view]: e.target.value })} />
           </label>
           {loading ? <div role="status" aria-label="Loading quests"><span className="sr-only">Loading quests…</span><div className="quest-grid" aria-hidden="true">{[1,2,3].map(n => <div className="card-skeleton" key={n}><div/><span/><span/></div>)}</div></div>
-            : cards.length ? <QuestIndex cards={cards} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} />
+            : view === 'ongoing' && workState && (views.ongoing.length > 0 || workState.phase !== 'stopped') ? <OngoingQuests cards={views.ongoing} work={workState} query={queries.ongoing} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} onClear={() => setQueries({...queries, ongoing: ''})}/>
+              : cards.length ? <QuestIndex cards={cards} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} />
               : <div className="empty-state"><NavIcon kind={view}/><h2>{queries[view].trim() ? 'No matching quests' : view === 'available' ? 'No available Orbs quests' : `No ${labels[view].toLowerCase()} quests`}</h2><p>{queries[view].trim() ? 'Try another quest, game, or publisher name.' : empty[view]}</p>{queries[view].trim() && <button className="button secondary" onClick={() => setQueries({ ...queries, [view]: '' })}>Clear search</button>}</div>}
         </section>
       </div>

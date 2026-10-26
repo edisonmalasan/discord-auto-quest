@@ -60,6 +60,12 @@ export function useDiscord(): DiscordController {
       if (!found.ready) { setFresh(false); setError(null); return; }
       const quests = await listDiscordQuests();
       if (!current()) return;
+      const overview = await questWorkStatus();
+      if (!current()) return;
+      if (!(needsStop.current && overview.phase === 'stopped')) {
+        needsStop.current = overview.phase !== 'stopped';
+        setWorkState(overview);
+      }
       setFeed(quests); setFresh(true); setError(null);
     } catch (failure) {
       if (!current()) return;

@@ -4,7 +4,7 @@ Discord Auto Quest is a desktop utility for viewing and working quests the user 
 
 ## Supported release target
 
-The 1.2 release line targets Windows 10/11 x64 and stable Discord. Linux and macOS compilation does not establish working client integration. A current-user installer and portable archive are supported distribution formats.
+The 1.3 release line targets Windows 10/11 x64 and stable Discord. Linux and macOS compilation does not establish working client integration. A current-user installer and portable archive are supported distribution formats.
 
 ## Principles and boundaries
 
@@ -17,6 +17,7 @@ The 1.2 release line targets Windows 10/11 x64 and stable Discord. Linux and mac
 - Restarting Discord requires the user's deliberate request and an interruption warning.
 - Work applies only to accepted quests. It is explicitly enabled, processes eligible quests sequentially, and waits for newly accepted quests until Stop. It never resumes automatically after app launch or an uncertain disconnect.
 - Stop cancels owned activity and confirms cleanup before another run, update installation, or normal exit. Uncertainty remains visible and blocks dispatch; progress already reported cannot be undone.
+- Achievement-only activity objectives require manual play and are automatically excluded from Work; timed activity tasks remain separate. Ongoing presents the backend-owned active quest and pending order, with skipped and unavailable quests kept visible.
 - Completion feedback follows Discord confirmation, with optional Windows notifications for installed copies. Only notification preferences are persisted.
 - Installed copies can check for stable updates and install a signed update after explicit confirmation and confirmed Work cleanup. Portable copies receive download links.
 - Only the user's own Discord desktop client is controlled. No unrelated process is modified.

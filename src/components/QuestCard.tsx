@@ -3,13 +3,14 @@ import { duration, taskLabel, requirement } from '../lib/quests';
 import { QuestImage } from './QuestImage';
 import { QuestProgress } from './QuestProgress';
 import { QuestActions } from './QuestActions';
-interface Props { card: QuestCardModel; stale: boolean; menuOpen: boolean; onMenuChange: (id: string | null) => void }
-export function QuestCard({ card, stale, menuOpen, onMenuChange }: Props) {
+interface Props { card: QuestCardModel; stale: boolean; menuOpen: boolean; onMenuChange: (id: string | null) => void; badge?: string }
+export function QuestCard({ card, stale, menuOpen, onMenuChange, badge }: Props) {
   const { quest } = card;
   const quantity = card.rewardState === 'claimed' ? quest.claimedRewardOrbs ?? quest.rewardOrbs : quest.rewardOrbs;
   const reward = quantity !== null ? `${quantity} Orbs` : quest.rewardName ?? 'Quest reward';
   const boost = quest.rewardOrbs && quest.premiumOrbs && quest.premiumOrbs > quest.rewardOrbs ? (quest.premiumOrbs/quest.rewardOrbs).toFixed(1) : null;
   return <article className="quest-card" aria-label={quest.name}>
+    {badge && <span className="work-card-badge">{badge}</span>}
     <div className="quest-hero"><QuestImage src={quest.banner} alt="" className="quest-banner"/><div className="hero-scrim"/>
       <div className="quest-wordmark"><QuestImage src={quest.logotype} alt="" fallback={<span>{quest.gameTitle ?? quest.name}</span>}/></div>
       <div className="publisher-row"><p>Promoted by <span>{quest.publisherVerified === true && <svg aria-label="Verified publisher" viewBox="0 0 16 16"><path fill="#3ba55d" d="m8 0 2 2 3-.1.5 3 2.5 2-2 2 .1 3-3 .5L8 16l-2-2-3 .1-.5-3L0 8l2-2-.1-3 3-.5z"/><path fill="none" stroke="white" strokeWidth="1.6" d="m4 8 2.5 2.5L12 5"/></svg>}{quest.publisher ?? 'Publisher unavailable'}</span></p><span className="quest-end">{endDate(quest.expiresAt)}</span></div>
