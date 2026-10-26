@@ -226,4 +226,24 @@ GitHub metadata confirmed a stable draft, not a prerelease, targeting the exact 
 
 Local automated verification passed: 178 public tests, 67 private behavioral cases per source/transformed form, 54 backend unit tests and the validation-only guard, type checking, formatting, Clippy, version/content/terminology/notices checks, frontend build and bundle acceptance. Three browser integration cases remain ignored. Notification expiry/unread handling, grouped search, backend ordering, achievement-only skipping, timed activity eligibility, and continued dispatch have regression coverage.
 
-No live acceptance, platform changes, Work/Stop, installation, or Discord restart was performed. The reported second-account stall remains unreproduced. CI/merge, exact production artifacts, signatures/checksums, setup/portable leak checks, and the existing exact-native gates remain pending. Keep any new candidate draft; published releases and tags remain unchanged.
+No live acceptance, platform changes, Work/Stop, installation, or Discord restart was performed. The reported second-account stall remains unreproduced. PR 50 merged at 409483511d50ce51da50d1d343d3a54b9b0e342c after CI 40231758947 passed checks and Windows validation packaging. Immutable v1.3.0 starts the approved production run 40249452192. Production artifact checks are recorded below. The existing exact-native gates remain pending. Keep any new candidate draft; published releases and tags remain unchanged.
+
+The implemented interface was checked in an isolated browser fixture using simulated data. Search precedes Active now, the active card remains while filtering, Pending uses Up next and Queued, and no card-footer feedback or routine Work strip appears. Keyboard focus pauses toast expiry; leaving it resumes expiry without moving search focus. Full instructions remain in the notification dropdown; expansion marks the item read and Escape restores bell focus. These results do not establish native account behavior.
+
+## 1.3.0 exact draft artifact verification — 2026-10-26
+
+The owner approved the protected build and draft verification from PR 50 after passing CI and merge. Immutable `v1.3.0` points to `409483511d50ce51da50d1d343d3a54b9b0e342c`. [Production run 40249452192](https://github.com/edisonmalasan/discord-auto-quest/actions/runs/40249452192) passed checks, production backend tests and lint, signed Windows packaging, and draft creation. The release is a stable draft with exactly five assets; no publication occurred.
+
+Independent downloads from the CI artifact and GitHub draft matched byte for byte. Exact asset names, installer/version signature, HTTPS manifest bindings, all four checksums, archive contents, production identity, and setup/portable leak scans passed. Scans also checked the local original/transformed content and textual key forms. These are leak regression checks, not proof against determined recovery. Update notes omit draft lifecycle metadata; the GitHub body retains the requested Draft/TBD fields and only Overview, New Features, Improvements, and Bug Fixes sections.
+
+| Asset | SHA-256 |
+| --- | --- |
+| `Discord-Auto-Quest-1.3.0-windows-x64-setup.exe` | `ada2a7b7d7dcef34d554da5abe87ac1f5ae0e2c871f8d0be80527f8b813b6373` |
+| `Discord-Auto-Quest-1.3.0-windows-x64-portable.zip` | `0485a5c8461c0753f04afa5ae94e32f3577ae555b4b05b07674540ce6fceb0c2` |
+| `Discord-Auto-Quest-1.3.0-windows-x64-setup.exe.sig` | `56d3d07159d2c448c65e7a3d33e6d2c720e44fa70e9d9bf05af0a888a2cd6a42` |
+| `latest.json` | `9dccd41f9f851d6d89a8febf8220a55c842643acb6a0f41f4c6d4062f467c3fc` |
+| `SHA256SUMS` | `0b303fb09bc1022cdf06529a6ee129be02ed36e87eb22dd6b2ddcaacfd548f6d` |
+
+Static inspection confirmed ProductName Discord Auto Quest, version 1.3.0 in setup and portable application resources, and x64 application architecture. The custom badge was independently extracted and viewed for both executables. The installer has no Windows publisher signature, as documented. No installer or app executable was launched for these checks.
+
+Standard-user clean installation, upgrade, uninstall, portable execution, clean WebView2 provisioning, live views/recovery/handoffs, accepted-quest and Desktop-selection workflows, continuous Work/Stop, native completion notifications, installed updating and failure recovery, portable update fallback, and independent signing-key backup verification remain unavailable for these exact assets. The second-account activity stall remains unreproduced. No live account actions, installation, or Discord restart were performed. Keep the release draft until the required native gates pass.
