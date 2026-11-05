@@ -23,7 +23,7 @@ it('confirms once and refreshes without starting Work',async()=>{
  fireEvent.click(accept); fireEvent.click(accept);
  await waitFor(()=>expect(refresh).toHaveBeenCalled()); expect(run.mock.calls).toEqual([['123'],['123','revision']]);
  expect(screen.queryByRole('dialog')).toBeNull(); expect(screen.getByText(/confirmed acceptance/)).toBeInTheDocument();
- expect(screen.getByRole('heading',{name:'Available quests'})).toHaveFocus();
+ await waitFor(()=>expect(screen.getByRole('heading',{name:'Available quests'})).toHaveFocus());
 });
 it('keeps uncertainty visible and prevents automatic retries',async()=>{
  const run=vi.fn().mockResolvedValueOnce(offer).mockResolvedValueOnce({status:'uncertain',message:'Check Discord before trying again.'});
