@@ -67,6 +67,8 @@ Linux is not supported and has no build job. macOS support is deferred and its o
 
 ## Installation
 
+Starting with 1.3.1, opening the app again returns to its existing window and shows a brief notice. Your current view and Work session stay in place.
+
 ### Setup EXE
 
 1. Download the `windows-x64-setup.exe` asset from the [latest release](https://github.com/edisonmalasan/discord-auto-quest/releases/latest).

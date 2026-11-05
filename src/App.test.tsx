@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQuest, makeFeed } from './test/fixtures/quests';
@@ -8,6 +8,13 @@ const status = vi.fn<() => Promise<DiscordStatus>>();
 const list = vi.fn<() => Promise<QuestFeed>>();
 let backendWork=stoppedWork();
 const work = vi.fn(); const stop = vi.fn(); const restart = vi.fn();
+const activation = vi.fn<() => Promise<boolean>>();
+const nativeListeners = new Map<string, (event: {payload: unknown}) => void>();
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (command: string) => command === 'take_launch_notice' ? activation() : Promise.reject(new Error('Unavailable in this test')) }));
+vi.mock('@tauri-apps/api/event', () => ({ listen: async (event: string, handler: (event: {payload: unknown}) => void) => {
+ nativeListeners.set(event, handler);
+ return () => { if (nativeListeners.get(event) === handler) nativeListeners.delete(event); };
+} }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('./lib/ipc', () => ({
  questWorkStatus: async()=>backendWork,
@@ -27,7 +34,36 @@ describe('the quest workspace', () => {
  beforeEach(() => {
   vi.clearAllMocks(); status.mockResolvedValue({ installed: true, ready: true, action: null, profile: null });
   backendWork=stoppedWork();
+  nativeListeners.clear(); activation.mockResolvedValue(false);
   list.mockResolvedValue(feed); work.mockImplementation(async()=>{backendWork={...stoppedWork(),phase:'waiting'};return backendWork;}); stop.mockImplementation(async()=>{backendWork=stoppedWork();return backendWork;}); restart.mockResolvedValue(undefined);
+ });
+ it('handles a repeat launch without resetting navigation, search, or running Work, and expires its notice', async () => {
+  vi.useFakeTimers(); backendWork={...stoppedWork(),phase:'waiting'};
+  render(<App/>); await act(async()=>{});
+  await act(async()=>{screen.getByRole('button',{name:/Available.*1/}).click();});
+  const search=screen.getByRole('searchbox');
+  fireEvent.change(search,{target:{value:'Offered'}});
+  activation.mockResolvedValueOnce(true);
+  await act(async()=>{nativeListeners.get('app-activation-requested')?.({payload:null});});
+  expect(screen.getByText('Discord Auto Quest is already running')).toBeInTheDocument();
+  expect(screen.getByRole('searchbox')).toHaveValue('Offered');
+  expect(screen.getByRole('button',{name:/Available.*1/})).toHaveAttribute('aria-current','page');
+  expect(screen.getByRole('button',{name:'Stop'})).toBeEnabled();
+  expect(work).not.toHaveBeenCalled(); expect(stop).not.toHaveBeenCalled(); expect(restart).not.toHaveBeenCalled();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
+  expect(screen.queryByText('Discord Auto Quest is already running')).toBeNull();
+ });
+ it('recovers a repeat launch before the webview listener is ready, and permits a later repeat notice', async () => {
+  vi.useFakeTimers(); activation.mockResolvedValueOnce(true);
+  render(<App/>); await act(async()=>{});
+  expect(screen.getByText('Discord Auto Quest is already running')).toBeInTheDocument();
+  await act(async()=>{await vi.advanceTimersByTimeAsync(5000);});
+  activation.mockResolvedValueOnce(true);
+  await act(async()=>{nativeListeners.get('app-activation-requested')?.({payload:null});});
+  expect(screen.getByText('Discord Auto Quest is already running')).toBeInTheDocument();
+  // A redundant wakeup cannot replay an already consumed launch.
+  await act(async()=>{nativeListeners.get('app-activation-requested')?.({payload:null});});
+  expect(screen.getByRole('button',{name:'Notifications, 2 unread'})).toBeInTheDocument();
  });
  it('starts in Ongoing and navigates to distinct live views', async () => {
   render(<App />); await screen.findByText('Active Quest');

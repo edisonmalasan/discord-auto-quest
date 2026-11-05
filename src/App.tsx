@@ -7,11 +7,13 @@ import { EnrollmentProvider } from './components/Enrollment';
 import { UpdateCenter, UpdateProvider, useUpdateContext } from './components/UpdateCenter';
 import { useCompletions } from './hooks/useCompletions';
 import { NotificationProvider } from './components/Notifications';
+import { useLaunchNotice } from './hooks/useLaunchNotice';
 export default function App() {
   const discord = useDiscord();
   return <NotificationProvider><UpdateProvider working={discord.working}><Workspace discord={discord}/></UpdateProvider></NotificationProvider>;
 }
 function Workspace({discord}: {discord: ReturnType<typeof useDiscord>}) {
+  useLaunchNotice();
   const [reviewing, setReviewing] = useState(false);
   const updates = useUpdateContext();
   const {completion, closeError, dismissCompletion} = useCompletions();
