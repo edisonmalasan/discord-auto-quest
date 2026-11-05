@@ -8,6 +8,20 @@ use tauri_plugin_updater::UpdaterExt;
 
 mod download;
 
+/// Keep a failed Windows installer launch recoverable in the running app.
+pub fn update_builder<R: tauri::Runtime>(
+    app: &AppHandle<R>,
+) -> tauri_plugin_updater::UpdaterBuilder {
+    let builder = app.updater_builder();
+    // Updater 2.14 exits immediately after a successful Windows installer launch.
+    // Its default hook clears app resources *before* that fallible launch,
+    // releasing the instance lock and hiding the window even when launch fails.
+    // Work is already confirmed stopped; retain resources until actual exit.
+    #[cfg(windows)]
+    let builder = builder.on_before_exit(|| {});
+    builder
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateState {
@@ -197,8 +211,7 @@ pub async fn check_for_updates(
         state.progress = None;
     });
     let result = async {
-        let updater = app
-            .updater_builder()
+        let updater = update_builder(&app)
             .timeout(std::time::Duration::from_secs(30))
             .version_comparator(|current, candidate| {
                 stable_upgrade(&current.to_string(), &candidate.version.to_string())

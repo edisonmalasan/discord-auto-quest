@@ -219,7 +219,7 @@
   "licensedFiles": [
     {
       "path": "THIRD_PARTY_NOTICES.txt",
-      "sha256": "f6a10f762b5c7703d40b3ed7c887a4b8e49812ef7d379cfc8ffd613cb393a8f6",
+      "sha256": "f4e6f04badf32a0a93ccd6cfbefde292c8832f5b73a6569d82f428a92acecd10",
       "reason": "Verbatim audited third-party license material"
     }
   ]

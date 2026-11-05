@@ -2,7 +2,12 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
-## 1.3.0 — Unreleased
+## 1.3.1 — Unreleased
+
+- Keep one Windows app instance per desktop session. Repeat launches restore and focus the existing window, show a five-second notice, and preserve the current view and Work session.
+- Keep the window and instance guard available if an update installer cannot start.
+
+## 1.3.0 — 2026-10-26
 
 - Group Ongoing into Active now, Pending, Needs manual play, and Needs attention using backend session ownership and queue order.
 - Automatically exclude achievement-only objectives from Work while preserving timed activity tasks and supported alternatives.

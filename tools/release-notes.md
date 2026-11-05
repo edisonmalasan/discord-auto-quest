@@ -1,6 +1,6 @@
 # Release Notes — Discord Auto Quest
 
-**Version:** v1.3.0
+**Version:** v1.3.1
 
 **Status:** Draft
 
@@ -8,25 +8,17 @@
 
 ## Overview
 
-A clearer Ongoing workspace and compact notifications for Windows 10/11 x64 and stable Discord desktop.
-
-## New Features
-
-- See the current quest under **Active now**, using the regular quest card and its Discord-confirmed progress.
-- Browse **Pending** in Work’s execution order, with **Up next** on the first card and **Queued** on the remaining cards.
-- Find recent instructions in a bell notification dropdown with unread indicators, expandable details, and **Mark all read**.
+Reopening Discord Auto Quest returns to the existing Windows window while keeping your current view and Work session.
 
 ## Improvements
 
-- Keep search above the quest groups and the active quest visible while filtering.
-- Separate **Needs manual play** and **Needs attention** from the pending queue.
-- Automatically skip achievement-only activity objectives so eligible quests can continue. Timed activities remain supported.
-- Remove the extra Work status strip and move routine card messages into five-second floating notifications. Recovery problems remain visible.
+- Restore and focus the existing window on repeat launches.
+- Show a brief “Discord Auto Quest is already running” notification, retained in Notifications after it disappears.
 
 ## Bug Fixes
 
-- Prevent achievement-only tasks from entering automatic Work even when upstream eligibility metadata is inconsistent.
-- Keep handoff instructions available after a floating message disappears, without adding text below quest buttons.
+- Prevent duplicate app launches from starting separate Work controllers.
+- Keep the app window and instance guard available if an update installer cannot start.
 
 Downloads include the setup EXE, portable ZIP, installer signature, latest.json, and SHA256SUMS. The installer provisions WebView2 when needed; the portable ZIP requires it already installed. These builds have no Windows publisher signature. Updates require confirmation; rewards are claimed in Discord. Linux is excluded and macOS remains paused.
 

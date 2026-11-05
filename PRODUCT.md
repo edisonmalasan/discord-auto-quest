@@ -16,6 +16,7 @@ The 1.3 release line targets Windows 10/11 x64 and stable Discord. Linux and mac
 - Reward claims remain the user's actions in Discord.
 - Restarting Discord requires the user's deliberate request and an interruption warning.
 - Work applies only to accepted quests. It is explicitly enabled, processes eligible quests sequentially, and waits for newly accepted quests until Stop. It never resumes automatically after app launch or an uncertain disconnect.
+- Windows release copies allow one running instance per desktop session. Another launch restores and focuses the existing window and shows a five-second notice without changing Work or navigation. Development builds remain independent.
 - Stop cancels owned activity and confirms cleanup before another run, update installation, or normal exit. Uncertainty remains visible and blocks dispatch; progress already reported cannot be undone.
 - Achievement-only activity objectives require manual play and are automatically excluded from Work; timed activity tasks remain separate. Ongoing presents the backend-owned active quest and pending order, with skipped and unavailable quests kept visible.
 - Completion feedback follows Discord confirmation, with optional Windows notifications for installed copies. Only notification preferences are persisted.

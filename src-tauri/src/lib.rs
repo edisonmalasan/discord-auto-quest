@@ -18,6 +18,7 @@ use std::sync::{
     Arc,
 };
 use tauri::{Emitter, Manager, State};
+mod instance;
 
 /// The application's connection to Discord.
 pub struct AppState {
@@ -138,12 +139,13 @@ async fn work_status(state: State<'_, AppState>) -> AppResult<WorkState> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    instance::register(tauri::Builder::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .manage(updates::UpdateManager::default())
         .manage(CloseState::default())
+        .manage(instance::LaunchNotice::default())
         .manage(AppState {
             discord: DiscordState::default(),
         })
@@ -189,6 +191,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             app_version,
+            instance::take_launch_notice,
             discord_status,
             relaunch_discord,
             list_discord_quests,
