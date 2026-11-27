@@ -64,3 +64,20 @@ export function searchQuests(cards: QuestCardModel[], query: string): QuestCardM
     value => value?.toLocaleLowerCase().includes(needle),
   ));
 }
+
+export interface CompletedGroups {
+  unclaimed: QuestCardModel[];
+  claimed: QuestCardModel[];
+  other: QuestCardModel[];
+}
+
+/** Partition completed quest cards by reward claim state, preserving input order. */
+export function completedGroups(cards: QuestCardModel[]): CompletedGroups {
+  const groups: CompletedGroups = { unclaimed: [], claimed: [], other: [] };
+  for (const card of cards) {
+    if (card.rewardState === 'claimable') groups.unclaimed.push(card);
+    else if (card.rewardState === 'claimed') groups.claimed.push(card);
+    else groups.other.push(card);
+  }
+  return groups;
+}

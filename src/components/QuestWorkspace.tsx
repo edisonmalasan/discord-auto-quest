@@ -6,6 +6,7 @@ import { QuestIndex } from './QuestIndex';
 import type { QuestCompletion, WorkState } from '../types/work';
 import { NotificationCenter, useNotifications } from './Notifications';
 import { OngoingQuests } from './OngoingQuests';
+import { CompletedQuests } from './CompletedQuests';
 
 const labels: Record<QuestView, string> = { ongoing: 'Ongoing', available: 'Available', completed: 'Completed' };
 const descriptions: Record<QuestView, string> = { ongoing: 'Your accepted quests, ready to work.', available: 'Orbs rewards only. Review an offer to get started.', completed: 'Your completed quests and rewards.' };
@@ -59,7 +60,8 @@ export function QuestWorkspace({ views, loading, stale, controls, connection, no
           </label>
           {loading ? <div role="status" aria-label="Loading quests"><span className="sr-only">Loading quests…</span><div className="quest-grid" aria-hidden="true">{[1,2,3].map(n => <div className="card-skeleton" key={n}><div/><span/><span/></div>)}</div></div>
             : view === 'ongoing' && workState && (views.ongoing.length > 0 || workState.phase !== 'stopped') ? <OngoingQuests cards={views.ongoing} work={workState} query={queries.ongoing} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} onClear={() => setQueries({...queries, ongoing: ''})}/>
-              : cards.length ? <QuestIndex cards={cards} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} />
+              : view === 'completed' && views.completed.length > 0 ? <CompletedQuests cards={views.completed} query={queries.completed} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} onClear={() => setQueries({ ...queries, completed: '' })} />
+                : cards.length ? <QuestIndex cards={cards} stale={stale} openMenuQuestId={openMenuQuestId} onMenuChange={setMenu} />
               : <div className="empty-state"><NavIcon kind={view}/><h2>{queries[view].trim() ? 'No matching quests' : view === 'available' ? 'No available Orbs quests' : `No ${labels[view].toLowerCase()} quests`}</h2><p>{queries[view].trim() ? 'Try another quest, game, or publisher name.' : empty[view]}</p>{queries[view].trim() && <button className="button secondary" onClick={() => setQueries({ ...queries, [view]: '' })}>Clear search</button>}</div>}
         </section>
       </div>
