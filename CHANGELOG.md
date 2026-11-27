@@ -2,7 +2,11 @@
 
 This project follows Semantic Versioning. Versions below 1.0 are provisional; prereleases are intended for testing.
 
-## 1.3.1 — Unreleased
+## 1.4.0 — Unreleased
+
+- Group Completed quests into Unclaimed rewards, Claimed rewards, and Other completed sections so unclaimed rewards appear first while retaining all reward types, search-independent sidebar counts, and Discord handoffs.
+
+## 1.3.1 — 2026-11-05
 
 - Keep one Windows app instance per desktop session. Repeat launches restore and focus the existing window, show a five-second notice, and preserve the current view and Work session.
 - Keep the window and instance guard available if an update installer cannot start.
