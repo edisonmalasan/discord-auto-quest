@@ -46,7 +46,7 @@ Windows builds are **unsigned**. Windows may display an unknown-publisher warnin
 
 | Feature | What it does |
 | --- | --- |
-| Quest workspace | Switch between Ongoing, Available, and Completed quests, with search. Available shows only confirmed positive Orbs rewards; accepted and completed quests retain every reward type. |
+| Quest workspace | Switch between Ongoing, Available, and Completed quests, with search. Available shows only confirmed positive Orbs rewards; accepted and completed quests retain every reward type, and Completed separates Unclaimed rewards before Claimed rewards. |
 | In-app acceptance | Review and confirm one supported offer at a time. While Work is off, acceptance leaves the quest idle. Desktop/console alternatives use Desktop after acceptance and confirmed selection. An active continuous session queues it only when Desktop is confirmed. |
 | Work and Stop | Start a continuous session, work accepted quests sequentially, and wait for new acceptances until Stop. Active now identifies the current quest; Pending follows the backend order. Achievement-only objectives are automatically skipped and labeled Needs manual play. |
 | Progress updates | Refresh percentages from Discord about every four seconds, including during Work. Completion requires Discord's confirmation. |

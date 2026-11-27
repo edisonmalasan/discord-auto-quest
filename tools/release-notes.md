@@ -1,6 +1,6 @@
 # Release Notes — Discord Auto Quest
 
-**Version:** v1.3.1
+**Version:** v1.4.0
 
 **Status:** Draft
 
@@ -8,17 +8,17 @@
 
 ## Overview
 
-Reopening Discord Auto Quest returns to the existing Windows window while keeping your current view and Work session.
+Separates the Completed view into clear reward-status groups so unclaimed rewards appear first at the top, with claimed rewards below.
+
+## New Features
+
+- Group **Completed** quests into **Unclaimed rewards** first, **Claimed rewards** below, and **Other completed** when expired or unverified rewards are present.
+- Show live, search-filtered card counts on each Completed section header while keeping sidebar counts independent of search.
 
 ## Improvements
 
-- Restore and focus the existing window on repeat launches.
-- Show a brief “Discord Auto Quest is already running” notification, retained in Notifications after it disappears.
-
-## Bug Fixes
-
-- Prevent duplicate app launches from starting separate Work controllers.
-- Keep the app window and instance guard available if an update installer cannot start.
+- Hide empty Completed section headers automatically during normal viewing and search, and preserve the **No matching quests** empty state with **Clear search**.
+- Share consistent grouped-section layout and stretched card-footer alignment across Ongoing and Completed views.
 
 Downloads include the setup EXE, portable ZIP, installer signature, latest.json, and SHA256SUMS. The installer provisions WebView2 when needed; the portable ZIP requires it already installed. These builds have no Windows publisher signature. Updates require confirmation; rewards are claimed in Discord. Linux is excluded and macOS remains paused.
 
