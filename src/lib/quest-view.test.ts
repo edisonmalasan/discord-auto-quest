@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeFeed, makeQuest } from '../test/fixtures/quests';
-import { buildQuestViews, searchQuests } from './quest-view';
+import { buildQuestViews, completedGroups, searchQuests } from './quest-view';
 
 const now = Date.parse('2026-10-23T00:00:00Z');
 describe('quest views', () => {
@@ -66,5 +66,21 @@ describe('quest views', () => {
     ] }), now);
     expect(views.available.map(c => c.quest.id)).toEqual(['1', '2']);
     expect(views.completed.map(c => c.quest.id)).toEqual(['4', '3']);
+  });
+  it('groups completed cards into unclaimed, claimed, and other while keeping non-Orbs rewards and input order', () => {
+    const completed = (id: string, overrides = {}) => makeQuest({ id, state: 'completed', expiresAt: '2020-01-01', ...overrides });
+    const views = buildQuestViews(makeFeed({ claimed: [
+      completed('claim-orb', { completedAt: '2026-10-20', rewardClaimState: 'unclaimed', rewardClaimable: true, rewardExpiresAt: '2099-01-01' }),
+      completed('claim-badge', { completedAt: '2026-10-19', hasOrbReward: false, rewardOrbs: null, rewardName: 'Badge', rewardClaimState: 'unclaimed', rewardClaimable: true, rewardExpiresAt: '2099-01-01' }),
+      completed('claimed-orb', { completedAt: '2026-10-22', rewardClaimState: 'claimed' }),
+      completed('claimed-badge', { completedAt: '2026-10-21', hasOrbReward: false, rewardOrbs: null, rewardName: 'Badge', rewardClaimState: 'claimed' }),
+      completed('expired', { completedAt: '2026-10-18', rewardClaimState: 'unclaimed', rewardExpiresAt: '2026-10-23T00:00:00Z' }),
+      completed('unknown', { completedAt: '2026-10-17' }),
+    ] }), now);
+    const groups = completedGroups(views.completed);
+    expect(groups.unclaimed.map(c => c.quest.id)).toEqual(['claim-orb', 'claim-badge']);
+    expect(groups.claimed.map(c => c.quest.id)).toEqual(['claimed-orb', 'claimed-badge']);
+    expect(groups.other.map(c => c.quest.id)).toEqual(['expired', 'unknown']);
+    expect(completedGroups([])).toEqual({ unclaimed: [], claimed: [], other: [] });
   });
 });
