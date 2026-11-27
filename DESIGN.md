@@ -58,7 +58,7 @@ This system replaces the earlier teal/Archivo interface.
 ## Workspace
 
 Ongoing, Available, and Completed are separate views with live, search-independent counts.
-Ongoing opens first. Each view retains its search and scroll position during the session.
+Ongoing opens first. Each view retains its search and scroll position during the session. Completed groups non-empty sections in order (`Unclaimed rewards`, `Claimed rewards`, `Other completed`) while keeping its search-independent sidebar count.
 The main header owns one global Work my quests / Stop control; cards do not imply a per-quest runner.
 Connection and recovery controls live in the sidebar footer. Operation and recovery errors remain visible beneath the main header. Routine Work text does not occupy a separate status strip.
 
@@ -92,7 +92,9 @@ selected platform are not invented when unavailable. The boost pill is informati
 The normalized model in `src/lib/quest-view.ts` drives counts, membership, ordering, progress,
 and actions. Accepted-but-expired entries remain in Ongoing as expired. Discord's completion
 record alone moves a quest to Completed. Claimable, claimed, expired rewards, and unknown reward
-status are distinct; participation expiry is not treated as the reward deadline.
+status are distinct; participation expiry is not treated as the reward deadline. Completed retains
+all reward types and renders non-empty sections in order (`Unclaimed rewards`, `Claimed rewards`,
+and `Other completed` for expired or unverified reward status) without empty section headers.
 
 An accepted quest with a coherent task shows a progress ring even at zero. Alternative tasks
 keep their values and targets paired; ambiguous platform selection shows requirements rather

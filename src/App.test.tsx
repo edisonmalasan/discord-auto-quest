@@ -164,4 +164,37 @@ describe('the quest workspace', () => {
   expect(screen.getByRole('button',{name:'Work my quests'})).toBeDisabled();
   expect(screen.getByText('Working quests requires the Discord desktop client.')).toBeInTheDocument();
  });
+ it('separates unclaimed and claimed quests in Completed while keeping sidebar counts independent of search', async () => {
+  list.mockResolvedValue(makeFeed({
+   claimed: [
+    makeQuest({ id: 'c1', name: 'Claimed Later', state: 'completed', completedAt: '2026-10-22', rewardClaimState: 'claimed' }),
+    makeQuest({ id: 'c2', name: 'Ready To Claim', state: 'completed', completedAt: '2026-10-20', rewardClaimState: 'unclaimed', rewardClaimable: true, rewardExpiresAt: '2099-01-01' }),
+   ],
+  }));
+  render(<App />);
+  const nav = screen.getByRole('navigation', { name: 'Your quests' });
+  await userEvent.click(await within(nav).findByRole('button', { name: /Completed.*2/ }));
+  const content = screen.getByRole('region', { name: 'Completed quests' });
+  const regions = within(content).getAllByRole('region');
+  expect(regions.map(region => region.getAttribute('aria-label'))).toEqual(['Unclaimed rewards', 'Claimed rewards']);
+  expect(within(regions[0]).getByRole('heading', { level: 2, name: /^Unclaimed rewards 1$/ })).toBeInTheDocument();
+  expect(within(regions[1]).getByRole('heading', { level: 2, name: /^Claimed rewards 1$/ })).toBeInTheDocument();
+  expect(within(regions[0]).getByRole('article', { name: 'Ready To Claim' })).toBeInTheDocument();
+  expect(within(regions[1]).getByRole('article', { name: 'Claimed Later' })).toBeInTheDocument();
+  await userEvent.type(screen.getByRole('searchbox'), 'Ready');
+  expect(screen.queryByRole('region', { name: 'Claimed rewards' })).toBeNull();
+  expect(within(nav).getByRole('button', { name: /Completed.*2/ })).toBeInTheDocument();
+  await userEvent.type(screen.getByRole('searchbox'), 'xyz');
+  expect(screen.getByText('No matching quests')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+  expect(screen.getByRole('region', { name: 'Claimed rewards' })).toBeInTheDocument();
+ });
+ it('shows No completed quests when there are no completed quests', async () => {
+  list.mockResolvedValue(makeFeed());
+  render(<App />);
+  const nav = screen.getByRole('navigation', { name: 'Your quests' });
+  await userEvent.click(await within(nav).findByRole('button', { name: /Completed.*0/ }));
+  expect(screen.getByText('No completed quests')).toBeInTheDocument();
+  expect(screen.queryByText('No matching quests')).toBeNull();
+ });
 });
